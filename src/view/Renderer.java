@@ -1,14 +1,5 @@
 package view;
 
-import view.huds.SystemHud;
-import view.huds.PlayerHud;
-import view.renderables.Renderable;
-import view.renderables.ports.DynamicRenderDTO;
-import view.renderables.ports.RenderDTO;
-import view.renderables.DynamicRenderable;
-import images.ImageCache;
-import images.Images;
-
 import java.awt.AlphaComposite;
 import java.awt.Canvas;
 import java.awt.Dimension;
@@ -23,6 +14,15 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import images.Images;
+import images.ImageCache;
+import view.huds.SystemHud;
+import view.huds.PlayerHud;
+import view.renderables.Renderable;
+import view.renderables.DynamicRenderable;
+
+import view.renderables.ports.DynamicRenderDTO;
+import view.renderables.ports.RenderDTO;
 import controller.ports.EngineState;
 
 /**

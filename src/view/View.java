@@ -1,11 +1,5 @@
 package view;
 
-import assets.AssetCatalog;
-import assets.AssetType;
-import controller.Controller;
-import controller.ports.EngineState;
-import images.Images;
-
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -17,6 +11,12 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import assets.AssetCatalog;
+import assets.AssetType;
+import controller.Controller;
+import images.Images;
+
+import controller.ports.EngineState;
 import view.renderables.ports.DynamicRenderDTO;
 import view.renderables.ports.RenderDTO;
 

@@ -1,12 +1,11 @@
 package generators;
 
 import java.util.Random;
-import _helpers.DoubleVector;
-import controller.Controller;
-import controller.ports.EngineState;
-
 import java.util.ArrayList;
+import _helpers.DoubleVector;
 
+import controller.ports.EngineState;
+import controller.ports.WorldEvolver;
 import world.ports.WorldDefItemDto;
 import world.ports.WorldDefinition;
 
@@ -14,7 +13,7 @@ public class LifeGenerator implements Runnable {
 
     private final Random rnd = new Random();
     private final ArrayList<WorldDefItemDto> items;
-    private final Controller controller;
+    private final WorldEvolver worldEvolver;
     private Thread thread;
     private final WorldDefinition worldDefinition;
     private final LifeConfigDTO lifeConfig;
@@ -22,12 +21,12 @@ public class LifeGenerator implements Runnable {
     /**
      * CONSTRUCTORS
      */
-    public LifeGenerator(Controller controller,
+    public LifeGenerator(WorldEvolver controller,
             WorldDefinition worldDefinition, LifeConfigDTO lifeConfig) {
 
         this.worldDefinition = worldDefinition;
         this.items = this.worldDefinition.asteroids;
-        this.controller = controller;
+        this.worldEvolver = controller;
         this.lifeConfig = lifeConfig;
     }
 
@@ -59,7 +58,7 @@ public class LifeGenerator implements Runnable {
         }
 
         DoubleVector pos = this.randomPosition();
-        this.controller.addDynamicBody(
+        this.worldEvolver.addDynamicBody(
                 this.randomAsset(), this.randomSize(),
                 pos.x, pos.y, speed.x, speed.y, acc.x, acc.y,
                 0d, this.randomAngularSpeed(460d), 0d, 0d);
@@ -85,8 +84,8 @@ public class LifeGenerator implements Runnable {
         double x, y;
 
         // Random position within world limits
-        x = this.rnd.nextFloat() * this.controller.getWorldDimension().width;
-        y = this.rnd.nextFloat() * this.controller.getWorldDimension().height;
+        x = this.rnd.nextFloat() * this.worldEvolver.getWorldDimension().width;
+        y = this.rnd.nextFloat() * this.worldEvolver.getWorldDimension().height;
 
         return new DoubleVector(x, y);
     }
@@ -115,9 +114,9 @@ public class LifeGenerator implements Runnable {
      */
     @Override
     public void run() {
-        while (this.controller.getEngineState() != EngineState.STOPPED) { // TO-DO End condition
+        while (this.worldEvolver.getEngineState() != EngineState.STOPPED) { // TO-DO End condition
 
-            if (this.controller.getEngineState() == EngineState.ALIVE) { // TO-DO Pause condition
+            if (this.worldEvolver.getEngineState() == EngineState.ALIVE) { // TO-DO Pause condition
                 this.addRandomDynamicBody();
             }
 
@@ -133,25 +132,25 @@ public class LifeGenerator implements Runnable {
         String playerId = null;
 
         for (WorldDefItemDto body : dBodies) {
-            playerId = this.controller.addPlayer(
+            playerId = this.worldEvolver.addPlayer(
                     body.assetId, body.size, 500, 200, 0, 0, 0, 0, 0,
                     this.randomAngularSpeed(270), 0, 0);
 
-            this.controller.addWeaponToPlayer(
+            this.worldEvolver.addWeaponToPlayer(
                     playerId, this.worldDefinition.primaryWeapon.get(0), 0);
 
-            this.controller.addWeaponToPlayer(
+            this.worldEvolver.addWeaponToPlayer(
                     playerId, this.worldDefinition.secondaryWeapon.get(0), 0);
 
-            this.controller.addWeaponToPlayer(
+            this.worldEvolver.addWeaponToPlayer(
                     playerId, this.worldDefinition.missilLaunchers.get(0), -15);
 
-            this.controller.addWeaponToPlayer(
+            this.worldEvolver.addWeaponToPlayer(
                     playerId, this.worldDefinition.mineLaunchers.get(0), 15);
         }
 
         if (playerId != null) {
-            this.controller.setLocalPlayer(playerId);
+            this.worldEvolver.setLocalPlayer(playerId);
         } else {
             System.err.println("[DEBUG] No valid playerId to set as local player.");
         }

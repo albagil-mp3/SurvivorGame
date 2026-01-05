@@ -11,18 +11,18 @@ public class SceneGenerator {
 
     private final Random rnd = new Random();
 
-    private final WorldInitializer controller;
+    private final WorldInitializer worldInitializer;
     WorldDefinition worldDefinition;
 
     public SceneGenerator(WorldInitializer worldInitializer, WorldDefinition worldDef) {
-        this.controller = worldInitializer;
+        this.worldInitializer = worldInitializer;
         this.worldDefinition = worldDef;
 
         this.createWorld();
     }
 
     private void createWorld() {
-        this.controller.loadAssets(this.worldDefinition.gameAssets);
+        this.worldInitializer.loadAssets(this.worldDefinition.gameAssets);
 
         this.createSpaceDecorators();
         this.createSBodies();
@@ -32,7 +32,7 @@ public class SceneGenerator {
         ArrayList<WorldDefPositionItemDto> sBodies = this.worldDefinition.gravityBodies;
 
         for (WorldDefPositionItemDto body : sBodies) {
-            this.controller.addStaticBody(body.assetId, body.size, body.posX, body.posY, body.angle);
+            this.worldInitializer.addStaticBody(body.assetId, body.size, body.posX, body.posY, body.angle);
         }
     }
 
@@ -40,7 +40,7 @@ public class SceneGenerator {
         ArrayList<WorldDefPositionItemDto> decorators = this.worldDefinition.spaceDecorators;
 
         for (WorldDefPositionItemDto deco : decorators) {
-            this.controller.addDecorator(deco.assetId, deco.size, deco.posX, deco.posY, deco.angle);
+            this.worldInitializer.addDecorator(deco.assetId, deco.size, deco.posX, deco.posY, deco.angle);
         }
     }
 
