@@ -206,7 +206,7 @@ public class Renderer extends Canvas implements Runnable {
         BufferStrategy bs = getBufferStrategy();
 
         while (true) {
-            EngineState engineState = view.getEngineState();
+            EngineState engineState = this.view.getEngineState();
             if (engineState == EngineState.STOPPED) {
                 break;
             }
@@ -233,7 +233,7 @@ public class Renderer extends Canvas implements Runnable {
             return; // ========= Nothing to render by the moment ... =========>>
         }
 
-        Map<String, Renderable> newRenderables = new java.util.HashMap<>(this.staticRenderables);
+        Map<String, Renderable> newRenderables = new java.util.concurrent.ConcurrentHashMap<>(this.staticRenderables);
 
         if (renderablesData.isEmpty()) {
             newRenderables.clear(); //
