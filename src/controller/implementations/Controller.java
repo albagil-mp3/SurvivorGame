@@ -10,7 +10,6 @@ import controller.mappers.PlayerRenderableMapper;
 import controller.mappers.RenderableMapper;
 import controller.mappers.WeaponMapper;
 
-import controller.ports.DomainEventProcessor;
 import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
 import controller.ports.WorldInitializer;
@@ -21,8 +20,11 @@ import model.ports.ActionDTO;
 import model.ports.ActionExecutor;
 import model.ports.ActionPriority;
 import model.ports.ActionType;
+import model.ports.DomainEventProcessor;
 import model.ports.Event;
 import model.ports.EventType;
+import model.ports.DomainEventProcessor;
+
 import view.core.View;
 import view.renderables.ports.DynamicRenderDTO;
 import view.renderables.ports.PlayerRenderDTO;
