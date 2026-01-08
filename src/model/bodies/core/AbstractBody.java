@@ -2,9 +2,10 @@ package model.bodies.core;
 
 import java.util.UUID;
 
-import model.Model;
+import model.bodies.ports.Body;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
+import model.implementations.Model;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
 
@@ -12,7 +13,7 @@ import model.physics.ports.PhysicsValuesDTO;
  *
  * @author juanm
  */
-public abstract class AbstractBody {
+public abstract class AbstractBody implements Body {
 
     private static volatile int aliveQuantity = 0;
     private static volatile int createdQuantity = 0;
@@ -42,6 +43,7 @@ public abstract class AbstractBody {
         this.type = type;
     }
 
+    @Override
     public synchronized void activate() {
         if (this.model == null) {
             throw new IllegalArgumentException("Model not setted");
@@ -59,24 +61,29 @@ public abstract class AbstractBody {
         this.state = BodyState.ALIVE;
     }
 
+    @Override
     public synchronized void die() {
         this.state = BodyState.DEAD;
         AbstractBody.deadQuantity++;
         AbstractBody.aliveQuantity--;
     }
 
+    @Override
     public long getBornTime() {
         return this.bornTime;
     }
 
+    @Override
     public String getEntityId() {
         return this.entityId;
     }
 
+    @Override
     public double getLifeInSeconds() {
         return (System.nanoTime() - this.bornTime) / 1_000_000_000.0D;
     }
 
+    @Override
     public double getLifePercentage() {
         if (this.maxLifeInSeconds <= 0) {
             return 1D;
@@ -85,26 +92,36 @@ public abstract class AbstractBody {
         return Math.min(1D, this.getLifeInSeconds() / this.maxLifeInSeconds);
     }
 
+    @Override
     public double getMaxLife() {
         return this.maxLifeInSeconds;
     }
 
-    public Model getModel() {
+    
+    protected Model getModel() {
         return this.model;
     }
 
+    public PhysicsEngine getPhysicsEngine() {
+        return this.phyEngine;
+    }
+
+    @Override
     public PhysicsValuesDTO getPhysicsValues() {
         return this.phyEngine.getPhysicsValues();
     }
 
+    @Override
     public BodyState getState() {
         return this.state;
     }
 
+    @Override
     public BodyType getType() {
         return this.type;
     }
 
+    @Override
     public boolean isLifeOver() {
         if (this.maxLifeInSeconds <= 0) {
             return false;
@@ -113,47 +130,57 @@ public abstract class AbstractBody {
         return this.getLifeInSeconds() >= this.maxLifeInSeconds;
     }
 
+    @Override
     public void setModel(Model model) {
         this.model = model;
     }
 
+    @Override
     public void setState(BodyState state) {
         this.state = state;
     }
 
     /**
+     * 
      * STATICS
      */
+    // @Override
     static public int getCreatedQuantity() {
         return AbstractBody.createdQuantity;
     }
 
+    // @Override
     static public int getAliveQuantity() {
         return AbstractBody.aliveQuantity;
     }
 
+    // @Override
     static public int getDeadQuantity() {
         return AbstractBody.deadQuantity;
     }
 
+    // @Override
     static protected int incCreatedQuantity() {
         AbstractBody.createdQuantity++;
 
         return AbstractBody.createdQuantity;
     }
 
+    // @Override
     static protected int incAliveQuantity() {
         AbstractBody.aliveQuantity++;
 
         return AbstractBody.aliveQuantity;
     }
 
+    // @Override
     static protected int decAliveQuantity() {
         AbstractBody.aliveQuantity--;
 
         return AbstractBody.aliveQuantity;
     }
 
+    // @Override
     static protected int incDeadQuantity() {
         AbstractBody.deadQuantity++;
 

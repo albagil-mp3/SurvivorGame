@@ -2,37 +2,35 @@ package model.physics.ports;
 
 public interface PhysicsEngine {
 
-    public abstract PhysicsValuesDTO calcNewPhysicsValues();
+        public void addAngularAcceleration(double angularAcc);
 
+        public PhysicsValuesDTO calcNewPhysicsValues();
 
-    public abstract PhysicsValuesDTO getPhysicsValues();
+        public PhysicsValuesDTO getPhysicsValues();
 
+        public void reboundInEast(
+                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
+                        double worldDim_x, double worldDim_y);
 
-    public abstract void reboundInEast(
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-            double worldDim_x, double worldDim_y);
+        public void reboundInWest(
+                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
+                        double worldDim_x, double worldDim_y);
 
+        public void reboundInNorth(
+                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
+                        double worldDim_x, double worldDim_y);
 
-    public abstract void reboundInWest(
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-            double worldDim_x, double worldDim_y);
+        public void reboundInSouth(
+                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
+                        double worldDim_x, double worldDim_y);
 
+        public void resetAcceleration();
 
-    public abstract void reboundInNorth(
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-            double worldDim_x, double worldDim_y);
+        public void setAngularAcceleration(double angularAcceleration);
 
+        public void setAngularSpeed(double angularSpeed);
 
-    public abstract void reboundInSouth(
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-            double worldDim_x, double worldDim_y);
+        public void setPhysicsValues(PhysicsValuesDTO phyValues);
 
-
-    public void setAngularAcceleration(double angularAcceleration);
-
-
-    public abstract void setPhysicsValues(PhysicsValuesDTO phyValues);
-
-
-    public void setThrust(double thrust);
+        public void setThrust(double thrust);
 }

@@ -2,7 +2,7 @@ package controller.ports;
 
 import java.awt.Dimension;
 
-import world.ports.WorldDefWeaponDto;
+import world.ports.WorldDefWeaponDTO;
 
 public interface WorldEvolver {
 
@@ -14,7 +14,7 @@ public interface WorldEvolver {
             double speedX, double speedY, double accX, double accY,
             double angle, double angularSpeed, double angularAcc, double thrust);
 
-    public void addWeaponToPlayer(String playerId, WorldDefWeaponDto weaponDef, int shootingOffset);
+    public void addWeaponToPlayer(String playerId, WorldDefWeaponDTO weaponDef, int shootingOffset);
 
     public Dimension getWorldDimension();
 

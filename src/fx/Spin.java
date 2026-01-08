@@ -1,7 +1,7 @@
 package fx;
 
 
-import view.renderables.DynamicRenderable;
+import view.renderables.implementations.DynamicRenderable;
 
 
 

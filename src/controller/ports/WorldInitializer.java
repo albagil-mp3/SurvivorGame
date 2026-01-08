@@ -1,6 +1,6 @@
 package controller.ports;
 
-import assets.AssetCatalog;
+import assets.core.AssetCatalog;
 
 public interface WorldInitializer {
 

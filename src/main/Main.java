@@ -1,24 +1,13 @@
 package main;
 
-/**
- * TO-DO 
- * ===== 
- * 1) Create HUD for player info
- * 2) Colision detection
- * 3) Game rules injection
- * 4) Create a new physic engine with a gravitational field 
- * 5) Basic Fx
- * 6) Comms
- * =====
- */
-import assets.ProjectAssets;
-import controller.Controller;
-import generators.LifeConfigDTO;
-import generators.LifeGenerator;
-import generators.SceneGenerator;
-import model.Model;
-import view.View;
-import world.RandomWorldDefinitionProvider;
+import assets.implementations.ProjectAssets;
+import controller.implementations.Controller;
+import generators.implementations.LifeGenerator;
+import generators.implementations.SceneGenerator;
+import generators.ports.LifeConfigDTO;
+import model.implementations.Model;
+import view.core.View;
+import world.implementations.RandomWorldDefinitionProvider;
 import world.ports.WorldDefinition;
 import world.ports.WorldDefinitionProvider;
 
@@ -48,8 +37,8 @@ public class Main {
                 SceneGenerator worldGenerator = new SceneGenerator(controller, worldDef);
 
                 LifeConfigDTO lifeConfig = new LifeConfigDTO(
-                                2000, // maxCreationDelay
-                                24, 6, // maxSize, minSize
+                                10000, // maxCreationDelay
+                                54, 54, // maxSize, minSize
                                 1000, 10, // maxMass, minMass
                                 175, // maxSpeedModule
                                 0); // maxAccModule
