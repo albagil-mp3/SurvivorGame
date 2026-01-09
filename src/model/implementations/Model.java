@@ -1,10 +1,10 @@
 package model.implementations;
 
+import static java.lang.System.nanoTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.awt.Dimension;
-import static java.lang.System.nanoTime;
 import java.util.Comparator;
 import java.util.List;
 
