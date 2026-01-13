@@ -152,7 +152,7 @@ public class Model implements BodyEventProcessor {
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
         this.maxDynamicBodies = maxDynamicBodies;
-        this.spatialGrid = new SpatialGrid(54, (int) worldWidth, (int) worldHeight, 16);
+        this.spatialGrid = new SpatialGrid(128, (int) worldWidth, (int) worldHeight, 16);
     }
 
     /**
@@ -178,7 +178,7 @@ public class Model implements BodyEventProcessor {
                 speedX, speedY, accX, accY, angularSpeed, angularAcc, thrust);
 
         Body body = new DynamicBody(
-                this, this.spatialGrid, new BasicPhysicsEngine(phyVals), 
+                this, this.spatialGrid, new BasicPhysicsEngine(phyVals),
                 BodyType.DYNAMIC, maxLifeInSeconds);
 
         body.activate();
@@ -190,18 +190,18 @@ public class Model implements BodyEventProcessor {
 
     public String addProjectile(double size, double posX, double posY,
             double speedX, double speedY, double accX, double accY,
-            double angle, double angularSpeed, double angularAcc, double thrust, 
+            double angle, double angularSpeed, double angularAcc, double thrust,
             double maxLifeInSeconds, String shooterId) {
 
         if (AbstractBody.getAliveQuantity() >= this.maxDynamicBodies) {
-            return null; // ========= Max vObject quantity reached ==========>> 
+            return null; // ========= Max vObject quantity reached ==========>>
         }
 
         PhysicsValuesDTO phyVals = new PhysicsValuesDTO(nanoTime(), posX, posY, angle, size,
                 speedX, speedY, accX, accY, angularSpeed, angularAcc, thrust);
 
         ProjectileBody projectile = new ProjectileBody(
-                this, this.spatialGrid, new BasicPhysicsEngine(phyVals), 
+                this, this.spatialGrid, new BasicPhysicsEngine(phyVals),
                 maxLifeInSeconds, shooterId);
 
         projectile.activate();
@@ -209,7 +209,9 @@ public class Model implements BodyEventProcessor {
         this.upsertCommittedToGrid(projectile);
 
         return projectile.getEntityId();
-    }    public String addDecorator(double size, double posX, double posY, double angle, long maxLifeInSeconds) {
+    }
+
+    public String addDecorator(double size, double posX, double posY, double angle, long maxLifeInSeconds) {
         DecoBody deco = new DecoBody(this, this.spatialGrid, size, posX, posY, angle, maxLifeInSeconds);
 
         deco.activate();
@@ -404,8 +406,11 @@ public class Model implements BodyEventProcessor {
 
         try {
             List<Event> events = this.detectEvents(body, newPhyValues, oldPhyValues);
+            List<ActionDTO> actions = null;
 
-            List<ActionDTO> actions = this.domainEventProcessor.decideActions(events);
+            if (events != null && !events.isEmpty())
+                actions = this.domainEventProcessor.decideActions(events);
+
             if (actions == null)
                 actions = new ArrayList<>(4);
 
@@ -558,7 +563,6 @@ public class Model implements BodyEventProcessor {
             if (targetBody == null) {
                 continue; // Body already removed, skip this action
             }
-
 
             switch (action.executor) {
                 case BODY:
