@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import images.Images;
 import images.ImageCache;
-import view.huds.implementations.PlayerHUD;
+import view.huds.implementations.PlayerHUD2;
 import view.huds.implementations.SpatialGridHUD;
-import view.huds.implementations.SystemHUD;
+import view.huds.implementations.SystemHUD2;
 import view.renderables.implementations.DynamicRenderable;
 import view.renderables.implementations.Renderable;
 import view.renderables.ports.DynamicRenderDTO;
@@ -133,8 +133,8 @@ public class Renderer extends Canvas implements Runnable {
     private Images images;
     private ImageCache imagesCache;
     private VolatileImage viBackground;
-    private final PlayerHUD playerHUD = new PlayerHUD();
-    private final SystemHUD systemHUD = new SystemHUD();
+    private final PlayerHUD2 playerHUD = new PlayerHUD2();
+    private final SystemHUD2 systemHUD = new SystemHUD2();
     private final SpatialGridHUD spatialGridHUD = new SpatialGridHUD();
 
     private final Map<String, DynamicRenderable> dynamicRenderables = new ConcurrentHashMap<>();
