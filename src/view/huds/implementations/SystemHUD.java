@@ -4,8 +4,8 @@ import java.awt.Color;
 
 import view.huds.core.DataHUD;
 
-public class SystemHUD2 extends DataHUD {
-    public SystemHUD2() {
+public class SystemHUD extends DataHUD {
+    public SystemHUD() {
         super(
                 new Color(255, 140, 0, 150 ), // Title color
                 Color.GRAY, // Highlight color
