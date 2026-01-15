@@ -8,6 +8,8 @@ public interface PhysicsEngine {
 
         public PhysicsValuesDTO getPhysicsValues();
 
+        public boolean isThrusting();
+
         public void reboundInEast(
                         PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
                         double worldDim_x, double worldDim_y);

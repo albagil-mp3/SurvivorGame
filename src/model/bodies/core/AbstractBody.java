@@ -105,6 +105,7 @@ public abstract class AbstractBody implements Body {
         return this.maxLifeInSeconds;
     }
 
+    @Override
     public PhysicsEngine getPhysicsEngine() {
         return this.phyEngine;
     }

@@ -102,4 +102,9 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                                 old.angularAcc,
                                 thrust));
         }
+
+        public boolean isThrusting() {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'isThrusting'");
+        }
 }

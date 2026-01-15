@@ -30,18 +30,23 @@ public class Main {
         ProjectAssets projectAssets = new ProjectAssets();
 
         WorldDefinitionProvider world = new RandomWorldDefinitionProvider(
-                worldWidth, worldHeight, projectAssets);
+                worldWidth,
+                worldHeight,
+                projectAssets);
 
         WorldDefinition worldDef = world.provide();
 
         Controller controller = new Controller(
-                worldWidth, worldHeight, // World dimensions
+                worldWidth,
+                worldHeight,
                 new View(),
                 new Model(worldWidth, worldHeight, maxDynamicBodies));
 
         controller.activate();
 
-        SceneGenerator worldGenerator = new SceneGenerator(controller, worldDef);
+        SceneGenerator worldGenerator = new SceneGenerator(
+                controller,
+                worldDef);
 
         LifeConfigDTO lifeConfig = new LifeConfigDTO(
                 maxAsteroidCreationDelay,
@@ -53,7 +58,9 @@ public class Main {
                 maxAsteroidAccModule);
 
         LifeGenerator lifeGenerator = new LifeGenerator(
-                controller, worldDef, lifeConfig);
+                controller,
+                worldDef,
+                lifeConfig);
 
         lifeGenerator.activate();
     }

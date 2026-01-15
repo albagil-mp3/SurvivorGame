@@ -76,6 +76,10 @@ public class DynamicBody extends AbstractPhysicsBody implements Runnable {
         this.getPhysicsEngine().addAngularAcceleration(angularSpeed);
     }
 
+    public boolean isThrusting() {
+        return this.getPhysicsEngine().isThrusting();
+    }
+
     public void resetAcceleration() {
         this.getPhysicsEngine().resetAcceleration();
     }

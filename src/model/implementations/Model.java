@@ -564,12 +564,20 @@ public class Model implements BodyEventProcessor {
             events.addAll(collisionEvents);
         }
 
-        // 3) Player fire
+        // 3) Player events: fire, thrust on, etc.
         if (checkBody.getBodyType() == BodyType.PLAYER) {
-            if (((PlayerBody) checkBody).mustFireNow(newPhyValues)) {
+            PlayerBody pBody = (PlayerBody) checkBody;
+
+            if (pBody.mustFireNow(newPhyValues)) {
                 if (events == null)
                     events = new ArrayList<>(2);
                 events.add(new Event(checkBody, null, EventType.MUST_FIRE));
+            }
+
+            if (pBody.isThrusting()) {
+                if (events == null)
+                    events = new ArrayList<>(2);
+                events.add(new Event(checkBody, null, EventType.THRUST_ON));
             }
         }
 
@@ -579,6 +587,7 @@ public class Model implements BodyEventProcessor {
                 events = new ArrayList<>(1);
             events.add(new Event(checkBody, null, EventType.LIFE_OVER));
         }
+
 
         return events == null ? List.of() : events;
     }
