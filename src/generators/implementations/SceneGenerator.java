@@ -10,7 +10,6 @@ import world.ports.WorldDefinition;
 public class SceneGenerator {
 
     private final Random rnd = new Random();
-
     private final WorldInitializer worldInitializer;
     WorldDefinition worldDefinition;
 

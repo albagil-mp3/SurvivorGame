@@ -357,22 +357,22 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         switch (event.eventType) {
             case REACHED_NORTH_LIMIT:
                 actions.add(new ActionDTO(event.entityIdPrimaryBody,
-                        ActionType.REBOUND_IN_NORTH, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
+                        ActionType.DIE, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
                 break;
 
             case REACHED_SOUTH_LIMIT:
                 actions.add(new ActionDTO(event.entityIdPrimaryBody,
-                        ActionType.REBOUND_IN_SOUTH, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
+                        ActionType.DIE, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
                 break;
 
             case REACHED_EAST_LIMIT:
                 actions.add(new ActionDTO(event.entityIdPrimaryBody,
-                        ActionType.REBOUND_IN_EAST, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
+                        ActionType.DIE, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
                 break;
 
             case REACHED_WEST_LIMIT:
                 actions.add(new ActionDTO(event.entityIdPrimaryBody,
-                        ActionType.REBOUND_IN_WEST, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
+                        ActionType.DIE, ActionExecutor.PHYSICS_BODY, ActionPriority.HIGH));
                 break;
 
             case MUST_FIRE:

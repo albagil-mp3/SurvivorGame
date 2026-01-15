@@ -43,6 +43,8 @@ public final class ProjectAssets {
         this.catalog.register("back_5", "bg-space-medium-intensity-2.jpeg", AssetType.BACKGROUND, AssetIntensity.MEDIUM);
         this.catalog.register("back_6", "bg-seamless-1.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
         this.catalog.register("back_7", "bg-seamless-2.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
+        this.catalog.register("back_8", "bg-seamless-3.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
+        this.catalog.register("back_9", "bg-seamless-4.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
 
         this.catalog.register("black_hole_1", "black-hole-1.png", AssetType.BLACK_HOLE, AssetIntensity.HIGH);
         this.catalog.register("black_hole_2", "black-hole-2.png", AssetType.BLACK_HOLE, AssetIntensity.HIGH);

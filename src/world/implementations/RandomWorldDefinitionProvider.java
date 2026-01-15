@@ -181,7 +181,7 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
 
     private WorldDefBackgroundDTO randomBackgroundDef() {
         // String randomId = this.projectAssets.catalog.randomId(AssetType.BACKGROUND);
-        String randomId = "back_7";
+        String randomId = "back_9";
         AssetInfoDTO assetInfo = this.projectAssets.catalog.get(randomId);
         if (assetInfo == null) {
             throw new IllegalStateException("No background asset found in catalog.");

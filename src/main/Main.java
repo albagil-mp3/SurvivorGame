@@ -19,7 +19,7 @@ public class Main {
         int worldWidth = 2450;
         int worldHeight = 1450;
         int maxDynamicBodies = 5000;
-        int maxAsteroidCreationDelay = 1500;
+        int maxAsteroidCreationDelay = 2000;
         int minAsteroidSize = 8;
         int maxAsteroidSize = 16;
         int maxAsteroidMass = 1000;
@@ -29,8 +29,8 @@ public class Main {
 
         ProjectAssets projectAssets = new ProjectAssets();
 
-        WorldDefinitionProvider world = new RandomWorldDefinitionProvider(worldWidth, worldHeight,
-                projectAssets);
+        WorldDefinitionProvider world = new RandomWorldDefinitionProvider(
+                worldWidth, worldHeight, projectAssets);
 
         WorldDefinition worldDef = world.provide();
 
@@ -44,15 +44,17 @@ public class Main {
         SceneGenerator worldGenerator = new SceneGenerator(controller, worldDef);
 
         LifeConfigDTO lifeConfig = new LifeConfigDTO(
-                maxAsteroidCreationDelay, // maxCreationDelay
+                maxAsteroidCreationDelay,
                 maxAsteroidSize,
-                minAsteroidSize, // maxSize, minSize
+                minAsteroidSize,
                 maxAsteroidMass,
-                minAsteroidMass, // maxMass, minMass
-                maxAsteroidSpeedModule, // maxSpeedModule
-                maxAsteroidAccModule); // maxAccModule
+                minAsteroidMass,
+                maxAsteroidSpeedModule,
+                maxAsteroidAccModule);
 
-        LifeGenerator lifeGenerator = new LifeGenerator(controller, worldDef, lifeConfig);
+        LifeGenerator lifeGenerator = new LifeGenerator(
+                controller, worldDef, lifeConfig);
+
         lifeGenerator.activate();
     }
 }
