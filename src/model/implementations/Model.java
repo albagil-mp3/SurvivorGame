@@ -172,7 +172,7 @@ public class Model implements BodyEventProcessor {
             double posX, double posY, double speedX, double speedY,
             double accX, double accY,
             double angle, double angularSpeed, double angularAcc,
-            double thrust, double maxLifeInSeconds, String shooterId) {
+            double thrust, double maxLifeTime, String shooterId) {
 
         if (AbstractBody.getAliveQuantity() >= this.maxBodies) {
             return null; // ========= Max vObject quantity reached ==========>>
@@ -183,7 +183,7 @@ public class Model implements BodyEventProcessor {
         if (bodyType == BodyType.PROJECTILE && (shooterId == null || shooterId.isEmpty())) {
             throw new IllegalArgumentException("Projectile body requires shooterId");
         }
-        if (maxLifeInSeconds == 0) {
+        if (maxLifeTime == 0) {
             throw new IllegalArgumentException("maxLifeInSeconds must be greater than zero o -1 for infinite life");
         }
 
@@ -193,13 +193,13 @@ public class Model implements BodyEventProcessor {
                 thrust);
 
         Body body = BodyFactory.create(
-                this, this.spatialGrid, phyVals, bodyType, maxLifeInSeconds, shooterId);
+                this, this.spatialGrid, phyVals, bodyType, maxLifeTime, shooterId);
 
         body.activate();
 
-        Map<String, Body> bodyList = this.getBodyMap(bodyType);
-        bodyList.put(body.getEntityId(), body);
-        this.upsertCommittedToGrid(body);
+        Map<String, Body> bodyMap = this.getBodyMap(bodyType);
+        bodyMap.put(body.getEntityId(), body);
+        this.upsertCommittedToGrid(body); // &++
 
         return body.getEntityId();
     }
@@ -368,6 +368,7 @@ public class Model implements BodyEventProcessor {
 
         switch (body.getBodyType()) {
             case PLAYER:
+                body.die();
                 this.domainEventProcessor.notifyPlayerIsDead(body.getEntityId());
                 this.spatialGrid.remove(body.getEntityId());
                 this.dynamicBodies.remove(body.getEntityId());
@@ -375,11 +376,14 @@ public class Model implements BodyEventProcessor {
 
             case DYNAMIC:
             case PROJECTILE:
+                body.die();
+                this.domainEventProcessor.notiyDynamicIsDead(body.getEntityId());
                 this.spatialGrid.remove(body.getEntityId());
                 this.dynamicBodies.remove(body.getEntityId());
                 break;
 
             case DECORATOR:
+                body.die();
                 this.decorators.remove(body.getEntityId());
                 this.domainEventProcessor.notiyStaticIsDead(body.getEntityId());
                 break;
@@ -692,10 +696,6 @@ public class Model implements BodyEventProcessor {
         }
 
         switch (action) {
-            case DIE:
-                this.killBody(body);
-                break;
-
             case NONE:
             default:
                 // Nothing to do...
@@ -830,9 +830,10 @@ public class Model implements BodyEventProcessor {
         return (dx * dx + dy * dy) <= (r * r);
     }
 
-    private boolean isCollidable(Body b) {
-        return b != null
-                && b.getState() != BodyState.DEAD;
+    private boolean isCollidable(Body body) {
+        return body != null
+                && body.getState() != BodyState.DEAD
+                && (body.getSpatialGrid()!= null);
     }
 
     private boolean isProcessable(Body entity) {
@@ -909,14 +910,6 @@ public class Model implements BodyEventProcessor {
         if (body == null)
             return;
 
-        final PhysicsValuesDTO phyValues = body.getPhysicsValues();
-
-        final double r = phyValues.size * 0.5; // si size es radio, r = committed.size
-        final double minX = phyValues.posX - r;
-        final double maxX = phyValues.posX + r;
-        final double minY = phyValues.posY - r;
-        final double maxY = phyValues.posY + r;
-
-        this.spatialGrid.upsert(body.getEntityId(), minX, maxX, minY, maxY, body.getScratchIdxs());
+        body.spatialGridUpsert();
     }
 }

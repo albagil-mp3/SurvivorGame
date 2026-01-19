@@ -180,6 +180,10 @@ public class View extends JFrame implements KeyListener {
         this.localPlayerId = localPlayerId;
     }
 
+    public void notifyDynamicIsDead(String entityId) {
+        this.renderer.notifyDynamicIsDead(entityId);
+    }
+
     public void notifyPlayerIsDead(String entityId) {
         this.setLocalPlayer(null);
     }
@@ -266,11 +270,10 @@ public class View extends JFrame implements KeyListener {
     //
     // OVERRIDES
     //
-    
+
     @Override
     public void keyPressed(KeyEvent e) {
         if (this.localPlayerId == null) {
-            System.out.println("Local player not setted!");
             return;
         }
 
@@ -327,19 +330,25 @@ public class View extends JFrame implements KeyListener {
 
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
-            case KeyEvent.VK_A:
+            case KeyEvent.VK_W:
                 this.controller.playerThrustOff(this.localPlayerId);
                 break;
+
             case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_Z:
+            case KeyEvent.VK_X:
                 this.controller.playerThrustOff(this.localPlayerId);
                 break;
+
             case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_A:
                 this.controller.playerRotateOff(this.localPlayerId);
                 break;
+
             case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_D:
                 this.controller.playerRotateOff(this.localPlayerId);
                 break;
+                
             case KeyEvent.VK_SPACE:
                 fireKeyDown = false; // << permite el siguiente disparo
                 break;

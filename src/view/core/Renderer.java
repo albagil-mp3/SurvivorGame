@@ -190,6 +190,10 @@ public class Renderer extends Canvas implements Runnable {
         this.dynamicRenderables.put(entityId, renderable);
     }
 
+    public void notifyDynamicIsDead(String entityId) {
+        this.dynamicRenderables.remove(entityId);
+    }
+
     public void setImages(BufferedImage background, Images images) {
         this.background = background;
         this.viBackground = null;

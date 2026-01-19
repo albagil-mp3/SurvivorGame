@@ -42,4 +42,6 @@ public interface Body {
 
     public void setState(BodyState state);
 
+    public void spatialGridUpsert();
+
 }

@@ -317,6 +317,9 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.view.updateStaticRenderables(renderablesData);
     }
 
+    public void notiyDynamicIsDead(String entityId) {
+        this.view.notifyDynamicIsDead(entityId);
+    }
     public void notiyStaticIsDead(String entityId) {
         ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
         ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);

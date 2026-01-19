@@ -10,7 +10,10 @@ public interface DomainEventProcessor {
 
     public List<ActionDTO> decideActions(List<Event> events);
 
+    public void notiyDynamicIsDead(String entityId);
+
     public void notifyPlayerIsDead(String entityId);
 
     public void notiyStaticIsDead(String entityId);
+
 }
