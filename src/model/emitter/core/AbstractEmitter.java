@@ -3,6 +3,7 @@ package model.emitter.core;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import model.emitter.ports.BodyEmittedDTO;
 import model.emitter.ports.EmitterDto;
 
 public abstract class AbstractEmitter {
@@ -40,8 +41,11 @@ public abstract class AbstractEmitter {
         return this.cooldown;
     }
 
+    public BodyEmittedDTO getBodyConfig() {
+        return this.config.bodyEmitted;
+    }
     public EmitterDto getConfig() {
-        return new EmitterDto(this.config);
+        return this.config;
     }
 
     protected boolean hasRequest() {

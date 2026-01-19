@@ -5,22 +5,25 @@ import model.physics.ports.PhysicsValuesDTO;
 
 public interface PhysicsBody extends Body {
 
-    public PhysicsEngine getPhysicsEngine();
+        public void doMovement(PhysicsValuesDTO phyValues);
 
-    public PhysicsValuesDTO getPhysicsValues();
+        public PhysicsEngine getPhysicsEngine();
 
-    public void doMovement(PhysicsValuesDTO phyValues);
+        public PhysicsValuesDTO getPhysicsValues();
 
-    public void reboundInEast(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight);
+        public boolean isThrusting();
 
-    public void reboundInWest(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight);
+        public void reboundInEast(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
+                        double worldWidth, double worldHeight);
 
-    public void reboundInNorth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight);
+        public void reboundInWest(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
+                        double worldWidth, double worldHeight);
 
-    public void reboundInSouth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight);
+        public void reboundInNorth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
+                        double worldWidth, double worldHeight);
 
+        public void reboundInSouth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
+                        double worldWidth, double worldHeight);
+
+        public void setThread(Thread thread);
 }

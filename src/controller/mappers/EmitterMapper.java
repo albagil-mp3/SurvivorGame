@@ -25,6 +25,7 @@ public class EmitterMapper {
                 emitterDef.thrust,
                 emitterDef.randomAngle,
                 emitterDef.randomSize,
+                emitterDef.addEmitterSpeed,
                 emitterDef.emisionRate,
                 emitterDef.maxBodiesEmitted,
                 emitterDef.reloadTime,

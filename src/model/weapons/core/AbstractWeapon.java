@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import model.emitter.ports.BodyEmittedDTO;
 import model.weapons.ports.Weapon;
 import model.weapons.ports.WeaponDto;
 import model.weapons.ports.WeaponState;
@@ -128,6 +129,7 @@ public abstract class AbstractWeapon implements Weapon {
         return this.id;
     }
 
+    @Override
     public double getAmmoStatus() {
         if (this.weaponConfig.maxAmmo <= 0) {
             return 1D; // Ammo not applicable
@@ -157,8 +159,13 @@ public abstract class AbstractWeapon implements Weapon {
     }
 
     @Override
+    public BodyEmittedDTO getProjectileConfig() {
+        return this.weaponConfig.projectileConfig;
+    }
+
+    @Override
     public WeaponDto getWeaponConfig() {
-        return new WeaponDto(this.weaponConfig);
+        return this.weaponConfig;
     }
 
     protected boolean hasRequest() {

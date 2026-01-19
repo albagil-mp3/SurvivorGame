@@ -22,6 +22,7 @@ public class WorldDefEmitterDTO {
     public final double reloadTime;
     public final double bodyMass;
     public final double maxLifeTime;
+    public final boolean addEmitterSpeed;
 
     public WorldDefEmitterDTO(
             BodyType type,
@@ -38,6 +39,7 @@ public class WorldDefEmitterDTO {
             int emisionRate,
             boolean randomAngle,
             boolean randomSize,
+            boolean addEmitterSpeed,
             int maxBodiesEmitted,
             double reloadTime,
             double bodyMass,
@@ -56,32 +58,11 @@ public class WorldDefEmitterDTO {
         this.thrust = thrust;
         this.randomAngle = randomAngle;
         this.randomSize = randomSize;
+        this.addEmitterSpeed = addEmitterSpeed;
         this.emisionRate = emisionRate;
         this.maxBodiesEmitted = maxBodiesEmitted;
         this.reloadTime = reloadTime;
         this.bodyMass = bodyMass;
         this.maxLifeTime = maxLifeTime;
-    }
-
-    // Clone constructor
-    public WorldDefEmitterDTO(WorldDefEmitterDTO other) {
-        this.type = other.type;
-        this.assetId = other.assetId;
-        this.size = other.size;
-        this.xOffset = other.xOffset;
-        this.yOffset = other.yOffset;
-        this.speed = other.speed;
-        this.acceleration = other.acceleration;
-        this.emisionRate = other.emisionRate;
-        this.accelerationTime = other.accelerationTime;
-        this.angularSpeed = other.angularSpeed;
-        this.angularAcc = other.angularAcc;
-        this.thrust = other.thrust;
-        this.randomAngle = other.randomAngle;
-        this.randomSize = other.randomSize;
-        this.maxBodiesEmitted = other.maxBodiesEmitted;
-        this.reloadTime = other.reloadTime;
-        this.bodyMass = other.bodyMass;
-        this.maxLifeTime = other.maxLifeTime;
     }
 }

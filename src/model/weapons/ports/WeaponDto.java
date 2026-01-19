@@ -1,5 +1,8 @@
 package model.weapons.ports;
 
+import model.bodies.ports.BodyType;
+import model.emitter.ports.BodyEmittedDTO;
+
 /**
  * WeaponDto
  *
@@ -75,18 +78,14 @@ package model.weapons.ports;
 public class WeaponDto {
 
     public final WeaponType type;
-    public final String projectileAssetId;
-    public final double projectileSize;
-    public final double firingSpeed;
-    public final double acceleration;
-    public final double accelerationTime;
-    public final double shootingOffset;
+
+    public final BodyEmittedDTO projectileConfig;
+    
     public final int burstSize;
     public final int burstFireRate;
     public final double fireRate; // shoots per seconds
     public final int maxAmmo;
     public final double reloadTime;
-    public final double projectileMass;
     public final double maxLifeTime;
 
     public WeaponDto(
@@ -106,38 +105,30 @@ public class WeaponDto {
             double shootingOffset) {
 
         this.type = type;
-        this.projectileAssetId = projectileAssetId;
-        this.projectileSize = projectileSize;
-        this.firingSpeed = firingSpeed;
-        this.acceleration = acceleration;
-        this.accelerationTime = accelerationDuration;
-        this.shootingOffset = shootingOffset;
+        this.projectileConfig = new BodyEmittedDTO(
+                BodyType.PROJECTILE,
+                projectileAssetId,
+                projectileSize,
+                0,
+                shootingOffset,
+                firingSpeed,
+                acceleration,
+                accelerationDuration,
+                0,
+                0,
+                0,
+                projectileMass,
+                maxlifeTime,
+                false,
+                false,
+                true );
+
+
         this.burstSize = burstSize;
         this.burstFireRate = burstFireRate;
         this.fireRate = fireRatePerSec;
         this.maxAmmo = maxAmmo;
         this.reloadTime = reloadTime;
-        this.projectileMass = projectileMass;
         this.maxLifeTime = maxlifeTime;
-    }
-
-    // Clone constructor
-    public WeaponDto(
-            WeaponDto weaponConfig) {
-
-        this.type = weaponConfig.type;
-        this.projectileAssetId = weaponConfig.projectileAssetId;
-        this.projectileSize = weaponConfig.projectileSize;
-        this.firingSpeed = weaponConfig.firingSpeed;
-        this.acceleration = weaponConfig.acceleration;
-        this.accelerationTime = weaponConfig.accelerationTime;
-        this.shootingOffset = weaponConfig.shootingOffset;
-        this.burstSize = weaponConfig.burstSize;
-        this.burstFireRate = weaponConfig.burstFireRate;
-        this.fireRate = weaponConfig.fireRate;
-        this.maxAmmo = weaponConfig.maxAmmo;
-        this.reloadTime = weaponConfig.reloadTime;
-        this.projectileMass = weaponConfig.projectileMass;
-        this.maxLifeTime = weaponConfig.maxLifeTime;
     }
 }

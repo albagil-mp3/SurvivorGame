@@ -1,7 +1,6 @@
 package model.bodies.implementations;
 
 import model.bodies.core.AbstractPhysicsBody;
-import model.bodies.ports.Body;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
@@ -93,7 +92,7 @@ public class StaticBody extends AbstractPhysicsBody implements Runnable {
             try {
                 Thread.sleep(30);
             } catch (InterruptedException ex) {
-                System.err.println("ERROR Sleeping in vObject thread! (VObject) · " + ex.getMessage());
+                System.err.println("ERROR Sleeping in StaticBody thread! (StaticBody) · " + ex.getMessage());
             }
         }
     }

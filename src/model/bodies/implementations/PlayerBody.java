@@ -6,6 +6,7 @@ import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyType;
 import model.bodies.ports.PlayerDTO;
 import model.emitter.implementations.BasicEmitter;
+import model.emitter.ports.BodyEmittedDTO;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
 import model.spatial.core.SpatialGrid;
@@ -120,6 +121,19 @@ public class PlayerBody extends DynamicBody {
 
     public double getEnergy() {
         return energye;
+    }
+
+    public BodyEmittedDTO getProjectileConfig() {
+        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
+            return null;
+        }
+
+        Weapon weapon = this.weapons.get(this.currentWeaponIndex);
+        if (weapon == null) {
+            return null;
+        }
+
+        return weapon.getProjectileConfig();
     }
 
     public double getShield() {

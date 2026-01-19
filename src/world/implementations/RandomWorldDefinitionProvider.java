@@ -68,7 +68,7 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
 
         ArrayList<String> trailIds = new ArrayList<>();
         trailIds.add("stars_6");
-        this.emitters(this.trailEmitterDef, trailIds, 75, 75);
+        this.emitters(this.trailEmitterDef, trailIds, 100);
 
         this.primaryWeapon(this.primaryWeapon, 1, AssetType.BULLET,
                 15, 15, 350d, 8);
@@ -135,26 +135,35 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
                     this.randomAngle()));
         }
     }
-
-    private void dynamicBodies(ArrayList<WorldDefItemDTO> dBodies,
-            ArrayList<String> assetIds, int maxSize, int minSize) {
+    private void emitters(ArrayList<WorldDefEmitterDTO> emitters, ArrayList<String> assetIds,
+            int size) {
 
         AssetInfoDTO assetInfo;
 
         for (String assetId : assetIds) {
             assetInfo = this.projectAssets.catalog.get(assetId);
-
-            if (assetInfo == null) {
-                throw new IllegalStateException(
-                        "No asset found in catalog for id: " + assetId);
-            }
-
             this.gameAssets.register(assetInfo);
 
-            dBodies.add(new WorldDefItemDTO(
+            emitters.add(new WorldDefEmitterDTO(
+                    BodyType.DECORATOR,
                     assetId,
-                    this.randomSize(maxSize, minSize),
-                    this.randomAngle()));
+                    size,
+                    -75,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    50,
+                    true,
+                    true,
+                    false,
+                    -1,
+                    0,
+                    0,
+                    1.5D));
         }
     }
 
@@ -233,37 +242,6 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
                     firingSpeed, 0, 0,
                     1, 0, fireRate, 100, 2,
                     100, 6D));
-        }
-    }
-
-    private void emitters(ArrayList<WorldDefEmitterDTO> emitters, ArrayList<String> assetIds,
-            int maxSize, int minSize) {
-
-        AssetInfoDTO assetInfo;
-
-        for (String assetId : assetIds) {
-            assetInfo = this.projectAssets.catalog.get(assetId);
-            this.gameAssets.register(assetInfo);
-
-            emitters.add(new WorldDefEmitterDTO(
-                    BodyType.DECORATOR,
-                    assetId,
-                    this.randomSize(maxSize, minSize),
-                    -75,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    33,
-                    true,
-                    true,
-                    1000,
-                    0,
-                    0,
-                    2D));
         }
     }
 

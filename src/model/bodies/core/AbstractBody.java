@@ -8,6 +8,7 @@ import model.bodies.ports.Body;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
+import model.emitter.implementations.BasicEmitter;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
 import model.spatial.core.SpatialGrid;
@@ -30,7 +31,8 @@ public abstract class AbstractBody implements Body {
     private final long bornTime = System.nanoTime();
     private final double maxLifeInSeconds; // Infinite life by default
 
-    // Buffers for collision detection and avoiding garbage creation during the
+    // Spatial grid and buffers for collision detection and avoiding garbage
+    // creation during the
     // physics update. ==> Zero allocation strategy
     private final SpatialGrid spatialGrid;
     private final int[] scratchIdxs;
@@ -50,9 +52,16 @@ public abstract class AbstractBody implements Body {
         this.bodyType = bodyType;
         this.maxLifeInSeconds = maxLifeInSeconds;
 
-        this.spatialGrid = spatialGrid;
-        this.scratchIdxs = new int[spatialGrid.getMaxCellsPerBody()];
-        this.scratchCandidateIds = new ArrayList<String>(64);
+        if (spatialGrid != null) {
+            this.spatialGrid = spatialGrid;
+            this.scratchIdxs = new int[spatialGrid.getMaxCellsPerBody()];
+            this.scratchCandidateIds = new ArrayList<String>(64);
+
+        } else {
+            this.spatialGrid = null;
+            this.scratchIdxs = null;
+            this.scratchCandidateIds = null;
+        }
 
         this.entityId = UUID.randomUUID().toString();
         this.state = BodyState.STARTING;
@@ -150,7 +159,8 @@ public abstract class AbstractBody implements Body {
             return false;
         }
 
-        return this.getLifeInSeconds() >= this.maxLifeInSeconds;
+        boolean lifeOver = this.getLifeInSeconds() >= this.maxLifeInSeconds;
+        return lifeOver;
     }
 
     public void processBodyEvents(AbstractBody body, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
@@ -162,47 +172,57 @@ public abstract class AbstractBody implements Body {
         this.state = state;
     }
 
-    /**
-     * 
-     * STATICS
-     */
-    // @Override
+    @Override
+    public void spatialGridUpsert() {
+        if (this.spatialGrid == null) {
+            return;
+        }
+
+        final PhysicsValuesDTO phyValues = this.getPhysicsValues();
+
+        final double r = phyValues.size * 0.5; // si size es radio, r = committed.size
+        final double minX = phyValues.posX - r;
+        final double maxX = phyValues.posX + r;
+        final double minY = phyValues.posY - r;
+        final double maxY = phyValues.posY + r;
+
+        this.spatialGrid.upsert(this.getEntityId(), minX, maxX, minY, maxY, this.getScratchIdxs());
+    }
+
+    //
+    // STATICS
+    //
+
     static public int getCreatedQuantity() {
         return AbstractBody.createdQuantity;
     }
 
-    // @Override
     static public int getAliveQuantity() {
         return AbstractBody.aliveQuantity;
     }
 
-    // @Override
     static public int getDeadQuantity() {
         return AbstractBody.deadQuantity;
     }
 
-    // @Override
     static protected int incCreatedQuantity() {
         AbstractBody.createdQuantity++;
 
         return AbstractBody.createdQuantity;
     }
 
-    // @Override
     static protected int incAliveQuantity() {
         AbstractBody.aliveQuantity++;
 
         return AbstractBody.aliveQuantity;
     }
 
-    // @Override
     static protected int decAliveQuantity() {
         AbstractBody.aliveQuantity--;
 
         return AbstractBody.aliveQuantity;
     }
 
-    // @Override
     static protected int incDeadQuantity() {
         AbstractBody.deadQuantity++;
 
