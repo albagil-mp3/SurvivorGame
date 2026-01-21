@@ -37,7 +37,6 @@ import model.bodies.ports.BodyType;
 import model.bodies.ports.PhysicsBody;
 import model.bodies.ports.PlayerDTO;
 import model.emitter.implementations.BasicEmitter;
-import model.emitter.ports.Emitter;
 import model.emitter.ports.EmitterConfigDto;
 import model.ports.DomainEventProcessor;
 import model.ports.ModelState;
@@ -592,6 +591,55 @@ public class Model implements BodyEventProcessor {
         }
     }
 
+    private void checkEmissionEvents(AbstractBody checkBody, PhysicsValuesDTO newPhyValues,
+            PhysicsValuesDTO oldPhyValues, List<DomainEvent> domainEvents) {
+
+        BodyType bodyType = checkBody.getBodyType();
+        BodyRefDTO primaryBodyRef = checkBody.getBodyRef();
+
+        if (bodyType == BodyType.PLAYER || bodyType == BodyType.DYNAMIC) {
+            DynamicBody pBody = (DynamicBody) checkBody;
+
+            double dtSeconds = (newPhyValues.timeStamp - oldPhyValues.timeStamp) / 1_000_000_000.0;
+            if (pBody.mustEmitNow(dtSeconds)) {
+                EmitPayloadDTO payload = new EmitPayloadDTO(
+                        primaryBodyRef, pBody.getBodyToEmitConfig());
+
+                EmitEvent emitEvent = new EmitEvent(
+                        DomainEventType.EMIT_REQUESTED, primaryBodyRef, payload);
+
+                domainEvents.add(emitEvent);
+            }
+        }
+    }
+
+    private void checkFireEvents(AbstractBody checkBody,
+            PhysicsValuesDTO newPhyValues, List<DomainEvent> domainEvents) {
+
+        BodyType bodyType = checkBody.getBodyType();
+        BodyRefDTO primaryBodyRef = checkBody.getBodyRef();
+
+        if (bodyType == BodyType.PLAYER) {
+            PlayerBody pBody = (PlayerBody) checkBody;
+
+            if (pBody.mustFireNow(newPhyValues)) {
+                EmitPayloadDTO payload = new EmitPayloadDTO(
+                        primaryBodyRef, pBody.getProjectileConfig());
+
+                EmitEvent fireEvent = new EmitEvent(DomainEventType.FIRE_REQUESTED,
+                        primaryBodyRef, payload);
+
+                domainEvents.add(fireEvent);
+            }
+        }
+    }
+
+    private void checkLifeOverEvents(AbstractBody checkBody, List<DomainEvent> domainEvents) {
+        if (checkBody.isLifeOver()) {
+            domainEvents.add(new LifeOver(checkBody.getBodyRef()));
+        }
+    }
+
     private void checkLimitEvents(AbstractBody body, PhysicsValuesDTO phyValues,
             List<DomainEvent> domainEvents) {
 
@@ -630,9 +678,6 @@ public class Model implements BodyEventProcessor {
     private void detectEvents(AbstractBody checkBody,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues, List<DomainEvent> domainEvents) {
 
-        BodyType bodyType = checkBody.getBodyType();
-        BodyRefDTO primaryBodyRef = checkBody.getBodyRef();
-
         // 1 => Limits (all bodies) -----------------------
         this.checkLimitEvents(checkBody, newPhyValues, domainEvents);
 
@@ -640,41 +685,13 @@ public class Model implements BodyEventProcessor {
         this.checkCollisions(checkBody, newPhyValues, domainEvents);
 
         // 3 => Emission on (dynamics and players) ----------
-        if (bodyType == BodyType.PLAYER ||
-                bodyType == BodyType.DYNAMIC) {
-            DynamicBody pBody = (DynamicBody) checkBody;
-
-            double dtSeconds = (newPhyValues.timeStamp - oldPhyValues.timeStamp) / 1_000_000_000.0;
-            if (pBody.mustEmitNow(dtSeconds)) {
-                EmitPayloadDTO payload = new EmitPayloadDTO(
-                        primaryBodyRef, pBody.getBodyToEmitConfig());
-
-                EmitEvent emitEvent = new EmitEvent(
-                        DomainEventType.EMIT_REQUESTED, primaryBodyRef, payload);
-
-                domainEvents.add(emitEvent);
-            }
-        }
+        this.checkEmissionEvents(checkBody, newPhyValues, oldPhyValues, domainEvents);
 
         // 4 => Fire (only players) -----------------------
-        if (bodyType == BodyType.PLAYER) {
-            PlayerBody pBody = (PlayerBody) checkBody;
+        this.checkFireEvents(checkBody, newPhyValues, domainEvents);
 
-            if (pBody.mustFireNow(newPhyValues)) {
-                EmitPayloadDTO payload = new EmitPayloadDTO(
-                        primaryBodyRef, pBody.getProjectileConfig());
-
-                EmitEvent fireEvent = new EmitEvent(DomainEventType.FIRE_REQUESTED,
-                        primaryBodyRef, payload);
-
-                domainEvents.add(fireEvent);
-            }
-        }
-
-        // 5 => Life over (all bodies) --------------------
-        if (checkBody.isLifeOver()) {
-            domainEvents.add(new LifeOver(checkBody.getBodyRef()));
-        }
+        // 5 => Life over (all body types) -------------------
+        this.checkLifeOverEvents(checkBody, domainEvents);
     }
 
     private void doActions(

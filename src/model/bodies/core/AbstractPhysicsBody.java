@@ -1,10 +1,18 @@
 package model.bodies.core;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import events.domain.ports.BodyToEmitDTO;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyType;
 import model.bodies.ports.PhysicsBody;
 import model.emitter.implementations.BasicEmitter;
+import model.emitter.ports.Emitter;
 import model.emitter.ports.EmitterConfigDto;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
@@ -15,6 +23,9 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody {
     private Thread thread;
     private BasicEmitter emitter;
 
+    // New emitter map based
+    private final Map<String, Emitter> emitters = new ConcurrentHashMap<>();
+
     public AbstractPhysicsBody(
             BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType bodyType, double maxLifeInSeconds) {
@@ -22,6 +33,7 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody {
         super(bodyEventProcessor, spatialGrid, phyEngine, bodyType, maxLifeInSeconds);
     }
 
+    // why is public? and why is it here?
     public void decEmitterCooldown(double dtSeconds) {
         this.emitter.decCooldown(dtSeconds);
     }
@@ -118,4 +130,49 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody {
         this.thread = thread;
     }
 
+    //
+    // NEW EMITTER MAP BASED METHODS
+    //
+
+    public void addEmitter(Emitter emitter) {
+        if (emitter == null) {
+            throw new IllegalArgumentException("Emitter cannot be null");
+        }
+        this.emitters.put(emitter.getId(), emitter);
+    }
+
+    public void removeEmitter(String emitterId) {
+        this.emitters.remove(emitterId);
+    }
+
+    public Emitter getEmitter(String emitterId) {
+        return this.emitters.get(emitterId);
+    }
+
+    public boolean hasEmitters() {
+        return !this.emitters.isEmpty();
+    }
+
+    public int getEmitterCount() {
+        return this.emitters.size();
+    }
+
+    public void requestEmit(String emitterId) {
+        Emitter emitter = emitters.get(emitterId);
+        if (emitter != null) {
+            emitter.registerRequest();
+        }
+    }
+
+    public List<Emitter> checkActiveEmitters(double dtSeconds) {
+        List<Emitter> active = new ArrayList<>();
+
+        for (Emitter emitter : emitters.values()) {
+            if (emitter.mustEmitNow(dtSeconds)) {
+                active.add(emitter);
+            }
+        }
+
+        return active;
+    }
 }

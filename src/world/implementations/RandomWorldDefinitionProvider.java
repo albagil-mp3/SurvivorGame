@@ -242,7 +242,7 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
                     WorldDefWeaponType.PRIMARY_WEAPON,
                     firingSpeed, 0, 0,
                     1, 0, fireRate, 100, 2,
-                    100, 6D));
+                    100, 1D));
         }
     }
 
