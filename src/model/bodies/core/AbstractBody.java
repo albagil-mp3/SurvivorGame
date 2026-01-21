@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import actions.ActionDTO;
 import events.domain.ports.BodyRefDTO;
 import events.domain.ports.eventtype.DomainEvent;
 import model.bodies.ports.BodyEventProcessor;
@@ -12,7 +13,6 @@ import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
-import model.ports.ActionDTO;
 import model.spatial.core.SpatialGrid;
 
 /**

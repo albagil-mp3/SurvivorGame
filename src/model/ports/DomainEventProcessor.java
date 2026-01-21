@@ -2,6 +2,7 @@ package model.ports;
 
 import java.util.List;
 
+import actions.ActionDTO;
 import events.domain.ports.eventtype.DomainEvent;
 
 public interface DomainEventProcessor {

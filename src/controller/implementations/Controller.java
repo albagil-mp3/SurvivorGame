@@ -4,6 +4,10 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 
+import actions.ActionDTO;
+import actions.ActionExecutor;
+import actions.ActionPriority;
+import actions.ActionType;
 import assets.core.AssetCatalog;
 
 import controller.mappers.DynamicRenderableMapper;
@@ -26,10 +30,6 @@ import model.bodies.ports.BodyType;
 import model.emitter.ports.EmitterConfigDto;
 import model.implementations.Model;
 import model.weapons.ports.WeaponDto;
-import model.ports.ActionDTO;
-import model.ports.ActionExecutor;
-import model.ports.ActionPriority;
-import model.ports.ActionType;
 import model.ports.DomainEventProcessor;
 import view.core.View;
 import view.renderables.ports.DynamicRenderDTO;
