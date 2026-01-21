@@ -40,8 +40,6 @@ import model.ports.ActionExecutor;
 import model.ports.ActionPriority;
 import model.ports.ActionType;
 import model.ports.DomainEventProcessor;
-import model.ports.Event;
-import model.ports.EventType;
 import model.ports.ModelState;
 import model.spatial.core.SpatialGrid;
 import model.spatial.ports.SpatialGridStatisticsDTO;

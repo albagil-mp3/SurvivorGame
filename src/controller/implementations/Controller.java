@@ -31,8 +31,6 @@ import model.ports.ActionExecutor;
 import model.ports.ActionPriority;
 import model.ports.ActionType;
 import model.ports.DomainEventProcessor;
-import model.ports.Event;
-import model.ports.EventType;
 import view.core.View;
 import view.renderables.ports.DynamicRenderDTO;
 import view.renderables.ports.PlayerRenderDTO;
