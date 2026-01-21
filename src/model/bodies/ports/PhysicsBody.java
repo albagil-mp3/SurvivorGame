@@ -3,7 +3,7 @@ package model.bodies.ports;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
 
-public interface PhysicsBody extends Body {
+public interface PhysicsBody {
 
         public void doMovement(PhysicsValuesDTO phyValues);
 

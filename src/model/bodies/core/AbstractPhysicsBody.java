@@ -1,16 +1,16 @@
 package model.bodies.core;
 
+import events.domain.ports.BodyToEmitDTO;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyType;
 import model.bodies.ports.PhysicsBody;
 import model.emitter.implementations.BasicEmitter;
-import model.emitter.ports.BodyEmittedDTO;
-import model.emitter.ports.Emitter;
+import model.emitter.ports.EmitterConfigDto;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
 import model.spatial.core.SpatialGrid;
 
-public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody, Emitter {
+public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody {
 
     private Thread thread;
     private BasicEmitter emitter;
@@ -22,23 +22,28 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody, Em
         super(bodyEventProcessor, spatialGrid, phyEngine, bodyType, maxLifeInSeconds);
     }
 
+    public void decEmitterCooldown(double dtSeconds) {
+        this.emitter.decCooldown(dtSeconds);
+    }
+
     @Override
     public void doMovement(PhysicsValuesDTO phyValues) {
         PhysicsEngine engine = this.getPhysicsEngine();
         engine.setPhysicsValues(phyValues);
     }
 
-    @Override
-    public BodyEmittedDTO getBodyEmittedConfig() {
+    public BodyToEmitDTO getBodyToEmitConfig() {
         if (this.emitter == null) {
             return null;
         }
-        return this.emitter.getBodyConfig();
+        return this.emitter.getBodyToEmitConfig();
     }
 
-    @Override
-    public BasicEmitter getEmitter() {
-        return this.emitter;
+    public EmitterConfigDto getEmitterConfig() {
+        if (this.emitter == null) {
+            return null;
+        }
+        return this.emitter.getConfig();
     }
 
     @Override
@@ -51,16 +56,15 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody, Em
         return this.getPhysicsEngine().isThrusting();
     }
 
-    @Override
-    public boolean mustEmitNow(PhysicsValuesDTO newPhyValues) {
-        if (this.getEmitter() == null) {
+    public boolean mustEmitNow(double dtSeconds) {
+        if (this.emitter == null) {
             return false;
         }
 
-        double dtNanos = newPhyValues.timeStamp - this.getPhysicsValues().timeStamp;
-        double dtSeconds = dtNanos / 1_000_000_000;
+        // double dtNanos = newPhyValues.timeStamp - this.getPhysicsValues().timeStamp;
+        // double dtSeconds = dtNanos / 1_000_000_000;
 
-        return this.getEmitter().mustEmitNow(dtSeconds);
+        return this.emitter.mustEmitNow(dtSeconds);
     }
 
     @Override
@@ -94,9 +98,7 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody, Em
         engine.reboundInSouth(newVals, oldVals, worldWidth, worldHeight);
     }
 
-
-    @Override
-    public void registerEmmitRequest() {
+    public void registerBodyEmissionRequest() {
         if (this.emitter == null) {
             return; // No emitter attached ===========>
         }
@@ -104,7 +106,6 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody, Em
         this.emitter.registerRequest();
     }
 
-    @Override
     public void setEmitter(BasicEmitter emitter) {
         if (emitter == null) {
             throw new IllegalStateException("Emitter is null. Cannot add to player body.");
@@ -116,4 +117,5 @@ public class AbstractPhysicsBody extends AbstractBody implements PhysicsBody, Em
     public void setThread(Thread thread) {
         this.thread = thread;
     }
+
 }

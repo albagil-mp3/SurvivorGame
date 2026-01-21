@@ -7,7 +7,6 @@ import assets.core.AssetCatalog;
 import assets.implementations.ProjectAssets;
 import assets.ports.AssetInfoDTO;
 import assets.ports.AssetType;
-import model.bodies.ports.Body;
 import model.bodies.ports.BodyType;
 import world.ports.WorldDefBackgroundDTO;
 import world.ports.WorldDefEmitterDTO;
@@ -156,14 +155,16 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
                     0,
                     0,
                     0,
-                    50,
+                    100,
                     true,
                     true,
                     false,
                     -1,
                     0,
                     0,
-                    1.5D));
+                    0,
+                    0,
+                    0.75D));
         }
     }
 

@@ -1,18 +1,18 @@
 package model.emitter.ports;
 
-import model.emitter.implementations.BasicEmitter;
-import model.physics.ports.PhysicsValuesDTO;
+import events.domain.ports.BodyToEmitDTO;
 
 public interface Emitter {
 
-    public BodyEmittedDTO getBodyEmittedConfig();
+    public void decCooldown(double dtSeconds);
 
-    public BasicEmitter getEmitter();
+    public BodyToEmitDTO getBodyToEmitConfig();
 
-    public boolean mustEmitNow(PhysicsValuesDTO newPhyValues);
+    public EmitterConfigDto getConfig();
 
-    public void registerEmmitRequest();
+    public String getId();
 
-    public void setEmitter(BasicEmitter emitter);
+    public boolean mustEmitNow(double dtSeconds);
 
+    public void registerRequest();
 }

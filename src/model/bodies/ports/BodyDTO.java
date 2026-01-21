@@ -12,5 +12,5 @@ public class BodyDTO {
         this.type = type;
         this.physicsValues = phyValues;
     }
-
+    
 }

@@ -19,7 +19,7 @@ public class PhysicsValuesDTO implements Serializable {
     public final double angle;
     public final double size;
     public final double speedX, speedY;
-    public final double accX, accY;
+    public final double accX, accY; // Derived values. Every tick recalculateds
     public final double angularSpeed;
     public final double angularAcc;
     public final double thrust;
@@ -51,7 +51,7 @@ public class PhysicsValuesDTO implements Serializable {
 
     public PhysicsValuesDTO(double size, double x, double y, double angle) {
         this(
-                System.currentTimeMillis(),
+                System.nanoTime(),
                 x, y, angle,
                 size,
                 0.0, 0.0,

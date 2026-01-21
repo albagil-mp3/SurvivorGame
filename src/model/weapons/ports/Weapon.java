@@ -1,12 +1,12 @@
 package model.weapons.ports;
 
-import model.emitter.ports.BodyEmittedDTO;
+import events.domain.ports.BodyToEmitDTO;
 
 public interface Weapon {
 
     public double getAmmoStatus();
 
-    public BodyEmittedDTO getProjectileConfig();
+    public BodyToEmitDTO getProjectileConfig();
 
     public WeaponDto getWeaponConfig();
 

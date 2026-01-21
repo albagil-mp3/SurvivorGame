@@ -1,17 +1,17 @@
 package controller.mappers;
 
-import model.emitter.ports.EmitterDto;
+import model.emitter.ports.EmitterConfigDto;
 import world.ports.WorldDefEmitterDTO;
 
 public class EmitterMapper {
 
-    public static EmitterDto fromWorldDef(
+    public static EmitterConfigDto fromWorldDef(
             WorldDefEmitterDTO emitterDef) {
 
         if (emitterDef == null) {
             return null;
         }
-        return new EmitterDto(
+        return new EmitterConfigDto(
                 emitterDef.type,
                 emitterDef.assetId,
                 emitterDef.size,
@@ -28,6 +28,8 @@ public class EmitterMapper {
                 emitterDef.addEmitterSpeed,
                 emitterDef.emisionRate,
                 emitterDef.maxBodiesEmitted,
+                emitterDef.burstEmissionRate,
+                emitterDef.burstSize,
                 emitterDef.reloadTime,
                 emitterDef.bodyMass,
                 emitterDef.maxLifeTime);

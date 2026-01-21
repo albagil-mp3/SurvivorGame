@@ -137,8 +137,8 @@ public class Renderer extends Canvas implements Runnable {
     private final SystemHUD systemHUD = new SystemHUD();
     private final SpatialGridHUD spatialGridHUD = new SpatialGridHUD();
 
-    private final Map<String, DynamicRenderable> dynamicRenderables = new ConcurrentHashMap<>();
-    private volatile Map<String, Renderable> staticRenderables = new ConcurrentHashMap<>();
+    private final Map<String, DynamicRenderable> dynamicRenderables = new ConcurrentHashMap<>(2500);
+    private volatile Map<String, Renderable> staticRenderables = new ConcurrentHashMap<>(100);
 
     /**
      * CONSTRUCTORS
@@ -207,7 +207,7 @@ public class Renderer extends Canvas implements Runnable {
         this.setPreferredSize(this.viewDimension);
     }
 
-    @Override
+    @Override // Runnable
     public void run() {
         this.createBufferStrategy(3);
         BufferStrategy bs = getBufferStrategy();
@@ -407,9 +407,7 @@ public class Renderer extends Canvas implements Runnable {
             }
 
             DynamicRenderable renderable = this.dynamicRenderables.get(entityId);
-            if (renderable == null) {
-                System.err.println("Renderer: Dynamic renderable objet not found " + entityId);
-            } else {
+            if (renderable != null) {
                 // Existing renderable → update its snapshot and sprite if needed
                 renderable.update(renderableData, cFrame);
             }

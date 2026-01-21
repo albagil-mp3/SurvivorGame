@@ -1,8 +1,8 @@
 package model.ports;
 
-import model.bodies.ports.Body;
-import model.bodies.ports.BodyType;
+import model.bodies.core.AbstractBody;
 import model.bodies.implementations.ProjectileBody;
+import model.bodies.ports.BodyType;
 
 public class Event {
 
@@ -13,7 +13,7 @@ public class Event {
     public final BodyType secondaryBodyType;
     public final boolean shooterInmunity;
 
-    public Event(Body primaryBody, Body secondaryBody, EventType eventType) {
+    public Event(AbstractBody primaryBody, AbstractBody secondaryBody, EventType eventType) {
         if (primaryBody == null) {
             throw new IllegalArgumentException("Primary body cannot be null");
         }

@@ -1,12 +1,12 @@
 package model.bodies.implementations;
 
-import model.physics.ports.PhysicsEngine;
-import model.physics.ports.PhysicsValuesDTO;
-import model.spatial.core.SpatialGrid;
 import model.bodies.core.AbstractPhysicsBody;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
+import model.physics.ports.PhysicsEngine;
+import model.physics.ports.PhysicsValuesDTO;
+import model.spatial.core.SpatialGrid;
 
 /**
  * DynamicBody
@@ -104,7 +104,7 @@ public class DynamicBody extends AbstractPhysicsBody implements Runnable {
                         this.getEntityId(), minX, maxX, minY, maxY, this.getScratchIdxs());
 
                 if (this.isThrusting()) {
-                    this.getEmitter().registerRequest();
+                    this.registerBodyEmissionRequest();
                 }
 
                 this.processBodyEvents(this, newPhyValues, this.getPhysicsEngine().getPhysicsValues());

@@ -36,8 +36,15 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         PhysicsValuesDTO phyVals = this.getPhysicsValues();
         long now = nanoTime();
         long elapsedNanos = now - phyVals.timeStamp;
-
         double dt = elapsedNanos / 1_000_000_000.0; // Nanos to seconds
+
+        // ✅ Protección contra valores anómalos
+        if (dt < 0.0) {
+            System.err.println("WARNING: Negative dt detected:  " + dt + "s.  Using 0.001s");
+        } else if (dt > 0.5) {
+            System.err.println("WARNING:  Large dt detected: " + dt + "s. Clamping to 0.5s");
+        }
+
         return integrateMRUA(phyVals, dt);
     }
 
@@ -182,19 +189,19 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
      */
     private PhysicsValuesDTO integrateMRUA(PhysicsValuesDTO phyVals, double dt) {
         // Applying thrust according actual angle
-        double newAccX = phyVals.accX;
-        double newAccY = phyVals.accY;
+        double accX = 0d;
+        double accY = 0d;
         double angleRad = Math.toRadians(phyVals.angle);
         if (phyVals.thrust != 0.0d) {
-            newAccX += Math.cos(angleRad) * phyVals.thrust;
-            newAccY += Math.sin(angleRad) * phyVals.thrust;
+            accX = Math.cos(angleRad) * phyVals.thrust;
+            accY = Math.sin(angleRad) * phyVals.thrust;
         }
 
         // v1 = v0 + a*dt
         double oldSpeedX = phyVals.speedX;
         double oldSpeedY = phyVals.speedY;
-        double newSpeedX = oldSpeedX + newAccX * dt;
-        double newSpeedY = oldSpeedY + newAccY * dt;
+        double newSpeedX = oldSpeedX + accX * dt;
+        double newSpeedY = oldSpeedY + accY * dt;
 
         // avg_speed = (v0 + v1) / 2
         double avgSpeedX = (oldSpeedX + newSpeedX) * 0.5;
@@ -219,7 +226,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 newPosX, newPosY, newAngle,
                 phyVals.size,
                 newSpeedX, newSpeedY,
-                newAccX, newAccY,
+                accX, accY, // only for information and debugging
                 newAngularSpeed,
                 phyVals.angularAcc, // keep same angular acc
                 phyVals.thrust // keep same thrust

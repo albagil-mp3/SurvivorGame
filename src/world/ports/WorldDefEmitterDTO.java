@@ -19,6 +19,8 @@ public class WorldDefEmitterDTO {
     public final boolean randomSize;
     public final int emisionRate;
     public final int maxBodiesEmitted;
+    public final double burstEmissionRate;
+    public final int burstSize;
     public final double reloadTime;
     public final double bodyMass;
     public final double maxLifeTime;
@@ -41,6 +43,8 @@ public class WorldDefEmitterDTO {
             boolean randomSize,
             boolean addEmitterSpeed,
             int maxBodiesEmitted,
+            double burstEmissionRate,
+            int burstSize,
             double reloadTime,
             double bodyMass,
             double maxLifeTime) {
@@ -61,6 +65,8 @@ public class WorldDefEmitterDTO {
         this.addEmitterSpeed = addEmitterSpeed;
         this.emisionRate = emisionRate;
         this.maxBodiesEmitted = maxBodiesEmitted;
+        this.burstEmissionRate = burstEmissionRate;
+        this.burstSize = burstSize;
         this.reloadTime = reloadTime;
         this.bodyMass = bodyMass;
         this.maxLifeTime = maxLifeTime;

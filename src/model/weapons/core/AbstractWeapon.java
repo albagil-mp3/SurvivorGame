@@ -4,7 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import model.emitter.ports.BodyEmittedDTO;
+import events.domain.ports.BodyToEmitDTO;
 import model.weapons.ports.Weapon;
 import model.weapons.ports.WeaponDto;
 import model.weapons.ports.WeaponState;
@@ -159,7 +159,7 @@ public abstract class AbstractWeapon implements Weapon {
     }
 
     @Override
-    public BodyEmittedDTO getProjectileConfig() {
+    public BodyToEmitDTO getProjectileConfig() {
         return this.weaponConfig.projectileConfig;
     }
 

@@ -1,7 +1,7 @@
 package model.weapons.ports;
 
+import events.domain.ports.BodyToEmitDTO;
 import model.bodies.ports.BodyType;
-import model.emitter.ports.BodyEmittedDTO;
 
 /**
  * WeaponDto
@@ -79,7 +79,7 @@ public class WeaponDto {
 
     public final WeaponType type;
 
-    public final BodyEmittedDTO projectileConfig;
+    public final BodyToEmitDTO projectileConfig;
     
     public final int burstSize;
     public final int burstFireRate;
@@ -105,7 +105,7 @@ public class WeaponDto {
             double shootingOffset) {
 
         this.type = type;
-        this.projectileConfig = new BodyEmittedDTO(
+        this.projectileConfig = new BodyToEmitDTO(
                 BodyType.PROJECTILE,
                 projectileAssetId,
                 projectileSize,

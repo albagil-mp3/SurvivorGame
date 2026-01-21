@@ -2,22 +2,24 @@ package model.bodies.core;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
-import model.bodies.ports.Body;
+import events.domain.ports.BodyRefDTO;
+import events.domain.ports.eventtype.DomainEvent;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
-import model.emitter.implementations.BasicEmitter;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
+import model.ports.ActionDTO;
 import model.spatial.core.SpatialGrid;
 
 /**
  *
  * @author juanm
  */
-public abstract class AbstractBody implements Body {
+public abstract class AbstractBody {
 
     private static volatile int aliveQuantity = 0;
     private static volatile int createdQuantity = 0;
@@ -38,6 +40,11 @@ public abstract class AbstractBody implements Body {
     private final int[] scratchIdxs;
     private final ArrayList<String> scratchCandidateIds;
     private final HashSet<String> scratchSeenCandidateIds = new HashSet<>(64);
+
+    // Buffers and precomputed DTOs for events and actions processing
+    private final BodyRefDTO bodyRef;
+    private final ArrayList<DomainEvent> scratchEvents = new ArrayList<>(32);
+    private final List<ActionDTO> scratchActions = new ArrayList<>(32);
 
     /**
      * CONSTRUCTORS
@@ -65,9 +72,9 @@ public abstract class AbstractBody implements Body {
 
         this.entityId = UUID.randomUUID().toString();
         this.state = BodyState.STARTING;
+        this.bodyRef = new BodyRefDTO(this.entityId, this.bodyType);
     }
 
-    @Override
     public synchronized void activate() {
         if (this.state != BodyState.STARTING) {
             throw new IllegalArgumentException("Entity activation error due is not starting!");
@@ -77,29 +84,35 @@ public abstract class AbstractBody implements Body {
         this.state = BodyState.ALIVE;
     }
 
-    @Override
     public synchronized void die() {
+        if (this.state == BodyState.DEAD) {
+            return;
+        }
+
         this.state = BodyState.DEAD;
         AbstractBody.deadQuantity++;
-        AbstractBody.aliveQuantity--;
+
+        if (AbstractBody.aliveQuantity > 0) {
+            AbstractBody.aliveQuantity--;
+        }
     }
 
-    @Override
+    public BodyRefDTO getBodyRef() {
+        return this.bodyRef;
+    }
+
     public long getBornTime() {
         return this.bornTime;
     }
 
-    @Override
     public String getEntityId() {
         return this.entityId;
     }
 
-    @Override
     public double getLifeInSeconds() {
         return (System.nanoTime() - this.bornTime) / 1_000_000_000.0D;
     }
 
-    @Override
     public double getLifePercentage() {
         if (this.maxLifeInSeconds <= 0) {
             return 1D;
@@ -108,52 +121,54 @@ public abstract class AbstractBody implements Body {
         return Math.min(1D, this.getLifeInSeconds() / this.maxLifeInSeconds);
     }
 
-    @Override
     public double getMaxLife() {
         return this.maxLifeInSeconds;
     }
 
-    @Override
     public PhysicsEngine getPhysicsEngine() {
         return this.phyEngine;
     }
 
-    @Override
     public PhysicsValuesDTO getPhysicsValues() {
         return this.phyEngine.getPhysicsValues();
     }
 
-    @Override
-    public ArrayList<String> getScratchCandidateIds() {
+    public List<ActionDTO> getClearScratchActions() {
+        this.scratchActions.clear();
+        return this.scratchActions;
+    }
+
+    public ArrayList<String> getClearScratchCandidateIds() {
+        this.scratchCandidateIds.clear();
         return scratchCandidateIds;
     }
 
-    @Override
-    public HashSet<String> getScratchSeenCandidateIds() {
+    public HashSet<String> getClearScratchSeenCandidateIds() {
+        this.scratchSeenCandidateIds.clear();
         return this.scratchSeenCandidateIds;
     }
 
-    @Override
+    public ArrayList<DomainEvent> getClearScratchEvents() {
+        this.scratchEvents.clear();
+        return this.scratchEvents;
+    }
+
     public int[] getScratchIdxs() {
         return this.scratchIdxs;
     }
 
-    @Override
     public SpatialGrid getSpatialGrid() {
         return this.spatialGrid;
     }
 
-    @Override
     public BodyState getState() {
         return this.state;
     }
 
-    @Override
     public BodyType getBodyType() {
         return this.bodyType;
     }
 
-    @Override
     public boolean isLifeOver() {
         if (this.maxLifeInSeconds < 0) {
             return false;
@@ -167,12 +182,10 @@ public abstract class AbstractBody implements Body {
         this.bodyEventProcessor.processBodyEvents(body, newPhyValues, oldPhyValues);
     }
 
-    @Override
     public void setState(BodyState state) {
         this.state = state;
     }
 
-    @Override
     public void spatialGridUpsert() {
         if (this.spatialGrid == null) {
             return;

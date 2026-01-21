@@ -1,5 +1,6 @@
 package model.bodies.ports;
 
+import model.bodies.core.AbstractBody;
 import model.bodies.implementations.DynamicBody;
 import model.bodies.implementations.PlayerBody;
 import model.bodies.implementations.ProjectileBody;
@@ -11,7 +12,7 @@ import model.spatial.core.SpatialGrid;
 
 public class BodyFactory {
 
-    public static Body create(
+    public static AbstractBody create(
             BodyEventProcessor bodyEventProcessor,
             SpatialGrid spatialGrid,
             PhysicsValuesDTO phyVals,
@@ -19,7 +20,7 @@ public class BodyFactory {
             double maxLifeTime,
             String shooterId) {
 
-        Body body = null;
+        AbstractBody body = null;
         PhysicsEngine phyEngine = null;
 
         switch (bodyType) {
