@@ -1,4 +1,4 @@
-package model.ports;
+package actions;
 
 import events.domain.ports.eventtype.DomainEvent;
 import model.bodies.ports.BodyType;
