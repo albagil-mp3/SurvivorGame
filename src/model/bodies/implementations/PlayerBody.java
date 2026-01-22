@@ -159,7 +159,7 @@ public class PlayerBody extends DynamicBody {
     }
 
     public void reverseThrust() {
-        this.setThrust(-this.getMaxThrustForce());
+        this.thurstNow(-this.getMaxThrustForce());
     }
 
     public void rotateLeftOn() {
@@ -169,7 +169,7 @@ public class PlayerBody extends DynamicBody {
             this.setAngularSpeed(-this.getAngularSpeed());
         }
 
-        this.addAngularAcceleration(-this.getMaxAngularAcceleration());
+        this.accelerationAngularInc(-this.getMaxAngularAcceleration());
     }
 
     public void rotateRightOn() {
@@ -178,7 +178,7 @@ public class PlayerBody extends DynamicBody {
             this.setAngularSpeed(this.getAngularSpeed());
         }
 
-        this.addAngularAcceleration(this.getMaxAngularAcceleration());
+        this.accelerationAngularInc(this.getMaxAngularAcceleration());
     }
 
     public void rotateOff() {

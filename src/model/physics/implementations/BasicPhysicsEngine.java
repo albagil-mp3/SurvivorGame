@@ -18,7 +18,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
      * PUBLICS
      */
     @Override
-    public void addAngularAcceleration(double angularAcc) {
+    public void angularAccelerationInc(double angularAcc) {
         PhysicsValuesDTO old = this.getPhysicsValues();
         this.setPhysicsValues(new PhysicsValuesDTO(
                 old.timeStamp,

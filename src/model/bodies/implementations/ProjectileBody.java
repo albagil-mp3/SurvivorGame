@@ -65,7 +65,7 @@ public class ProjectileBody extends AbstractBody implements Runnable {
     }
 
     public void addAngularAcceleration(double angularSpeed) {
-        this.getPhysicsEngine().addAngularAcceleration(angularSpeed);
+        this.getPhysicsEngine().angularAccelerationInc(angularSpeed);
     }
 
     public void resetAcceleration() {

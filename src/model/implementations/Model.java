@@ -437,7 +437,7 @@ public class Model implements BodyEventProcessor {
     public void playerThrustOn(String playerId) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody != null) {
-            pBody.thrustOn();
+            pBody.thrustMaxOn();
         }
     }
 

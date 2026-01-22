@@ -31,7 +31,7 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
 
         public abstract PhysicsValuesDTO calcNewPhysicsValues();
 
-        public abstract void addAngularAcceleration(double angularAcc);
+        public abstract void angularAccelerationInc(double angularAcc);
 
         public PhysicsValuesDTO getPhysicsValues() {
                 return this.phyValues.get();

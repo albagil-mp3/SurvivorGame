@@ -34,16 +34,19 @@ import model.spatial.core.SpatialGrid;
  * ---------------------
  * - Lifecycle management: STARTING → ALIVE → DEAD state transitions
  * - Physics integration: owns and delegates to PhysicsEngine instance
- * - Spatial indexing: manages registration in SpatialGrid for collision detection
+ * - Spatial indexing: manages registration in SpatialGrid for collision
+ * detection
  * - Event processing: delegates to BodyEventProcessor (typically the Model)
  * - Emitter management: supports multiple particle/trail emitters per body
  * - Entity statistics: tracks global alive/created/dead counts
- * - Scratch buffer allocation: provides pre-allocated buffers to avoid GC pressure
+ * - Scratch buffer allocation: provides pre-allocated buffers to avoid GC
+ * pressure
  *
  * Architecture Pattern
  * --------------------
  * AbstractBody follows a "composition over inheritance" approach:
- * - PhysicsEngine handles all physics calculations (position, velocity, acceleration)
+ * - PhysicsEngine handles all physics calculations (position, velocity,
+ * acceleration)
  * - BodyEventProcessor handles event detection and action decisions
  * - SpatialGrid handles collision broad-phase queries
  * - Emitter instances handle particle/trail generation
@@ -54,35 +57,36 @@ import model.spatial.core.SpatialGrid;
  * Entity Lifecycle
  * ----------------
  * 1) Construction:
- *    - State = STARTING
- *    - Unique bodyId (UUID) generated
- *    - PhysicsEngine, BodyEventProcessor, SpatialGrid injected
- *    - Scratch buffers pre-allocated
- *    - bornTime recorded for lifetime tracking
- *    - createdQuantity++ (static counter)
+ * - State = STARTING
+ * - Unique bodyId (UUID) generated
+ * - PhysicsEngine, BodyEventProcessor, SpatialGrid injected
+ * - Scratch buffers pre-allocated
+ * - bornTime recorded for lifetime tracking
+ * - createdQuantity++ (static counter)
  *
  * 2) Activation (activate()):
- *    - Validates state == STARTING
- *    - State → ALIVE
- *    - aliveQuantity++ (static counter)
- *    - After activation, body participates in physics updates and collision detection
+ * - Validates state == STARTING
+ * - State → ALIVE
+ * - aliveQuantity++ (static counter)
+ * - After activation, body participates in physics updates and collision
+ * detection
  *
  * 3) Death (die()):
- *    - State → DEAD
- *    - deadQuantity++, aliveQuantity-- (static counters)
- *    - Idempotent: multiple die() calls are safe
- *    - Dead bodies are removed from SpatialGrid by the Model
+ * - State → DEAD
+ * - deadQuantity++, aliveQuantity-- (static counters)
+ * - Idempotent: multiple die() calls are safe
+ * - Dead bodies are removed from SpatialGrid by the Model
  *
  * State Machine
  * -------------
  * Volatile BodyState field ensures thread-safe state transitions:
  *
  * STARTING: Initial state after construction
- *   ↓ activate()
+ * ↓ activate()
  * ALIVE: Active physics simulation, event processing enabled
- *   ↓ processBodyEvents() temporarily transitions to...
+ * ↓ processBodyEvents() temporarily transitions to...
  * HANDS_OFF: Critical section - event processing in progress (set by Model)
- *   ↓ returns to ALIVE after event processing completes
+ * ↓ returns to ALIVE after event processing completes
  * DEAD: Entity is inactive, pending removal
  *
  * The HANDS_OFF state prevents concurrent event processing on the same body,
@@ -90,7 +94,8 @@ import model.spatial.core.SpatialGrid;
  *
  * Physics Integration
  * -------------------
- * AbstractBody owns a PhysicsEngine instance that handles all physics calculations:
+ * AbstractBody owns a PhysicsEngine instance that handles all physics
+ * calculations:
  * - getPhysicsValues(): returns immutable PhysicsValuesDTO snapshot
  * - doMovement(phyValues): commits new physics state to engine
  * - reboundIn[East|West|North|South](): delegates boundary rebound to engine
@@ -128,7 +133,7 @@ import model.spatial.core.SpatialGrid;
  * - Emitters are stored in ConcurrentHashMap for thread-safe access
  *
  * Typical use cases:
- * - Player ship: thrust trail emitter, explosion emitter
+ * - Player ship: thrust trail emitter, projectile emitter
  * - Projectile: trail emitter
  * - Asteroid: debris emitter on destruction
  *
@@ -162,7 +167,8 @@ import model.spatial.core.SpatialGrid;
  * ---------------
  * Each dynamic body typically runs on its own thread:
  * - setThread(thread): stores reference to owning thread
- * - Thread continuously calculates new physics state and calls processBodyEvents()
+ * - Thread continuously calculates new physics state and calls
+ * processBodyEvents()
  * - State machine (ALIVE ↔ HANDS_OFF) prevents concurrent event processing
  * - Static bodies (decorators, gravity) have no thread (static geometry)
  *
@@ -186,9 +192,11 @@ import model.spatial.core.SpatialGrid;
  * ------------
  * - Minimize per-frame allocations via scratch buffers
  * - Delegate specialized work to injected components (composition)
- * - Support heterogeneous entity types via inheritance (players, projectiles, etc.)
+ * - Support heterogeneous entity types via inheritance (players, projectiles,
+ * etc.)
  * - Enable deterministic multithreaded physics via state machine
- * - Provide clean integration points (PhysicsEngine, BodyEventProcessor, SpatialGrid)
+ * - Provide clean integration points (PhysicsEngine, BodyEventProcessor,
+ * SpatialGrid)
  * - Maintain thread-safe global statistics for debugging/monitoring
  */
 public abstract class AbstractBody {
@@ -289,6 +297,14 @@ public abstract class AbstractBody {
         return active;
     }
 
+    public Emitter getEmitter(String emitterId) {
+        return this.emitters.get(emitterId);
+    }
+
+    public boolean emittersHas() {
+        return !this.emitters.isEmpty();
+    }
+
     public String emitterEquip(Emitter emitter) {
         if (emitter == null) {
             throw new IllegalArgumentException("Emitter cannot be null");
@@ -308,7 +324,6 @@ public abstract class AbstractBody {
             emitter.registerRequest();
         }
     }
-
     // endregion
 
     // region Body getters (getBody***())
@@ -328,10 +343,6 @@ public abstract class AbstractBody {
         return this.type;
     }
     // endregion
-
-    public Emitter getEmitter(String emitterId) {
-        return this.emitters.get(emitterId);
-    }
 
     // region Life getters (getLife***())
     public long getLifeBorn() {
@@ -393,10 +404,6 @@ public abstract class AbstractBody {
 
     public SpatialGrid getSpatialGrid() {
         return this.spatialGrid;
-    }
-
-    public boolean hasEmitters() {
-        return !this.emitters.isEmpty();
     }
 
     public boolean isLifeOver() {

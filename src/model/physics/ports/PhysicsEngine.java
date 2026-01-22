@@ -2,7 +2,7 @@ package model.physics.ports;
 
 public interface PhysicsEngine {
 
-        public void addAngularAcceleration(double angularAcc);
+        public void angularAccelerationInc(double angularAcc);
 
         public PhysicsValuesDTO calcNewPhysicsValues();
 

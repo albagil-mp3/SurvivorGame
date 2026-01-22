@@ -22,7 +22,7 @@ public class NullPhysicsEngine extends AbstractPhysicsEngine {
     //
 
     @Override
-    public void addAngularAcceleration(double angularAcc) {
+    public void angularAccelerationInc(double angularAcc) {
     }
 
     @Override

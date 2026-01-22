@@ -4,6 +4,7 @@ import model.bodies.core.AbstractBody;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
+import model.emitter.ports.Emitter;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
 import model.spatial.core.SpatialGrid;
@@ -61,11 +62,9 @@ public class DynamicBody extends AbstractBody implements Runnable {
                 maxLifeInSeconds);
     }
 
-    //
-    // PUBLICS
-    //
+    // *** PUBLICS ***
 
-    @Override
+    @Override // AbstractBody
     public synchronized void activate() {
         super.activate();
 
@@ -77,14 +76,72 @@ public class DynamicBody extends AbstractBody implements Runnable {
         this.setState(BodyState.ALIVE);
     }
 
-    public void addAngularAcceleration(double angularSpeed) {
-        this.getPhysicsEngine().addAngularAcceleration(angularSpeed);
+    // region Acceleration control (acceleration***)
+    public void accelerationAngularInc(double angularAcceleration) {
+        this.getPhysicsEngine().angularAccelerationInc(angularAcceleration);
     }
 
-    public void resetAcceleration() {
+    public void accelerationReset() {
         this.getPhysicsEngine().resetAcceleration();
     }
+    // endregion
 
+    // region Trail management (trail***)
+    public void trailEquip(Emitter trailEmitter) {
+        this.trailId = this.registerBodyEmitter(trailEmitter);
+    }
+    // endregion
+
+    // region Getters (get***)
+    public double getAngularSpeed() {
+        return this.angularSpeed;
+    }
+
+    public double getMaxThrustForce() {
+        return this.maxThrustForce;
+    }
+
+    public double getMaxAngularAcceleration() {
+        return this.maxAngularAcc;
+    }
+    // endregion
+
+    // region settersb (set***)
+    public void setAngularAcceleration(double angularAcc) {
+        this.getPhysicsEngine().setAngularAcceleration(angularAcc);
+    }
+
+    public void setAngularSpeed(double angularSpeed) {
+        this.getPhysicsEngine().setAngularSpeed(angularSpeed);
+    }
+
+    public void setMaxThrustForce(double maxThrust) {
+        this.maxThrustForce = maxThrust;
+    }
+
+    public void setMaxAngularAcceleration(double maxAngularAcc) {
+        this.setAngularSpeed(this.angularSpeed);
+        this.maxAngularAcc = maxAngularAcc;
+    }
+    // endregion
+
+    // region Thrust control (thrust***)
+    public void thrustMaxOn() {
+        this.thurstNow(this.maxThrustForce);
+    }
+
+    public void thurstNow(double thrust) {
+        this.getPhysicsEngine().setThrust(thrust);
+    }
+
+    public void thrustOff() {
+        this.getPhysicsEngine().stopPushing();
+    }
+    // endregion
+
+    // *** INTERFACE IMPLEMENTATIONS ***
+
+    // regions Runnable
     @Override
     public void run() {
         PhysicsValuesDTO newPhyValues;
@@ -117,46 +174,6 @@ public class DynamicBody extends AbstractBody implements Runnable {
             }
         }
     }
-
-    public double getAngularSpeed() {
-        return this.angularSpeed;
-    }
-
-    public double getMaxThrustForce() {
-        return this.maxThrustForce;
-    }
-
-    public double getMaxAngularAcceleration() {
-        return this.maxAngularAcc;
-    }
-
-    public void setAngularAcceleration(double angularAcc) {
-        this.getPhysicsEngine().setAngularAcceleration(angularAcc);
-    }
-
-    public void setAngularSpeed(double angularSpeed) {
-        this.getPhysicsEngine().setAngularSpeed(angularSpeed);
-    }
-
-    public void setMaxThrustForce(double maxThrust) {
-        this.maxThrustForce = maxThrust;
-    }
-
-    public void setMaxAngularAcceleration(double maxAngularAcc) {
-        this.setAngularSpeed(this.angularSpeed);
-        this.maxAngularAcc = maxAngularAcc;
-    }
-
-    public void setThrust(double thrust) {
-        this.getPhysicsEngine().setThrust(thrust);
-    }
-
-    public void thrustOn() {
-        this.setThrust(this.maxThrustForce);
-    }
-
-    public void thrustOff() {
-        this.getPhysicsEngine().stopPushing();
-    }
+    // endregion
 
 }
