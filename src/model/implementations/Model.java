@@ -392,7 +392,7 @@ public class Model implements BodyEventProcessor {
 
             case DYNAMIC:
             case PROJECTILE:
-                this.domainEventProcessor.notiyDynamicIsDead(body.getEntityId());
+                this.domainEventProcessor.notifyDynamicIsDead(body.getEntityId());
                 this.spatialGrid.remove(body.getEntityId());
                 this.dynamicBodies.remove(body.getEntityId());
                 break;

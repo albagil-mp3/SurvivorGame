@@ -142,9 +142,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.setView(view);
     }
 
-    //
-    // PUBLICS
-    //
+    //// PUBLICS
 
     public void activate() {
         if (this.worldDimension == null) {
@@ -163,89 +161,6 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.view.activate();
         this.model.activate();
         this.engineState = EngineState.ALIVE;
-    }
-
-    @Override // WorldEvolver
-    public void addDynamicBody(String assetId, double size, double posX, double posY,
-            double speedX, double speedY, double accX, double accY,
-            double angle, double angularSpeed, double angularAcc, double thrust) {
-
-        String entityId = this.model.addDynamicBody(size, posX, posY, speedX, speedY,
-                accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
-
-        if (entityId == null || entityId.isEmpty()) {
-            return; // ======= Max entity quantity reached =======>
-        }
-        this.view.addDynamicRenderable(entityId, assetId);
-    }
-
-    @Override // WorldInitializer
-    public void addDecorator(String assetId, double size, double posX, double posY, double angle) {
-        String entityId = this.model.addDecorator(size, posX, posY, angle, -1L);
-
-        if (entityId == null || entityId.isEmpty()) {
-            return; // ======= Max entity quantity reached =======>
-        }
-
-        this.view.addStaticRenderable(entityId, assetId);
-
-        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
-        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
-        this.view.updateStaticRenderables(renderablesData);
-    }
-
-    @Override // WorldEvolver
-    public void addEmitterToPlayer(String playerId, WorldDefEmitterDTO bodyEmitterDef) {
-        EmitterConfigDto bodyEmitter = EmitterMapper.fromWorldDef(bodyEmitterDef);
-        this.model.addEmitterToPlayer(playerId, bodyEmitter);
-    }
-
-    @Override // WorldEvolver
-    public String addPlayer(String assetId, double size, double posX, double posY,
-            double speedX, double speedY, double accX, double accY,
-            double angle, double angularSpeed, double angularAcc, double thrust) {
-
-        String entityId = this.model.addPlayerBody(size, posX, posY, speedX, speedY,
-                accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
-
-        if (entityId == null) {
-            return null; // ======= Max entity quantity reached =======>>
-        }
-
-        this.view.addDynamicRenderable(entityId, assetId);
-        return entityId;
-    }
-
-    @Override // WorldInitializer
-    public void addStaticBody(String assetId, double size, double posX, double posY, double angle) {
-
-        String entityId = this.model.addDecorator(size, posX, posY, angle, -1L);
-        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
-        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
-
-        if (entityId == null || entityId.isEmpty()) {
-            return; // ======= Max entity quantity reached =======>>
-        }
-        this.view.addStaticRenderable(entityId, assetId);
-
-        this.view.updateStaticRenderables(renderablesData);
-    }
-
-    @Override // WorldEvolver
-    public void addWeaponToPlayer(String playerId, WorldDefWeaponDTO weaponDef, int shootingOffset) {
-
-        WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);
-
-        this.model.addWeaponToPlayer(playerId, weapon);
-    }
-
-    @Override // DomainEventProcessor
-    public void decideActions(List<DomainEvent> domainEvents, List<ActionDTO> actions) {
-        if (domainEvents != null) {
-            for (DomainEvent event : domainEvents) {
-                this.applyGameRules(event, actions);
-            }
-        }
     }
 
     public void enginePause() {
@@ -296,42 +211,6 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         return SpatialGridStatisticsMapper.fromSpatialGridStatisticsDTO(
 
                 this.model.getSpatialGridStatistics());
-    }
-
-    @Override // DomainEventProcessor
-    public void notifyPlayerIsDead(String entityId) {
-        this.view.notifyPlayerIsDead(entityId);
-    }
-
-    @Override // WorldInitializer
-    public void loadAssets(AssetCatalog assets) {
-        this.view.loadAssets(assets);
-    }
-
-    @Override // DomainEventProcessor
-    public void notifyNewDynamic(String entityId, String assetId) {
-        this.view.addDynamicRenderable(entityId, assetId);
-    }
-
-    @Override // DomainEventProcessor
-    public void notifyNewStatic(String entityId, String assetId) {
-        this.view.addStaticRenderable(entityId, assetId);
-
-        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
-        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
-        this.view.updateStaticRenderables(renderablesData);
-    }
-
-    @Override // DomainEventProcessor
-    public void notiyDynamicIsDead(String entityId) {
-        this.view.notifyDynamicIsDead(entityId);
-    }
-
-    @Override // DomainEventProcessor
-    public void notiyStaticIsDead(String entityId) {
-        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
-        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
-        this.view.updateStaticRenderables(renderablesData);
     }
 
     public void playerFire(String playerId) {
@@ -385,9 +264,132 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.worldDimension = new Dimension(width, height);
     }
 
-    //
-    // PRIVATE
-    //
+    //// INTERFACE IMPLEMENTATIONS
+
+    // DomainEventProcessor
+    @Override // DomainEventProcessor
+    public void decideActions(List<DomainEvent> domainEvents, List<ActionDTO> actions) {
+        if (domainEvents != null) {
+            for (DomainEvent event : domainEvents) {
+                this.applyGameRules(event, actions);
+            }
+        }
+    }
+
+    @Override // DomainEventProcessor
+    public void notifyPlayerIsDead(String entityId) {
+        this.view.notifyPlayerIsDead(entityId);
+    }
+
+    @Override // DomainEventProcessor
+    public void notifyNewDynamic(String entityId, String assetId) {
+        this.view.addDynamicRenderable(entityId, assetId);
+    }
+
+    @Override // DomainEventProcessor
+    public void notifyNewStatic(String entityId, String assetId) {
+        this.view.addStaticRenderable(entityId, assetId);
+
+        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
+        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
+        this.view.updateStaticRenderables(renderablesData);
+    }
+
+    @Override // DomainEventProcessor
+    public void notifyDynamicIsDead(String entityId) {
+        this.view.notifyDynamicIsDead(entityId);
+    }
+
+    @Override // DomainEventProcessor
+    public void notiyStaticIsDead(String entityId) {
+        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
+        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
+        this.view.updateStaticRenderables(renderablesData);
+    }
+
+    // WorldEvolver
+    @Override // WorldEvolver
+    public void addDynamicBody(String assetId, double size, double posX, double posY,
+            double speedX, double speedY, double accX, double accY,
+            double angle, double angularSpeed, double angularAcc, double thrust) {
+
+        String entityId = this.model.addDynamicBody(size, posX, posY, speedX, speedY,
+                accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
+
+        if (entityId == null || entityId.isEmpty()) {
+            return; // ======= Max entity quantity reached =======>
+        }
+        this.view.addDynamicRenderable(entityId, assetId);
+    }
+
+    @Override // WorldEvolver
+    public void addEmitterToPlayer(String playerId, WorldDefEmitterDTO bodyEmitterDef) {
+        EmitterConfigDto bodyEmitter = EmitterMapper.fromWorldDef(bodyEmitterDef);
+        this.model.addEmitterToPlayer(playerId, bodyEmitter);
+    }
+
+    @Override // WorldEvolver
+    public String addPlayer(String assetId, double size, double posX, double posY,
+            double speedX, double speedY, double accX, double accY,
+            double angle, double angularSpeed, double angularAcc, double thrust) {
+
+        String entityId = this.model.addPlayerBody(size, posX, posY, speedX, speedY,
+                accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
+
+        if (entityId == null) {
+            return null; // ======= Max entity quantity reached =======>>
+        }
+
+        this.view.addDynamicRenderable(entityId, assetId);
+        return entityId;
+    }
+
+    @Override // WorldEvolver
+    public void addWeaponToPlayer(String playerId, WorldDefWeaponDTO weaponDef, int shootingOffset) {
+
+        WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);
+
+        this.model.addWeaponToPlayer(playerId, weapon);
+    }
+
+    // WorldInitializer
+    @Override // WorldInitializer
+    public void addDecorator(String assetId, double size, double posX, double posY, double angle) {
+        String entityId = this.model.addDecorator(size, posX, posY, angle, -1L);
+
+        if (entityId == null || entityId.isEmpty()) {
+            return; // ======= Max entity quantity reached =======>
+        }
+
+        this.view.addStaticRenderable(entityId, assetId);
+
+        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
+        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
+        this.view.updateStaticRenderables(renderablesData);
+    }
+
+    @Override // WorldInitializer
+    public void addStaticBody(String assetId, double size, double posX, double posY, double angle) {
+
+        String entityId = this.model.addDecorator(size, posX, posY, angle, -1L);
+        ArrayList<BodyDTO> bodiesData = this.model.getStaticsData();
+        ArrayList<RenderDTO> renderablesData = RenderableMapper.fromBodyDTO(bodiesData);
+
+        if (entityId == null || entityId.isEmpty()) {
+            return; // ======= Max entity quantity reached =======>>
+        }
+        this.view.addStaticRenderable(entityId, assetId);
+
+        this.view.updateStaticRenderables(renderablesData);
+    }
+
+    @Override // WorldInitializer
+    public void loadAssets(AssetCatalog assets) {
+        this.view.loadAssets(assets);
+    }
+
+    //// PRIVATE
+
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
             case LimitEvent e -> {

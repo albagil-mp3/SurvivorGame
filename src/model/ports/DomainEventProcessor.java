@@ -13,7 +13,7 @@ public interface DomainEventProcessor {
 
     public void notifyNewStatic(String entityId, String assetId);
 
-    public void notiyDynamicIsDead(String entityId);
+    public void notifyDynamicIsDead(String entityId);
 
     public void notifyPlayerIsDead(String entityId);
 
