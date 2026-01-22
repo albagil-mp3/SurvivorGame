@@ -43,61 +43,105 @@ import world.ports.WorldDefWeaponDTO;
  * Controller
  * ----------
  *
- * Central coordinator of the MVC triad:
- * - Owns references to Model and View.
- * - Performs engine startup wiring (assets, world definition, dimensions,
- * limits).
- * - Bridges user input (View) into Model commands.
- * - Provides snapshot getters used by the Renderer (via the View).
+ * Central coordinator of the MVC triad that orchestrates the game engine:
+ * - Owns references to Model and View
+ * - Performs engine startup wiring (assets, world definition, dimensions)
+ * - Bridges user input (View) into Model commands
+ * - Transforms Model domain data (BodyDTO) into View render data (RenderDTO)
+ * - Implements game rules by converting domain events into actions
+ * - Manages entity lifecycle notifications between Model and View
+ *
+ * Implemented Interfaces
+ * ----------------------
+ * 1) WorldInitializer - Initial world setup (decorators, static bodies, assets)
+ * 2) WorldEvolver - Runtime entity creation (players, dynamics, equipment)
+ * 3) DomainEventProcessor - Game logic decision layer (events → actions)
  *
  * Responsibilities (high level)
  * -----------------------------
  *
  * 1) Bootstrapping / activation sequence
- * - Validates that all required dependencies are present (assets, world,
- * dimensions, max bodies, model, view).
- * - Loads visual resources into the View (View.loadAssets).
- * - Configures the View and starts the Renderer loop (View.activate).
- * - Configures the Model (dimension, max bodies) and starts simulation
- * (Model.activate).
- * - Switches controller state to ALIVE when everything is ready.
+ * - Validates that all required dependencies are present (worldDimension,
+ *   model, view)
+ * - Configures world dimensions in both Model and View
+ * - Activates View (starts Renderer loop)
+ * - Activates Model (enables entity creation and physics)
+ * - Switches controller state to ALIVE when everything is ready
  *
  * 2) World building / entity creation
- * - addDBody / addSBody / addDecorator / addPlayer delegate entity creation
- * to the Model.
- * - Important: static bodies and decorators are "push-updated" into the View:
- * after adding a static/decorator entity, the controller fetches a fresh
- * static/decorator snapshot from the Model and pushes it to the View
- * (View.updateSBodyInfo / View.updateDecoratorsInfo). This matches the design
- * where static/decorator visuals usually do not change every frame, so you
- * avoid unnecessary per-frame updates.
+ * - addPlayer(): creates player entity, adds visual to View
+ * - addDynamicBody(): creates dynamic entity, adds visual to View
+ * - addDecorator() / addStaticBody(): creates static entity, pushes snapshot
+ *   to View
+ * - addWeaponToPlayer() / addEmitterToPlayer(): equips player with weapons
+ *   or particle emitters
+ *
+ * Important: Static bodies and decorators are "push-updated" into the View.
+ * After adding a static/decorator entity, the controller fetches a fresh
+ * static snapshot from the Model and pushes it to the View via
+ * updateStaticRenderables(). This matches the design where static visuals
+ * usually do not change every frame, avoiding unnecessary per-frame updates.
  *
  * 3) Runtime command dispatch
  * - Exposes high-level player commands that the View calls in response to
- * input:
- * playerThrustOn / playerThrustOff / playerReverseThrust
- * playerRotateLeftOn / playerRotateRightOn / playerRotateOff
- * playerFire
+ *   user input:
+ *     * playerThrustOn / playerThrustOff / playerReverseThrust
+ *     * playerRotateLeftOn / playerRotateRightOn / playerRotateOff
+ *     * playerFire
+ *     * playerSelectNextWeapon
  * - All of these are simple delegations to the Model, keeping the View free
- * of simulation logic.
+ *   of simulation logic
  *
  * 4) Snapshot access for rendering
- * - getDBodyInfo(): returns dynamic snapshot data from the Model. This is
- * intended to be pulled frequently (typically once per frame by the
- * Renderer thread).
- * - getSBodyInfo() / getDecoratorInfo(): used to push snapshots when
- * static/decorator content changes.
+ * - getDynamicRenderablesData(): transforms Model's BodyDTO list into
+ *   DynamicRenderDTO list via mapper. Called once per frame by Renderer.
+ * - getPlayerRenderData(playerId): transforms PlayerDTO into PlayerRenderDTO
+ *   for HUD/UI rendering
+ * - getSpatialGridStatistics(): provides collision detection grid metrics
+ *   for debugging/monitoring
+ * - Entity statistics: getEntityAliveQuantity(), getEntityCreatedQuantity(),
+ *   getEntityDeadQuantity()
  *
- * 5) Game rules / decision layer (rule-based actions)
- * - decideActions(entity, events) takes Model events (EventDTO) and produces
- * a list of actions (ActionDTO).
- * - applyGameRules(...) maps events -> actions:
- * * World boundary reached => DIE (high priority)
- * * MUST_FIRE => FIRE (high priority)
- * * COLLIDED / NONE => no additional action
- * - If no "death-like" action is present, MOVE is appended by default.
- * This creates a deterministic baseline: entities always move unless
- * explicitly killed/exploded.
+ * 5) Game rules / decision layer (DomainEventProcessor interface)
+ * - decideActions(domainEvents, actions): processes all domain events from
+ *   the Model and populates the actions list
+ * - applyGameRules(event, actions): maps specific events to specific actions:
+ *     * LimitEvent (boundary reached) → REBOUND_IN_[EAST|WEST|NORTH|SOUTH]
+ *       (HIGH priority, executed by BODY)
+ *     * LifeOver → DIE (HIGH priority, executed by MODEL)
+ *     * EmitEvent (EMIT_REQUESTED) → SPAWN_BODY (LOW priority, MODEL)
+ *     * EmitEvent (FIRE_REQUESTED) → SPAWN_PROJECTILE (LOW priority, MODEL)
+ *     * CollisionEvent → Currently resolved by resolveCollision() (commented
+ *       out in production)
+ *
+ * Data transformation (Mappers)
+ * -----------------------------
+ * The Controller uses dedicated mapper classes to translate between Model
+ * domain DTOs and View render DTOs:
+ * - DynamicRenderableMapper: BodyDTO → DynamicRenderDTO
+ * - PlayerRenderableMapper: PlayerDTO → PlayerRenderDTO
+ * - RenderableMapper: BodyDTO → RenderDTO (generic static bodies)
+ * - WeaponMapper: WorldDefWeaponDTO → WeaponDto
+ * - EmitterMapper: WorldDefEmitterDTO → EmitterConfigDto
+ * - SpatialGridStatisticsMapper: SpatialGridStatisticsDTO →
+ *   SpatialGridStatisticsRenderDTO
+ *
+ * This layer ensures complete decoupling: Model knows nothing about rendering,
+ * View knows nothing about physics simulation.
+ *
+ * Entity lifecycle notifications (DomainEventProcessor interface)
+ * ----------------------------------------------------------------
+ * The Controller acts as observer/notifier for entity lifecycle events:
+ * - notifyNewDynamic(entityId, assetId): tells View to create visual for
+ *   dynamic entity
+ * - notifyNewStatic(entityId, assetId): tells View to create visual for
+ *   static entity, then pushes static snapshot update
+ * - notifyDynamicIsDead(entityId): tells View to remove dynamic visual
+ * - notifyPlayerIsDead(entityId): tells View to remove player visual
+ * - notifyStaticIsDead(entityId): triggers static snapshot update
+ *
+ * These notifications enable the View to maintain its own renderable
+ * collections in sync with the Model's entity state.
  *
  * Engine state
  * ------------
@@ -105,26 +149,40 @@ import world.ports.WorldDefWeaponDTO;
  * lifecycle:
  * - STARTING: initial state after construction
  * - ALIVE: set after activate() finishes successfully
- * - PAUSED: set via enginePause()
- * - STOPPED: set via engineStop()
+ * - PAUSED: set via enginePause() (future use)
+ * - STOPPED: set via engineStop() (future use)
  *
  * Dependency injection rules
  * --------------------------
- * - setModel(model): stores the model and injects the controller back into
- * the model (model.setController(this)). This enables callbacks / rules
- * decisions if the Model consults the Controller.
+ * - setModel(model): stores the model and injects the controller as
+ *   DomainEventProcessor (model.setDomainEventProcessor(this)). This enables
+ *   the Model to delegate game rules decisions to the Controller.
  * - setView(view): stores the view and injects the controller into the view
- * (view.setController(this)). This enables the View to send player commands
- * and to pull snapshots.
+ *   (view.setController(this)). This enables the View to send player commands
+ *   and pull rendering snapshots.
+ * - Bidirectional injection creates a clean separation: Model owns simulation,
+ *   Controller owns rules, View owns rendering.
  *
  * Threading notes
  * ---------------
- * - The Controller itself mostly acts as a facade. The key concurrency point
- * is snapshot access: Renderer thread pulls getDBodyInfo() frequently.
- * Static/decorator snapshots are pushed occasionally from the "logic side"
- * (model->controller->view).
+ * - The Controller itself mostly acts as a stateless facade
+ * - Key concurrency point: Renderer thread calls getDynamicRenderablesData()
+ *   every frame (~60Hz)
+ * - Static snapshots are pushed occasionally from Model thread when
+ *   static/decorator entities are created/destroyed
+ * - All data transformations (mappers) create new DTO instances, preventing
+ *   shared mutable state between threads
+ * - Volatile engineState ensures visibility across threads
  * - Keeping Controller methods small and side-effect-light reduces contention
- * and makes it easier to reason about where cross-thread interactions happen.
+ *   and makes cross-thread interactions predictable
+ *
+ * Design goals
+ * ------------
+ * - Enforce strict layer separation via DTOs and mappers
+ * - Provide a single point of control for game rules (applyGameRules)
+ * - Enable independent testing of Model (physics) and View (rendering)
+ * - Support hot-swapping of game rules without touching Model or View code
+ * - Minimize coupling: Model/View never reference each other directly
  */
 public class Controller implements WorldEvolver, WorldInitializer, DomainEventProcessor {
 

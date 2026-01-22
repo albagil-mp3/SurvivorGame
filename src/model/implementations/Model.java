@@ -570,7 +570,7 @@ public class Model implements BodyEventProcessor {
 
     // *** PRIVATE ***
 
-    // region Check methodes (check***)
+    // region Check methods (check***)
     private void checkCollisions(AbstractBody checkBody, PhysicsValuesDTO newPhyValues,
             List<DomainEvent> domainEvents) {
         if (checkBody == null)
@@ -772,40 +772,6 @@ public class Model implements BodyEventProcessor {
     }
 
     // region Execute actions (doAction***)
-    private void doActions(
-            List<ActionDTO> actions, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
-
-        if (actions == null || actions.isEmpty()) {
-            return;
-        }
-
-        actions.sort(Comparator.comparing(a -> a.priority));
-
-        for (ActionDTO action : actions) {
-            if (action == null || action.type == null) {
-                continue;
-            }
-
-            AbstractBody targetBody = this.getBody(action.entityId, action.bodyType);
-            if (targetBody == null) {
-                continue; // Body already removed, skip this action
-            }
-
-            switch (action.executor) {
-                case BODY:
-                    this.doActionBody(action.type, targetBody, newPhyValues, oldPhyValues);
-                    break;
-
-                case MODEL:
-                    this.doActionModel(action, targetBody, newPhyValues, oldPhyValues);
-                    break;
-
-                default:
-                    // Nada
-            }
-        }
-    }
-
     private void doActionBody(ActionType action, AbstractBody body,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
@@ -886,6 +852,40 @@ public class Model implements BodyEventProcessor {
             default:
         }
 
+    }
+
+    private void doActions(
+            List<ActionDTO> actions, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
+
+        if (actions == null || actions.isEmpty()) {
+            return;
+        }
+
+        actions.sort(Comparator.comparing(a -> a.priority));
+
+        for (ActionDTO action : actions) {
+            if (action == null || action.type == null) {
+                continue;
+            }
+
+            AbstractBody targetBody = this.getBody(action.entityId, action.bodyType);
+            if (targetBody == null) {
+                continue; // Body already removed, skip this action
+            }
+
+            switch (action.executor) {
+                case BODY:
+                    this.doActionBody(action.type, targetBody, newPhyValues, oldPhyValues);
+                    break;
+
+                case MODEL:
+                    this.doActionModel(action, targetBody, newPhyValues, oldPhyValues);
+                    break;
+
+                default:
+                    // Nada
+            }
+        }
     }
     // endregion
 
