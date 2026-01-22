@@ -27,6 +27,7 @@ public abstract class AbstractBody {
     private static volatile int createdQuantity = 0;
     private static volatile int deadQuantity = 0;
 
+    // regions Fields
     private final BodyEventProcessor bodyEventProcessor;
     private volatile BodyState state;
     private final BodyType type;
@@ -35,28 +36,21 @@ public abstract class AbstractBody {
     private final long bornTime = System.nanoTime();
     private final double maxLifeInSeconds; // Infinite life by default
     private Thread thread;
-
-    private BasicEmitter emitter; // **************** TO DEPRECATE ****************
-
-    // New emitter map based
+    private final BodyRefDTO bodyRef;
     private final Map<String, Emitter> emitters = new ConcurrentHashMap<>();
+    // endregion
 
-    // Spatial grid and buffers for collision detection and avoiding garbage
-    // creation during the
-    // physics update. ==> Zero allocation strategy
+    // region Scratch buffers
     private final SpatialGrid spatialGrid;
     private final int[] scratchIdxs;
     private final ArrayList<String> scratchCandidateIds;
     private final HashSet<String> scratchSeenCandidateIds = new HashSet<>(64);
 
-    // Buffers and precomputed DTOs for events and actions processing
-    private final BodyRefDTO bodyRef;
     private final ArrayList<DomainEvent> scratchEvents = new ArrayList<>(32);
     private final List<ActionDTO> scratchActions = new ArrayList<>(32);
+    // endregion
 
-    /**
-     * CONSTRUCTORS
-     */
+    // *** CONSTRUCTORS ***
 
     public AbstractBody(BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType type,
@@ -83,6 +77,8 @@ public abstract class AbstractBody {
         this.bodyRef = new BodyRefDTO(this.entityId, this.type);
     }
 
+    // *** PUBLICS ***
+
     public synchronized void activate() {
         if (this.state != BodyState.STARTING) {
             throw new IllegalArgumentException("Entity activation error due is not starting!");
@@ -105,12 +101,12 @@ public abstract class AbstractBody {
         }
     }
 
-    // Action
     public void doMovement(PhysicsValuesDTO phyValues) {
         PhysicsEngine engine = this.getPhysicsEngine();
         engine.setPhysicsValues(phyValues);
     }
 
+    // region getters
     public BodyRefDTO getBodyRef() {
         return this.bodyRef;
     }
@@ -182,7 +178,9 @@ public abstract class AbstractBody {
     public BodyType getType() {
         return this.type;
     }
+    // endregion
 
+    // region Boolean getters is***()
     public boolean isThrusting() {
         return this.getPhysicsEngine().isThrusting();
     }
@@ -195,11 +193,13 @@ public abstract class AbstractBody {
         boolean lifeOver = this.getLifeInSeconds() >= this.maxLifeInSeconds;
         return lifeOver;
     }
+    // endregion
 
     public void processBodyEvents(AbstractBody body, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
         this.bodyEventProcessor.processBodyEvents(body, newPhyValues, oldPhyValues);
     }
 
+    // region Rebound methods
     public void reboundInEast(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
             double worldWidth, double worldHeight) {
 
@@ -226,7 +226,9 @@ public abstract class AbstractBody {
         PhysicsEngine engine = this.getPhysicsEngine();
         engine.reboundInSouth(newVals, oldVals, worldWidth, worldHeight);
     }
+    // endregion
 
+    // region Setters
     public void setState(BodyState state) {
         this.state = state;
     }
@@ -234,6 +236,7 @@ public abstract class AbstractBody {
     public void setThread(Thread thread) {
         this.thread = thread;
     }
+    // endregion
 
     public void spatialGridUpsert() {
         if (this.spatialGrid == null) {
@@ -251,10 +254,9 @@ public abstract class AbstractBody {
         this.spatialGrid.upsert(this.getEntityId(), minX, maxX, minY, maxY, this.getScratchIdxs());
     }
 
-    //
-    // STATICS
-    //
+    // *** STATICS ***
 
+    // region Body counters management
     static public int getCreatedQuantity() {
         return AbstractBody.createdQuantity;
     }
@@ -290,53 +292,11 @@ public abstract class AbstractBody {
 
         return AbstractBody.deadQuantity;
     }
+    // endregion
 
-    // HOST EMITTER INTERFACE
+    // *** INTERFACES IMPLEMENTATIONS ***
 
-    // To deprecate
-
-    public BodyToEmitDTO getBodyToEmitConfig() {
-        if (this.emitter == null) {
-            return null;
-        }
-        return this.emitter.getBodyToEmitConfig();
-    }
-
-    public EmitterConfigDto getEmitterConfig() {
-        if (this.emitter == null) {
-            return null;
-        }
-        return this.emitter.getConfig();
-    }
-
-    public boolean mustEmitNow(double dtSeconds) {
-        if (this.emitter == null) {
-            return false;
-        }
-
-        // double dtNanos = newPhyValues.timeStamp - this.getPhysicsValues().timeStamp;
-        // double dtSeconds = dtNanos / 1_000_000_000;
-
-        return this.emitter.mustEmitNow(dtSeconds);
-    }
-
-    public void registerBodyEmissionRequest() {
-        if (this.emitter == null) {
-            return; // No emitter attached ===========>
-        }
-
-        this.emitter.registerRequest();
-    }
-
-    public void setEmitter(BasicEmitter emitter) {
-        if (emitter == null) {
-            throw new IllegalStateException("Emitter is null. Cannot add to player body.");
-        }
-        this.emitter = emitter;
-    }
-
-    // New emitter map based methods
-
+    // region New emitter map based methods
     public void addEmitter(Emitter emitter) {
         if (emitter == null) {
             throw new IllegalArgumentException("Emitter cannot be null");
@@ -378,5 +338,5 @@ public abstract class AbstractBody {
 
         return active;
     }
-
+    // endregion
 }

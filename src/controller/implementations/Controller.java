@@ -144,7 +144,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.setView(view);
     }
 
-    // *** PUBLICS (alphabetical) ***
+    // *** PUBLICS (alphabetical sort) ***
 
     public void activate() {
         if (this.worldDimension == null) {
@@ -320,7 +320,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
             double speedX, double speedY, double accX, double accY,
             double angle, double angularSpeed, double angularAcc, double thrust) {
 
-        String entityId = this.model.addDynamicBody(size, posX, posY, speedX, speedY,
+        String entityId = this.model.addDynamic(size, posX, posY, speedX, speedY,
                 accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
 
         if (entityId == null || entityId.isEmpty()) {
@@ -332,7 +332,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     @Override // WorldEvolver
     public void addEmitterToPlayer(String playerId, WorldDefEmitterDTO bodyEmitterDef) {
         EmitterConfigDto bodyEmitter = EmitterMapper.fromWorldDef(bodyEmitterDef);
-        this.model.addEmitterToPlayer(playerId, bodyEmitter);
+        this.model.bodyEquipEmitter(playerId, bodyEmitter);
     }
 
     @Override // WorldEvolver
@@ -340,7 +340,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
             double speedX, double speedY, double accX, double accY,
             double angle, double angularSpeed, double angularAcc, double thrust) {
 
-        String entityId = this.model.addPlayerBody(size, posX, posY, speedX, speedY,
+        String entityId = this.model.addPlayer(size, posX, posY, speedX, speedY,
                 accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
 
         if (entityId == null) {
@@ -356,7 +356,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
 
         WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);
 
-        this.model.addWeaponToPlayer(playerId, weapon);
+        this.model.playerEquipWeapon(playerId, weapon);
     }
     // endregion WorldEvolver
 
@@ -391,7 +391,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     }
     // endregion WorldInitializer
 
-    // *** PRIVATE (Internal) ***
+    // *** PRIVATE (Internal, helpers, ...) ***
 
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {

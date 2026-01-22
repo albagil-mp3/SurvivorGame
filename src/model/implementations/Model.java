@@ -143,11 +143,11 @@ public class Model implements BodyEventProcessor {
     private final Map<String, AbstractBody> decorators = new ConcurrentHashMap<>(100);
     private final Map<String, AbstractBody> dynamicBodies = new ConcurrentHashMap<>(MAX_ENTITIES);
     private final Map<String, AbstractBody> gravityBodies = new ConcurrentHashMap<>(50);
-    // endregion 
+    // endregion
 
     // regions Scratch buffers (for zero-allocation snapshot generation)
     private final ArrayList<BodyDTO> scratchDynamicsBuffer = new ArrayList<>(MAX_ENTITIES);
-    // endregion 
+    // endregion
 
     // *** CONSTRUCTORS ***
 
@@ -176,7 +176,7 @@ public class Model implements BodyEventProcessor {
         this.state = ModelState.ALIVE;
     }
 
-    // region Body creation
+    // region Body management (add***)
     public String addBody(BodyType bodyType,
             double size,
             double posX, double posY, double speedX, double speedY,
@@ -224,7 +224,7 @@ public class Model implements BodyEventProcessor {
         return entityId;
     }
 
-    public String addDynamicBody(double size,
+    public String addDynamic(double size,
             double posX, double posY, double speedX, double speedY,
             double accX, double accY,
             double angle, double angularSpeed, double angularAcc,
@@ -238,7 +238,7 @@ public class Model implements BodyEventProcessor {
         return entityId;
     }
 
-    public String addPlayerBody(double size,
+    public String addPlayer(double size,
             double posX, double posY, double speedX, double speedY,
             double accX, double accY,
             double angle, double angularSpeed, double angularAcc,
@@ -252,7 +252,7 @@ public class Model implements BodyEventProcessor {
         return entityId;
     }
 
-    public String addProjectileBody(double size,
+    public String addProjectile(double size,
             double posX, double posY, double speedX, double speedY,
             double accX, double accY,
             double angle, double angularSpeed, double angularAcc,
@@ -266,20 +266,10 @@ public class Model implements BodyEventProcessor {
 
         return entityId;
     }
+    // endregion
 
-    public void addWeaponToPlayer(String playerId, WeaponDto weaponConfig) {
-
-        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
-        if (pBody == null) {
-            return; // ========= Player not found =========>
-        }
-
-        Weapon weapon = WeaponFactory.create(weaponConfig);
-
-        pBody.addWeapon(weapon);
-    }
-
-    public void addEmitterToPlayer(String playerId, EmitterConfigDto emitterConfig) {
+    // region body equipment (bodyEquip***)
+    public void bodyEquipEmitter(String playerId, EmitterConfigDto emitterConfig) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody == null) {
             return; // ========= Player not found =========>
@@ -289,7 +279,7 @@ public class Model implements BodyEventProcessor {
         pBody.setEmitter(emitter);
     }
 
-    public void addTrailEmitter(String playerId, EmitterConfigDto trailConfig) {
+    public void boydEquipTrail(String playerId, EmitterConfigDto trailConfig) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody == null) {
             return; // ========= Player not found =========>
@@ -300,7 +290,7 @@ public class Model implements BodyEventProcessor {
     }
     // endregion
 
-    // region Getters
+    // region Getters (get***)
     public int getAliveQuantity() {
         return AbstractBody.getAliveQuantity();
     }
@@ -381,10 +371,13 @@ public class Model implements BodyEventProcessor {
     }
     // endregion Getters
 
+    // region boolean getters (is***)
     public boolean isAlive() {
         return this.state == ModelState.ALIVE;
     }
+    // endregion
 
+    // region destroy (kill***)
     public void killBody(AbstractBody body) {
         body.die();
 
@@ -415,8 +408,23 @@ public class Model implements BodyEventProcessor {
         }
 
     }
+    // endregion
 
-    // region Player Actions
+    // region player equipment (playerEquip***)
+    public void playerEquipWeapon(String playerId, WeaponDto weaponConfig) {
+
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody == null) {
+            return; // ========= Player not found =========>
+        }
+
+        Weapon weapon = WeaponFactory.create(weaponConfig);
+
+        pBody.addWeapon(weapon);
+    }
+    // endregion
+
+    // region Player Actions (player***)
     public void playerFire(String playerId) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody != null) {
@@ -476,7 +484,20 @@ public class Model implements BodyEventProcessor {
     }
     // endregion Player Actions
 
-    @Override // BodyEventProcessor
+    // region Setters
+    public void setDomainEventProcessor(DomainEventProcessor domainEventProcessor) {
+        this.domainEventProcessor = domainEventProcessor;
+    }
+
+    public void setMaxBodies(int maxDynamicBody) {
+        this.maxBodies = maxDynamicBody;
+    }
+    // endregion
+
+    // *** INTERFACE IMPLEMENTATIONS ***
+
+    // region BodyEventProcessor
+    @Override
     public void processBodyEvents(AbstractBody body,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
@@ -510,20 +531,12 @@ public class Model implements BodyEventProcessor {
             }
         }
     }
-
-    // region Setters
-    public void setDomainEventProcessor(DomainEventProcessor domainEventProcessor) {
-        this.domainEventProcessor = domainEventProcessor;
-    }
-
-    public void setMaxBodies(int maxDynamicBody) {
-        this.maxBodies = maxDynamicBody;
-    }
     // endregion
 
-    //// PRIVATE
 
-    // regions CheckCollision
+    // *** PRIVATE ***
+
+    // region CheckCollision
     private void checkCollisions(AbstractBody checkBody, PhysicsValuesDTO newPhyValues,
             List<DomainEvent> domainEvents) {
         if (checkBody == null)
@@ -686,7 +699,7 @@ public class Model implements BodyEventProcessor {
             domainEvents.add(new LimitEvent(DomainEventType.REACHED_SOUTH_LIMIT, body.getBodyRef()));
         }
     }
-    // endregions
+    // endregion
 
     private void decideActions(AbstractBody body, List<DomainEvent> domainEvents, List<ActionDTO> actions) {
         if (!domainEvents.isEmpty())
@@ -724,7 +737,7 @@ public class Model implements BodyEventProcessor {
         this.checkLifeOverEvents(checkBody, domainEvents);
     }
 
-    // region doAction 
+    // region execute actions (do***)
     private void doActions(
             List<ActionDTO> actions, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
