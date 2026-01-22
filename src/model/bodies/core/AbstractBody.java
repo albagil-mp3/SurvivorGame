@@ -28,7 +28,7 @@ public abstract class AbstractBody {
     private final BodyEventProcessor bodyEventProcessor;
     private volatile BodyState state;
     private final BodyType type;
-    private final String entityId;
+    private final String bodyId;
     private final PhysicsEngine phyEngine;
     private final long bornTime = System.nanoTime();
     private final double maxLifeInSeconds; // Infinite life by default
@@ -69,9 +69,9 @@ public abstract class AbstractBody {
             this.scratchCandidateIds = null;
         }
 
-        this.entityId = UUID.randomUUID().toString();
+        this.bodyId = UUID.randomUUID().toString();
         this.state = BodyState.STARTING;
-        this.bodyRef = new BodyRefDTO(this.entityId, this.type);
+        this.bodyRef = new BodyRefDTO(this.bodyId, this.type);
     }
 
     // *** PUBLICS ***
@@ -139,7 +139,7 @@ public abstract class AbstractBody {
 
     // region Body getters (getBody***())
     public String getBodyId() {
-        return this.entityId;
+        return this.bodyId;
     }
 
     public BodyRefDTO getBodyRef() {
