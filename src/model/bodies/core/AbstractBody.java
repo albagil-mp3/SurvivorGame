@@ -24,7 +24,7 @@ public abstract class AbstractBody {
     private static volatile int createdQuantity = 0;
     private static volatile int deadQuantity = 0;
 
-    // regions Fields
+    // region Fields
     private final BodyEventProcessor bodyEventProcessor;
     private volatile BodyState state;
     private final BodyType type;
@@ -225,10 +225,6 @@ public abstract class AbstractBody {
         return !this.emitters.isEmpty();
     }
 
-    public boolean isThrusting() {
-        return this.getPhysicsEngine().isThrusting();
-    }
-
     public boolean isLifeOver() {
         if (this.maxLifeInSeconds < 0) {
             return false;
@@ -236,6 +232,10 @@ public abstract class AbstractBody {
 
         boolean lifeOver = this.getLifeInSeconds() >= this.maxLifeInSeconds;
         return lifeOver;
+    }
+
+    public boolean isThrusting() {
+        return this.getPhysicsEngine().isThrusting();
     }
 
     public void processBodyEvents(AbstractBody body, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
@@ -250,18 +250,18 @@ public abstract class AbstractBody {
         engine.reboundInEast(newVals, oldVals, worldWidth, worldHeight);
     }
 
-    public void reboundInWest(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight) {
-
-        PhysicsEngine engine = this.getPhysicsEngine();
-        engine.reboundInWest(newVals, oldVals, worldWidth, worldHeight);
-    }
-
     public void reboundInNorth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
             double worldWidth, double worldHeight) {
 
         PhysicsEngine engine = this.getPhysicsEngine();
         engine.reboundInNorth(newVals, oldVals, worldWidth, worldHeight);
+    }
+
+    public void reboundInWest(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
+            double worldWidth, double worldHeight) {
+
+        PhysicsEngine engine = this.getPhysicsEngine();
+        engine.reboundInWest(newVals, oldVals, worldWidth, worldHeight);
     }
 
     public void reboundInSouth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
@@ -299,13 +299,7 @@ public abstract class AbstractBody {
 
     // *** STATICS ***
 
-    // region Body counters management
-    static protected int decAliveQuantity() {
-        AbstractBody.aliveQuantity--;
-
-        return AbstractBody.aliveQuantity;
-    }
-
+    // region PUBLIC getters for static counters
     static public int getAliveQuantity() {
         return AbstractBody.aliveQuantity;
     }
@@ -316,6 +310,14 @@ public abstract class AbstractBody {
 
     static public int getDeadQuantity() {
         return AbstractBody.deadQuantity;
+    }
+    // endregion
+
+    // region PROTECTED setters for static counters
+    static protected int decAliveQuantity() {
+        AbstractBody.aliveQuantity--;
+
+        return AbstractBody.aliveQuantity;
     }
 
     static protected int incAliveQuantity() {

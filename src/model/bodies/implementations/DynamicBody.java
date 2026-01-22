@@ -48,9 +48,9 @@ public class DynamicBody extends AbstractBody implements Runnable {
     private double maxAngularAcc; // degrees*s^-2
     private double angularSpeed; // degrees*s^-1
 
-    //
-    // CONSTRUCTORS
-    //
+    private String trailId;
+
+    // *** CONSTRUCTORS ***
 
     public DynamicBody(BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType bodyType, double maxLifeInSeconds) {
