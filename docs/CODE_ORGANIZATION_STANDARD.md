@@ -222,7 +222,7 @@ isAlive()                         // I
 **Rules:**
 - Placed immediately after field declarations
 - Multiple constructors ordered by parameter count (ascending)
-- No subsection allowed
+- No regions allowed
 
 **Example:**
 
