@@ -133,6 +133,8 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     private View view;
     private Dimension worldDimension;
 
+    // *** CONSTRUCTORS ***
+
     public Controller(int worldWidth, int worldHigh,
             View view, Model model) {
 
@@ -142,7 +144,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.setView(view);
     }
 
-    // *** PUBLICS ***
+    // *** PUBLICS (alphabetical) ***
 
     public void activate() {
         if (this.worldDimension == null) {
@@ -272,7 +274,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     }
     // endregion setters
 
-    // *** INTERFACE IMPLEMENTATIONS ***
+    // *** INTERFACE IMPLEMENTATIONS (one region per interface) ***
 
     // region DomainEventProcessor
     @Override
@@ -389,7 +391,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     }
     // endregion WorldInitializer
 
-    // *** PRIVATE ***
+    // *** PRIVATE (Internal) ***
 
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {

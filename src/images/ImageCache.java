@@ -1,6 +1,6 @@
 package images;
 
-
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -8,7 +8,6 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
-
 
 /**
  * ImageCache
@@ -34,12 +33,10 @@ public class ImageCache {
     private volatile long hits = 0;
     private volatile long fails = 0;
 
-
     public ImageCache(GraphicsConfiguration gc, Images baseImages) {
         this.gc = gc;
         this.baseImages = baseImages;
     }
-
 
     /**
      * PUBLICS
@@ -59,11 +56,9 @@ public class ImageCache {
         return image;
     }
 
-
     public long getHits() {
         return this.hits;
     }
-
 
     public double getHitsPercentage() {
         if (this.hits == 0) {
@@ -74,21 +69,17 @@ public class ImageCache {
         return hitsPctg * 100d;
     }
 
-
     public long getFails() {
         return this.fails;
     }
-
 
     public int size() {
         return this.cache.size();
     }
 
-
     public void setGraphicsConfiguration(GraphicsConfiguration gc) {
         this.gc = gc;
     }
-
 
     /**
      * PRIVATES
@@ -96,7 +87,7 @@ public class ImageCache {
     private BufferedImage putInCache(int angle, String assetId, int size) {
         if (this.gc == null) {
             System.err.println("Graphics configuration is null · ImageCache");
-            return null;  // =================================================>
+            return null; // =================================================>
         }
 
         BufferedImage image = gc.createCompatibleImage(size, size, Transparency.TRANSLUCENT);
@@ -107,6 +98,9 @@ public class ImageCache {
 
         try {
             if (imageDto != null) {
+                // g2.setComposite(AlphaComposite.getInstance(
+                //         AlphaComposite.SRC_OVER, 0.4f));
+
                 g2.drawImage(imageDto.image, 0, 0, size, size, null);
             } else {
                 g2.setColor(Color.RED);

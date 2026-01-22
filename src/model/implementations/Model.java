@@ -131,24 +131,25 @@ import model.weapons.ports.WeaponFactory;
 
 public class Model implements BodyEventProcessor {
 
-    private int maxBodies;
-
-    private DomainEventProcessor domainEventProcessor = null;
-    private volatile ModelState state = ModelState.STARTING;
-
     private static final int MAX_ENTITIES = 5000;
 
+    // region Fields
+    private int maxBodies;
+    private DomainEventProcessor domainEventProcessor = null;
+    private volatile ModelState state = ModelState.STARTING;
     private final double worldWidth;
     private final double worldHeight;
     private final SpatialGrid spatialGrid;
     private final Map<String, AbstractBody> decorators = new ConcurrentHashMap<>(100);
     private final Map<String, AbstractBody> dynamicBodies = new ConcurrentHashMap<>(MAX_ENTITIES);
     private final Map<String, AbstractBody> gravityBodies = new ConcurrentHashMap<>(50);
+    // endregion 
 
-    // Scratch buffer for zero-allocation snapshot generation
+    // regions Scratch buffers (for zero-allocation snapshot generation)
     private final ArrayList<BodyDTO> scratchDynamicsBuffer = new ArrayList<>(MAX_ENTITIES);
+    // endregion 
 
-    //// CONSTRUCTORS
+    // *** CONSTRUCTORS ***
 
     public Model(double worldWidth, double worldHeight, int maxDynamicBodies) {
         if (worldWidth <= 0 || worldHeight <= 0) {
@@ -165,7 +166,7 @@ public class Model implements BodyEventProcessor {
         this.spatialGrid = new SpatialGrid(48, (int) worldWidth, (int) worldHeight, 24);
     }
 
-    //// PUBLIC
+    // *** PUBLICS ***
 
     public void activate() {
         if (this.domainEventProcessor == null) {
@@ -175,6 +176,7 @@ public class Model implements BodyEventProcessor {
         this.state = ModelState.ALIVE;
     }
 
+    // region Body creation
     public String addBody(BodyType bodyType,
             double size,
             double posX, double posY, double speedX, double speedY,
@@ -207,7 +209,7 @@ public class Model implements BodyEventProcessor {
 
         Map<String, AbstractBody> bodyMap = this.getBodyMap(bodyType);
         bodyMap.put(body.getEntityId(), body);
-        this.upsertCommittedToGrid(body); // &++
+        this.spatialGridUpsert(body); // &++
 
         return body.getEntityId();
     }
@@ -296,7 +298,9 @@ public class Model implements BodyEventProcessor {
         BasicEmitter trailEmitter = new BasicEmitter(trailConfig);
         pBody.setEmitter(trailEmitter);
     }
+    // endregion
 
+    // region Getters
     public int getAliveQuantity() {
         return AbstractBody.getAliveQuantity();
     }
@@ -375,6 +379,7 @@ public class Model implements BodyEventProcessor {
     public Dimension getWorldDimension() {
         return new Dimension((int) this.worldWidth, (int) this.worldHeight);
     }
+    // endregion Getters
 
     public boolean isAlive() {
         return this.state == ModelState.ALIVE;
@@ -411,6 +416,7 @@ public class Model implements BodyEventProcessor {
 
     }
 
+    // region Player Actions
     public void playerFire(String playerId) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody != null) {
@@ -468,6 +474,7 @@ public class Model implements BodyEventProcessor {
 
         pBody.selectNextWeapon();
     }
+    // endregion Player Actions
 
     @Override // BodyEventProcessor
     public void processBodyEvents(AbstractBody body,
@@ -504,6 +511,7 @@ public class Model implements BodyEventProcessor {
         }
     }
 
+    // region Setters
     public void setDomainEventProcessor(DomainEventProcessor domainEventProcessor) {
         this.domainEventProcessor = domainEventProcessor;
     }
@@ -511,9 +519,11 @@ public class Model implements BodyEventProcessor {
     public void setMaxBodies(int maxDynamicBody) {
         this.maxBodies = maxDynamicBody;
     }
+    // endregion
 
     //// PRIVATE
 
+    // regions CheckCollision
     private void checkCollisions(AbstractBody checkBody, PhysicsValuesDTO newPhyValues,
             List<DomainEvent> domainEvents) {
         if (checkBody == null)
@@ -676,6 +686,7 @@ public class Model implements BodyEventProcessor {
             domainEvents.add(new LimitEvent(DomainEventType.REACHED_SOUTH_LIMIT, body.getBodyRef()));
         }
     }
+    // endregions
 
     private void decideActions(AbstractBody body, List<DomainEvent> domainEvents, List<ActionDTO> actions) {
         if (!domainEvents.isEmpty())
@@ -713,6 +724,7 @@ public class Model implements BodyEventProcessor {
         this.checkLifeOverEvents(checkBody, domainEvents);
     }
 
+    // region doAction 
     private void doActions(
             List<ActionDTO> actions, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
@@ -734,11 +746,11 @@ public class Model implements BodyEventProcessor {
 
             switch (action.executor) {
                 case BODY:
-                    this.doBodyAction(action.type, targetBody, newPhyValues, oldPhyValues);
+                    this.doActionBody(action.type, targetBody, newPhyValues, oldPhyValues);
                     break;
 
                 case MODEL:
-                    this.doModelAction(action, targetBody, newPhyValues, oldPhyValues);
+                    this.doActionModel(action, targetBody, newPhyValues, oldPhyValues);
                     break;
 
                 default:
@@ -747,7 +759,7 @@ public class Model implements BodyEventProcessor {
         }
     }
 
-    private void doBodyAction(ActionType action, AbstractBody body,
+    private void doActionBody(ActionType action, AbstractBody body,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
         if (body == null) {
@@ -757,31 +769,31 @@ public class Model implements BodyEventProcessor {
         switch (action) {
             case MOVE:
                 body.doMovement(newPhyValues);
-                upsertCommittedToGrid((AbstractBody) body);
+                spatialGridUpsert((AbstractBody) body);
                 break;
 
             case REBOUND_IN_EAST:
                 body.reboundInEast(newPhyValues, oldPhyValues,
                         this.worldWidth, this.worldHeight);
-                upsertCommittedToGrid((AbstractBody) body);
+                spatialGridUpsert((AbstractBody) body);
                 break;
 
             case REBOUND_IN_WEST:
                 body.reboundInWest(newPhyValues, oldPhyValues,
                         this.worldWidth, this.worldHeight);
-                upsertCommittedToGrid((AbstractBody) body);
+                spatialGridUpsert((AbstractBody) body);
                 break;
 
             case REBOUND_IN_NORTH:
                 body.reboundInNorth(newPhyValues, oldPhyValues,
                         this.worldWidth, this.worldHeight);
-                upsertCommittedToGrid((AbstractBody) body);
+                spatialGridUpsert((AbstractBody) body);
                 break;
 
             case REBOUND_IN_SOUTH:
                 body.reboundInSouth(newPhyValues, oldPhyValues,
                         this.worldWidth, this.worldHeight);
-                upsertCommittedToGrid((AbstractBody) body);
+                spatialGridUpsert((AbstractBody) body);
                 break;
 
             case GO_INSIDE:
@@ -794,7 +806,7 @@ public class Model implements BodyEventProcessor {
         }
     }
 
-    private void doModelAction(ActionDTO action, AbstractBody body,
+    private void doActionModel(ActionDTO action, AbstractBody body,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
         if (body == null) {
@@ -828,6 +840,7 @@ public class Model implements BodyEventProcessor {
         }
 
     }
+    // endregion
 
     private ArrayList<BodyDTO> getBodiesData(Map<String, AbstractBody> bodies) {
         ArrayList<BodyDTO> bodyInfos = new ArrayList<>(bodies.size());
@@ -955,7 +968,7 @@ public class Model implements BodyEventProcessor {
                 entityId, bodyConfig.assetId);
     }
 
-    private void upsertCommittedToGrid(AbstractBody body) {
+    private void spatialGridUpsert(AbstractBody body) {
         if (body == null)
             return;
 
