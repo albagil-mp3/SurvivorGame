@@ -32,7 +32,7 @@ Every class is organized into **exactly four sections**, always in this order:
 ### Section Order
 
 ```java
-1. Constructor(s)
+1. // *** CONSTRUCTORS ***
 2. // *** PUBLICS ***
 3. // *** INTERFACE IMPLEMENTATIONS ***
 4. // *** PRIVATE ***
@@ -217,12 +217,12 @@ isAlive()                         // I
 
 ---
 
-## Section 1: Constructor(s)
+## Section 1: CONSTRUCTORS
 
 **Rules:**
 - Placed immediately after field declarations
 - Multiple constructors ordered by parameter count (ascending)
-- No section header needed
+- No regions allowed
 
 **Example:**
 
