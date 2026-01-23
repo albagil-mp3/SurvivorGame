@@ -832,6 +832,12 @@ public class Model implements BodyEventProcessor {
                 spatialGridUpsert((AbstractBody) body);
                 break;
 
+            case NO_MOVE:
+                // Only refresh timestamp
+                PhysicsValuesDTO frozen = new PhysicsValuesDTO(oldPhyValues);
+                body.doMovement(frozen);
+                spatialGridUpsert((AbstractBody) body);
+
             case GO_INSIDE:
                 // To-Do: lógica futura
                 break;

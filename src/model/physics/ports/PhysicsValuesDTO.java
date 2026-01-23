@@ -60,4 +60,15 @@ public class PhysicsValuesDTO implements Serializable {
                 0.0);
     }
 
+        public PhysicsValuesDTO(PhysicsValuesDTO phyValues) {
+        this(
+                System.nanoTime(),
+                phyValues.posX, phyValues.posY, phyValues.angle,
+                phyValues.size,
+                phyValues.speedX, phyValues.speedY,
+                phyValues.accX, phyValues.accY,
+                phyValues.angularSpeed, phyValues.angularAcc,
+                phyValues.thrust);
+    }
+
 }
