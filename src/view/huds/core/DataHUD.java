@@ -4,10 +4,12 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataHUD {
+    // region Fields
     public final int initRow;
     public final int initCol;
     public final int interline;
@@ -20,6 +22,9 @@ public class DataHUD {
     public int maxLenLabel = 0;
     public final List<Item> items = new ArrayList<>(20);
     public int valuesExpected = 0;
+    // endregion
+
+    // *** CONSTRUCTORS ***
 
     public DataHUD(Color titleColor, Color highLightColor, Color labelColor, Color dataColor, int initRow, int initCol,
             int interline) {
@@ -32,6 +37,33 @@ public class DataHUD {
         this.dataColor = dataColor;
     }
 
+    // *** PUBLICS ***
+
+    // region add elements to HUD
+    public void addBarItem(String label, int barWidth) {
+        this.addItem(new BarItem(label, this.labelColor, this.dataColor, barWidth));
+    }
+
+    public void addBarItem(String label, int barWidth, boolean showPercentage) {
+        this.addItem(new BarItem(label, this.labelColor, this.dataColor, barWidth, showPercentage));
+    }
+
+    public void addIconItem(BufferedImage icon, int iconWidth, int iconHeight, int textPadding) {
+        this.addItem(new IconItem(icon, iconWidth, iconHeight, textPadding, this.dataColor));
+    }
+
+    public void addIconItem(BufferedImage icon, int iconSize, int textPadding) {
+        this.addIconItem(icon, iconSize, iconSize, textPadding);
+    }
+
+    public void addSeparatorItem() {
+        this.addItem(new SeparatorItem());
+    }
+
+    public void addSkipValue() {
+        this.addItem(new SkipItem());
+    }
+
     public void addTextItem(String label) {
         this.addItem(new TextItem(label, this.labelColor, this.dataColor));
     }
@@ -39,22 +71,7 @@ public class DataHUD {
     public void addTitle(String title) {
         this.addItem(new TitleItem(title, this.titleColor));
     }
-
-    public void addSeparator() {
-        this.addItem(new SeparatorItem());
-    }
-
-    public void addBar(String label, int barWidth) {
-        this.addItem(new BarItem(label, this.labelColor, this.dataColor, barWidth));
-    }
-
-    public void addBar(String label, int barWidth, boolean showPercentage) {
-        this.addItem(new BarItem(label, this.labelColor, this.dataColor, barWidth, showPercentage));
-    }
-
-    public void addSkipValue() {
-        this.addItem(new SkipItem());
-    }
+    // endregion
 
     public void draw(Graphics2D g, Object... values) {
         if (values.length != this.valuesExpected) {
@@ -88,9 +105,8 @@ public class DataHUD {
         }
     }
 
-    /**
-     * PRIVATES
-     */
+    // *** PRIVATES ***
+
     private void addItem(Item item) {
         items.add(item);
 

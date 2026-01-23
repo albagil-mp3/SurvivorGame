@@ -1,13 +1,16 @@
 package view.huds.implementations;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 
 import view.huds.core.DataHUD;
 
 public class PlayerHUD extends DataHUD {
     public PlayerHUD() {
         super(
-                new Color(255, 140, 0, 255 ), // Title color
+                new Color(255, 140, 0, 255), // Title color
                 Color.GRAY, // Highlight color
                 new Color(255, 255, 255, 150), // Label color
                 new Color(255, 255, 255, 255), // Data color
@@ -20,16 +23,16 @@ public class PlayerHUD extends DataHUD {
         this.addTitle("PLAYER STATUS");
         this.addSkipValue(); // Entity ID
         this.addSkipValue(); // Player name
-        this.addBar("Damage", 125, false);
-        this.addBar("Energy", 125, false);
-        this.addBar("Shield", 125, false);
+        this.addBarItem("Damage", 125, false);
+        this.addBarItem("Energy", 125, false);
+        this.addBarItem("Shield", 125, false);
         this.addTextItem("Temperature");
         this.addTitle("Weapons");
         this.addSkipValue(); // Active weapon
-        this.addBar("Guns", 125, false);
-        this.addBar("Burst", 125, false);
-        this.addBar("Mines", 125, false);
-        this.addBar("Missiles", 125, false);
+        this.addBarItem("Guns", 125, false);
+        this.addBarItem("Burst", 125, false);
+        this.addBarItem("Mines", 125, false);
+        this.addBarItem("Missiles", 125, false);
         this.prepareHud();
     }
 }

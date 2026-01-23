@@ -3,10 +3,10 @@ package main;
 import assets.implementations.ProjectAssets;
 import controller.implementations.Controller;
 import generators.implementations.LifeGenerator;
+import generators.implementations.ActionGenerator;
 import generators.implementations.SceneGenerator;
 import generators.ports.LifeConfigDTO;
 import model.implementations.Model;
-import rules.implementations.DefaultGameRulesEngine;
 import view.core.View;
 import world.implementations.RandomWorldDefinitionProvider;
 import world.ports.WorldDefinition;
@@ -19,7 +19,7 @@ public class Main {
         System.setProperty("sun.java2d.uiScale", "1.0");
         int worldWidth = 2450;
         int worldHeight = 1450;
-        int maxDynamicBodies = 5000;
+        int maxDynamicBodies = 2000;
         int maxAsteroidCreationDelay = 3000;
         int minAsteroidSize = 8;
         int maxAsteroidSize = 16;
@@ -42,7 +42,7 @@ public class Main {
                 worldHeight,
                 new View(),
                 new Model(worldWidth, worldHeight, maxDynamicBodies),
-                new DefaultGameRulesEngine());
+                new ActionGenerator());
 
         controller.activate();
 

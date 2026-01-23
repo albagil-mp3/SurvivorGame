@@ -1,4 +1,4 @@
-package rules.ports;
+package generators.ports;
 
 import java.util.List;
 

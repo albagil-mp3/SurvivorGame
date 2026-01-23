@@ -21,7 +21,7 @@ public class SpatialGridHUD extends DataHUD  {
         this.addTitle("SPATIAL GRID ");
         this.addTextItem("Cell Size");
         this.addTextItem("Total Cells");
-        this.addBar("Empties", 125, false);
+        this.addBarItem("Empties", 125, false);
         this.addTextItem("Avg Bodies");
         this.addTextItem("Max Bodies");
         this.addTextItem("Pair Checks");

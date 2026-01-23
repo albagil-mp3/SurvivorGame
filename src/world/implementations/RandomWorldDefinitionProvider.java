@@ -51,7 +51,7 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
 
         this.background = randomBackgroundDef();
 
-        this.decorators(this.decoratorsDef, 6, AssetType.STARS, 600, 200);
+        this.decorators(this.decoratorsDef, 2, AssetType.STARS, 600, 200);
 
         this.staticBodies(this.gravityBodiesDef, 1, AssetType.PLANET, 200, 100);
 
@@ -61,7 +61,7 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
 
         this.staticBodies(this.gravityBodiesDef, 1, AssetType.BLACK_HOLE, 55, 45);
 
-        this.dynamicBodies(this.asteroidsDef, 5, AssetType.ASTEROID, 25, 6);
+        this.dynamicBodies(this.asteroidsDef, 6, AssetType.ASTEROID, 25, 6);
 
         this.dynamicBodies(this.spaceshipsDef, 1, AssetType.SPACESHIP, 40, 40);
 

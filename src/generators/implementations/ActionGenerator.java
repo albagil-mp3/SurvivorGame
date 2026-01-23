@@ -1,4 +1,4 @@
-package rules.implementations;
+package generators.implementations;
 
 import java.util.List;
 
@@ -12,8 +12,8 @@ import events.domain.ports.eventtype.DomainEvent;
 import events.domain.ports.eventtype.EmitEvent;
 import events.domain.ports.eventtype.LifeOver;
 import events.domain.ports.eventtype.LimitEvent;
+import generators.ports.GameRulesEngine;
 import model.bodies.ports.BodyType;
-import rules.ports.GameRulesEngine;
 
 /**
  * DefaultGameRulesEngine
@@ -34,15 +34,10 @@ import rules.ports.GameRulesEngine;
  * - Keep rule logic isolated from Controller
  * - Enable swapping rules without touching core engine wiring
  */
-public class DefaultGameRulesEngine implements GameRulesEngine {
-
-    // *** CONSTRUCTORS ***
-
-    // *** PUBLICS ***
+public class ActionGenerator implements GameRulesEngine {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
-    // region GameRulesEngine
     @Override //
     public void provideActions(List<DomainEvent> domainEvents, List<ActionDTO> actions) {
         if (domainEvents != null) {
@@ -51,7 +46,6 @@ public class DefaultGameRulesEngine implements GameRulesEngine {
             }
         }
     }
-    // endregion
 
     // *** PRIVATE ***
 
