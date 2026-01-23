@@ -1,7 +1,7 @@
 package actions;
 
 
-public enum ActionType {
+public enum Action {
     DIE,
     EXPLODE_IN_FRAGMENTS,
     GO_INSIDE,

@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import actions.ActionDTO;
-import actions.ActionExecutor;
-import actions.ActionPriority;
-import actions.ActionType;
 import assets.core.AssetCatalog;
 
 import controller.mappers.DynamicRenderableMapper;
@@ -19,15 +16,9 @@ import controller.mappers.WeaponMapper;
 import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
 import controller.ports.WorldInitializer;
-import events.domain.ports.DomainEventType;
-import events.domain.ports.eventtype.CollisionEvent;
 import events.domain.ports.eventtype.DomainEvent;
-import events.domain.ports.eventtype.EmitEvent;
-import events.domain.ports.eventtype.LifeOver;
-import events.domain.ports.eventtype.LimitEvent;
 import generators.ports.ActionsGenerator;
 import model.bodies.ports.BodyDTO;
-import model.bodies.ports.BodyType;
 import model.emitter.ports.EmitterConfigDto;
 import model.implementations.Model;
 import model.weapons.ports.WeaponDto;

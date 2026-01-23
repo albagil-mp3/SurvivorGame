@@ -3,9 +3,7 @@ package generators.implementations.actions;
 import java.util.List;
 
 import actions.ActionDTO;
-import actions.ActionExecutor;
-import actions.ActionPriority;
-import actions.ActionType;
+import actions.Action;
 import events.domain.ports.DomainEventType;
 import events.domain.ports.eventtype.CollisionEvent;
 import events.domain.ports.eventtype.DomainEvent;
@@ -51,39 +49,37 @@ public class LimitReboundActionsGenerator implements ActionsGenerator {
 
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
-            case LimitEvent e -> {
-                ActionType actionType;
+            case LimitEvent limitEvent -> {
+                Action action;
 
-                switch (e.type) {
+                switch (limitEvent.type) {
                     case REACHED_EAST_LIMIT:
-                        actionType = ActionType.REBOUND_IN_EAST;
+                        action = Action.REBOUND_IN_EAST;
                         break;
                     case REACHED_WEST_LIMIT:
-                        actionType = ActionType.REBOUND_IN_WEST;
+                        action = Action.REBOUND_IN_WEST;
                         break;
                     case REACHED_NORTH_LIMIT:
-                        actionType = ActionType.REBOUND_IN_NORTH;
+                        action = Action.REBOUND_IN_NORTH;
                         break;
                     case REACHED_SOUTH_LIMIT:
-                        actionType = ActionType.REBOUND_IN_SOUTH;
+                        action = Action.REBOUND_IN_SOUTH;
                         break;
                     default:
-                        actionType = ActionType.NONE;
+                        action = Action.NONE;
                         break;
                 }
 
                 actions.add(new ActionDTO(
-                        e.primaryBodyRef.id(), e.primaryBodyRef.type(),
-                        actionType, ActionExecutor.BODY, ActionPriority.HIGH,
-                        event));
+                        limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
+                        action, event));
 
             }
 
             case LifeOver e ->
                 actions.add(new ActionDTO(
                         e.primaryBodyRef.id(), e.primaryBodyRef.type(),
-                        ActionType.DIE, ActionExecutor.MODEL, ActionPriority.HIGH,
-                        event));
+                        Action.DIE, event));
 
             case EmitEvent e -> {
 
@@ -91,17 +87,15 @@ public class LimitReboundActionsGenerator implements ActionsGenerator {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            ActionType.SPAWN_BODY,
-                            ActionExecutor.MODEL,
-                            ActionPriority.LOW, event));
+                            Action.SPAWN_BODY,
+                            event));
 
                 } else {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            ActionType.SPAWN_PROJECTILE,
-                            ActionExecutor.MODEL,
-                            ActionPriority.LOW, event));
+                            Action.SPAWN_PROJECTILE,
+                            event));
                 }
 
             }
@@ -129,9 +123,10 @@ public class LimitReboundActionsGenerator implements ActionsGenerator {
         }
 
         // Default: Both die
-        actions.add(new ActionDTO(event.primaryBodyRef.id(), event.primaryBodyRef.type(),
-                ActionType.DIE, ActionExecutor.MODEL, ActionPriority.HIGH, event));
-        actions.add(new ActionDTO(event.secondaryBodyRef.id(), event.secondaryBodyRef.type(),
-                ActionType.DIE, ActionExecutor.MODEL, ActionPriority.HIGH, event));
+        actions.add(new ActionDTO(
+                event.primaryBodyRef.id(), event.primaryBodyRef.type(), Action.DIE, event));
+
+        actions.add(new ActionDTO(
+                event.secondaryBodyRef.id(), event.secondaryBodyRef.type(), Action.DIE, event));
     }
 }

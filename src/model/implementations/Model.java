@@ -7,9 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import actions.ActionDTO;
-import actions.ActionExecutor;
-import actions.ActionPriority;
-import actions.ActionType;
+import actions.Action;
 import events.domain.ports.BodyRefDTO;
 import events.domain.ports.BodyToEmitDTO;
 import events.domain.ports.DomainEventType;
@@ -577,7 +575,7 @@ public class Model implements BodyEventProcessor {
             this.provideActions(body, domainEvents, actions);
 
             // 3 => Execute actions -----------------
-            this.doActions(actions, newPhyValues, oldPhyValues);
+            this.executeActionList(actions, newPhyValues, oldPhyValues);
 
         } catch (Exception e) { // Fallback anti-zombi
             if (body.getBodyState() == BodyState.HANDS_OFF) {
@@ -764,16 +762,16 @@ public class Model implements BodyEventProcessor {
         if (!domainEvents.isEmpty())
             this.domainEventProcessor.provideActions(domainEvents, actions);
 
-        boolean executorIsPhysicBody = actions.stream()
-                .anyMatch(a -> a.type == ActionType.REBOUND_IN_EAST
-                        || a.type == ActionType.REBOUND_IN_WEST
-                        || a.type == ActionType.REBOUND_IN_NORTH
-                        || a.type == ActionType.REBOUND_IN_SOUTH);
+        boolean actionWithMovementImplicit = actions.stream()
+                .anyMatch(a -> a.action == Action.REBOUND_IN_EAST
+                        || a.action == Action.REBOUND_IN_WEST
+                        || a.action == Action.REBOUND_IN_NORTH
+                        || a.action == Action.REBOUND_IN_SOUTH);
 
-        if (!executorIsPhysicBody)
+        if (!actionWithMovementImplicit)
             // Always add MOVE action except if body rebounded
-            actions.add(new ActionDTO(body.getBodyId(), body.getBodyType(),
-                    ActionType.MOVE, ActionExecutor.BODY, ActionPriority.LOW, null));
+            actions.add(new ActionDTO(
+                    body.getBodyId(), body.getBodyType(), Action.MOVE, null));
 
     }
 
@@ -796,15 +794,18 @@ public class Model implements BodyEventProcessor {
         this.checkLifeOverEvents(checkBody, domainEvents);
     }
 
-    // region Execute actions (doAction***)
-    private void doActionBody(ActionType action, AbstractBody body,
+    // region Execute actions (executeAction***)
+    private void executeAction(ActionDTO action, AbstractBody body,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
         if (body == null) {
-            return;
+            throw new IllegalArgumentException("doModelAction() -> body is null");
+        }
+        if (action == null) {
+            throw new IllegalArgumentException("doModelAction() -> action is null");
         }
 
-        switch (action) {
+        switch (action.action) {
             case MOVE:
                 body.doMovement(newPhyValues);
                 spatialGridUpsert((AbstractBody) body);
@@ -837,24 +838,6 @@ public class Model implements BodyEventProcessor {
             case GO_INSIDE:
                 // To-Do: lógica futura
                 break;
-
-            case NONE:
-            default:
-                // Nothing to do...
-        }
-    }
-
-    private void doActionModel(ActionDTO action, AbstractBody body,
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
-
-        if (body == null) {
-            throw new IllegalArgumentException("doModelAction() -> body is null");
-        }
-        if (action == null) {
-            throw new IllegalArgumentException("doModelAction() -> action is null");
-        }
-
-        switch (action.type) {
             case SPAWN_BODY:
             case SPAWN_PROJECTILE:
                 if (!(action.relatedEvent instanceof EmitEvent emitEvent))
@@ -876,20 +859,17 @@ public class Model implements BodyEventProcessor {
 
             default:
         }
-
     }
 
-    private void doActions(
+    private void executeActionList(
             List<ActionDTO> actions, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
 
         if (actions == null || actions.isEmpty()) {
             return;
         }
 
-        actions.sort(Comparator.comparing(a -> a.priority));
-
         for (ActionDTO action : actions) {
-            if (action == null || action.type == null) {
+            if (action == null || action.action == null) {
                 continue;
             }
 
@@ -898,18 +878,8 @@ public class Model implements BodyEventProcessor {
                 continue; // Body already removed, skip this action
             }
 
-            switch (action.executor) {
-                case BODY:
-                    this.doActionBody(action.type, targetBody, newPhyValues, oldPhyValues);
-                    break;
+            this.executeAction(action, targetBody, newPhyValues, oldPhyValues);
 
-                case MODEL:
-                    this.doActionModel(action, targetBody, newPhyValues, oldPhyValues);
-                    break;
-
-                default:
-                    // Nada
-            }
         }
     }
     // endregion
