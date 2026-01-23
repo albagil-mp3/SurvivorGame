@@ -1,7 +1,7 @@
 package generators.implementations;
 
 public class DefaultActionsGenerator
-        extends generators.implementations.actions.InLimitsGoToCenterActionsGenerator {
+        extends generators.implementations.actions.ReboundAndCollisionActionsGenerator {
 
     //
     // No additional functionality

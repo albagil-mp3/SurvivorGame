@@ -5,7 +5,7 @@ import generators.ports.LifeConfigDTO;
 import world.ports.WorldDefinition;
 
 public class DefaultIAGenerator
-        extends generators.implementations.ia.AsteroidSpawnFromCenterIAGenerator {
+        extends generators.implementations.ia.AsteroidSpawnIAGenerator {
 
     // No additional functionality
     //

@@ -53,7 +53,7 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
 
         this.staticBody(gravityBodiesDef, "stars_2", 2100, 300, 600);
 
-        this.staticBody(gravityBodiesDef, "planet_4", this.width/2, this.height/2, 500);
+        this.staticBody(gravityBodiesDef, "planet_3", this.width/2, this.height/2, 500);
 
         this.dynamicBodies(this.asteroidsDef, 6, AssetType.ASTEROID, 100, 6);
 
