@@ -173,6 +173,16 @@ Conceptualmente, el IAGenerator debería limitarse a decidir **cuántas instanci
 
 #### ActionsGenerator
 
+**Introducción narrada**
+
+> En esta sección entramos en el punto donde el juego deja de ser una simulación y pasa a ser un conjunto de reglas.
+> 
+> Hasta ahora, el mundo existe, el tiempo avanza y las entidades se mueven. Pero nada de eso explica todavía *qué significa* que algo ocurra. Una colisión no es solo un choque geométrico; es una decisión de diseño. Un disparo no es solo un body rápido; es una intención.
+> 
+> El `ActionsGenerator` es el lugar donde esas intenciones se formalizan. No mueve el mundo ni mantiene la simulación viva: interpreta eventos y decide consecuencias. Aquí se codifica el “si pasa esto, entonces ocurre aquello”.
+> 
+> Entender bien este módulo es clave, porque cualquier confusión en sus fronteras acaba contaminando al resto del engine. Por eso, en esta sección se clarifica qué debe decidir el `ActionsGenerator`… y, sobre todo, qué no.
+
 - Recibe eventos ricos.
 - Decide qué acciones se disparan.
 - Es el ruleset del juego.
