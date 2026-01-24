@@ -176,11 +176,11 @@ Conceptualmente, el IAGenerator debería limitarse a decidir **cuántas instanci
 **Introducción narrada**
 
 > En esta sección entramos en el punto donde el juego deja de ser una simulación y pasa a ser un conjunto de reglas.
-> 
+>
 > Hasta ahora, el mundo existe, el tiempo avanza y las entidades se mueven. Pero nada de eso explica todavía *qué significa* que algo ocurra. Una colisión no es solo un choque geométrico; es una decisión de diseño. Un disparo no es solo un body rápido; es una intención.
-> 
+>
 > El `ActionsGenerator` es el lugar donde esas intenciones se formalizan. No mueve el mundo ni mantiene la simulación viva: interpreta eventos y decide consecuencias. Aquí se codifica el “si pasa esto, entonces ocurre aquello”.
-> 
+>
 > Entender bien este módulo es clave, porque cualquier confusión en sus fronteras acaba contaminando al resto del engine. Por eso, en esta sección se clarifica qué debe decidir el `ActionsGenerator`… y, sobre todo, qué no.
 
 - Recibe eventos ricos.
@@ -276,7 +276,7 @@ Cada subapartado aborda uno o varios problemas concretos identificados en el pun
 
 Las soluciones están pensadas para ser **incrementales y compatibles** con el engine actual. No requieren una reescritura completa, sino una evolución controlada hacia un diseño más legible, más explicable y más fácil de extender.
 
-Este bloque debe leerse, por tanto, no como una especificación cerrada, sino como un **marco de referencia estable** sobre el que construir futuras iteraciones (REFACTOR_V2) y decisiones formales (ADR).
+Este bloque debe leerse, por tanto, no como una especificación cerrada, sino como un **marco de referencia estable** sobre el que construir futuras iteraciones (REFACTOR\_V2) y decisiones formales (ADR).
 
 ### 4.1 World\*: definición clara + variación explícita
 
@@ -616,18 +616,31 @@ Este ejemplo muestra claramente:
 
 ## 5. GRID DE CROSS-REFERENCE
 
-| Problema                      | Solución                             |
-| ----------------------------- | ------------------------------------ |
-| Tamaños pisados entre módulos | PrototypeItemDTO con rangos          |
-| Juego repetitivo              | Rangos + variación continua          |
-| Masas arbitrarias             | Densidad en assets + masa derivada   |
-| Main sobrecargado             | Diseño movido a World                |
-| Bodies se congelan sin MOVE   | Commit obligatorio                   |
-| Spawn congela emisores        | Movimiento independiente de acciones |
-| Rebotes inconsistentes        | MovementDirective                    |
-| NO\_MOVE confuso              | Semántica clara + core               |
-| IA tocando infraestructura    | Commit y timestamp solo en core      |
-| Reglas difíciles de razonar   | Acciones = consecuencias             |
+> Este grid está pensado como **herramienta de planificación y priorización**. Las filas representan problemas concretos observados. Las columnas agrupan **familias de solución** (World\*, Level, IA, Rules, Core, Main). Un ✓ indica que **esa solución ataca directamente ese problema**.
+
+### Leyenda de soluciones
+
+- **World\***: definición de prototipos, rangos, assets, densidad
+- **Level**: escena inicial, progresión, resets
+- **IA**: ritmo, presión dinámica, spawn
+- **Rules**: ActionsGenerator, reglas puras
+- **Core**: infraestructura, commit, tiempo, física
+- **Main**: orquestación mínima
+
+### Matriz problema → solución
+
+| Problema / Solución                    | World\* | Level | IA | Rules | Core | Main |
+| -------------------------------------- | ------- | ----- | -- | ----- | ---- | ---- |
+| Doble fuente de verdad (tamaño / masa) | ✓       |       |    |       |      |      |
+| Variabilidad visual limitada           | ✓       |       |    |       |      |      |
+| Masas arbitrarias                      | ✓       |       |    |       |      |      |
+| Movimiento acoplado a acciones         |         |       |    |       | ✓    |      |
+| Bodies se congelan sin acciones        |         |       |    |       | ✓    |      |
+| NO\_MOVE malinterpretado               |         |       |    |       | ✓    |      |
+| IA tocando infraestructura             |         |       | ✓  |       | ✓    |      |
+| Reglas mezcladas con dinámica          |         |       |    | ✓     |      |      |
+| Spawn y ritmo difíciles de ajustar     |         |       | ✓  |       |      |      |
+| Main sobrecargado de decisiones        | ✓       | ✓     | ✓  | ✓     |      | ✓    |
 
 ---
 
