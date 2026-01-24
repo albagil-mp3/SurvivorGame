@@ -19,6 +19,7 @@ import world.ports.WorldDefinitionProvider;
 
 public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProvider {
 
+    // region Fields
     private final Random rnd = new Random();
     private final int width;
     private final int height;
@@ -26,19 +27,18 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
     private final AssetCatalog gameAssets = new AssetCatalog("src/resources/images/");
 
     private WorldDefBackgroundDTO background;
-
     private ArrayList<WorldDefPositionItemDTO> decoratorsDef = new ArrayList<>();
     private ArrayList<WorldDefPositionItemDTO> gravityBodiesDef = new ArrayList<>();
-
     private ArrayList<WorldDefItemDTO> asteroidsDef = new ArrayList<>();
     private ArrayList<WorldDefItemDTO> spaceshipsDef = new ArrayList<>();
-
     private ArrayList<WorldDefEmitterDTO> trailEmitterDef = new ArrayList<>();
-
     private ArrayList<WorldDefWeaponDTO> primaryWeapon = new ArrayList<>();
     private ArrayList<WorldDefWeaponDTO> secondaryWeaponDef = new ArrayList<>();
     private ArrayList<WorldDefWeaponDTO> mineLaunchersDef = new ArrayList<>();
     private ArrayList<WorldDefWeaponDTO> missilLaunchersDef = new ArrayList<>();
+    // endregion
+
+    // *** CONSTRUCTOR ***
 
     public EarthInCenterWorldDefinitionProvider(int worldWidth, int worldHeight, ProjectAssets assets) {
         this.width = worldWidth;
@@ -46,18 +46,18 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
         this.projectAssets = assets;
     }
 
-    @Override
+    // *** INTERFACE IMPLEMENTATIONS ***
+
+    @Override // WorldDefinitionProvider
     public WorldDefinition provide() {
 
         this.background = getBackgroundDef();
 
         this.staticBody(gravityBodiesDef, "stars_2", 2100, 300, 600);
+        this.staticBody(gravityBodiesDef, "planet_4", this.width / 2, this.height / 2, 500);
 
-        this.staticBody(gravityBodiesDef, "planet_3", this.width/2, this.height/2, 500);
-
-        this.dynamicBodies(this.asteroidsDef, 6, AssetType.ASTEROID, 100, 6);
-
-        this.dynamicBodies(this.spaceshipsDef, 1, AssetType.SPACESHIP, 85, 85);
+        this.dynamicBodies(this.asteroidsDef, 6, AssetType.ASTEROID);
+        this.dynamicBodies(this.spaceshipsDef, 1, AssetType.SPACESHIP);
 
         ArrayList<String> trailIds = new ArrayList<>();
         trailIds.add("stars_6");
@@ -84,13 +84,10 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
         return worlDef;
     }
 
-    private double randomAngle() {
-        return this.rnd.nextFloat() * 360d;
-    }
+    // *** PRIVATE METHODS ***
 
     private void dynamicBodies(ArrayList<WorldDefItemDTO> dBodies,
-            int num, AssetType type,
-            int maxSize, int minSize) {
+            int num, AssetType type) {
 
         String randomId;
         AssetInfoDTO assetInfo;
@@ -101,8 +98,7 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
             this.gameAssets.register(assetInfo);
 
             dBodies.add(new WorldDefItemDTO(
-                    randomId,
-                    this.randomSize(maxSize, minSize),
+                    randomId,                     this.randomSize(maxSize, minSize),
                     this.randomAngle()));
         }
     }
@@ -141,26 +137,6 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
         }
     }
 
-    private void staticBody(
-            ArrayList<WorldDefPositionItemDTO> sBodies, String assetId, double posX, double posY, int size) {
-
-        AssetInfoDTO assetInfo = this.projectAssets.catalog.get(assetId);
-        if (assetInfo == null) {
-            throw new IllegalStateException("No asset found in catalog for id: " + assetId);
-        }
-        this.gameAssets.register(assetInfo);
-
-        assetInfo = this.projectAssets.catalog.get(assetId);
-        this.gameAssets.register(assetInfo);
-
-        sBodies.add(new WorldDefPositionItemDTO(
-                assetId,
-                size,
-                this.randomAngle(),
-                posX,
-                posY));
-    }
-
     private WorldDefBackgroundDTO getBackgroundDef() {
         String randomId = "back_3";
         AssetInfoDTO assetInfo = this.projectAssets.catalog.get(randomId);
@@ -170,10 +146,6 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
         this.gameAssets.register(assetInfo);
 
         return new WorldDefBackgroundDTO(randomId, 0.0d, 0.0d);
-    }
-
-    private double randomSize(int maxSize, int minSize) {
-        return (minSize + (this.rnd.nextFloat() * (maxSize - minSize)));
     }
 
     private void mineLaunchers(ArrayList<WorldDefWeaponDTO> weapons, int num, AssetType type,
@@ -196,6 +168,29 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
         }
     }
 
+    private void missilLaunchers(ArrayList<WorldDefWeaponDTO> weapons,
+            int num, AssetType type,
+            int maxSize, int minSize,
+            double acceleration, double accelerationDuration, int fireRate) {
+
+        String randomId;
+        AssetInfoDTO assetInfo;
+
+        for (int i = 0; i < num; i++) {
+            randomId = this.projectAssets.catalog.randomId(type);
+            assetInfo = this.projectAssets.catalog.get(randomId);
+            this.gameAssets.register(assetInfo);
+
+            weapons.add(new WorldDefWeaponDTO(
+                    randomId, this.randomSize(maxSize, minSize),
+                    WorldDefWeaponType.MISSILE_LAUNCHER,
+                    0, acceleration, accelerationDuration,
+                    1, 0, fireRate, 4, 4,
+                    1000, 1D));
+
+        }
+    }
+
     private void primaryWeapon(ArrayList<WorldDefWeaponDTO> weapons, int num, AssetType type,
             int maxSize, int minSize, double firingSpeed, int fireRate) {
 
@@ -214,6 +209,14 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
                     1, 0, fireRate, 100, 2,
                     100, 1D));
         }
+    }
+
+    private double randomAngle() {
+        return this.rnd.nextFloat() * 360d;
+    }
+
+    private double randomSize(int maxSize, int minSize) {
+        return (minSize + (this.rnd.nextFloat() * (maxSize - minSize)));
     }
 
     private void secondaryWeapon(ArrayList<WorldDefWeaponDTO> weapons,
@@ -240,26 +243,23 @@ public class EarthInCenterWorldDefinitionProvider implements WorldDefinitionProv
         }
     }
 
-    private void missilLaunchers(ArrayList<WorldDefWeaponDTO> weapons,
-            int num, AssetType type,
-            int maxSize, int minSize,
-            double acceleration, double accelerationDuration, int fireRate) {
+    private void staticBody(
+            ArrayList<WorldDefPositionItemDTO> sBodies, String assetId, double posX, double posY, int size) {
 
-        String randomId;
-        AssetInfoDTO assetInfo;
-
-        for (int i = 0; i < num; i++) {
-            randomId = this.projectAssets.catalog.randomId(type);
-            assetInfo = this.projectAssets.catalog.get(randomId);
-            this.gameAssets.register(assetInfo);
-
-            weapons.add(new WorldDefWeaponDTO(
-                    randomId, this.randomSize(maxSize, minSize),
-                    WorldDefWeaponType.MISSILE_LAUNCHER,
-                    0, acceleration, accelerationDuration,
-                    1, 0, fireRate, 4, 4,
-                    1000, 1D));
-
+        AssetInfoDTO assetInfo = this.projectAssets.catalog.get(assetId);
+        if (assetInfo == null) {
+            throw new IllegalStateException("No asset found in catalog for id: " + assetId);
         }
+        this.gameAssets.register(assetInfo);
+
+        assetInfo = this.projectAssets.catalog.get(assetId);
+        this.gameAssets.register(assetInfo);
+
+        sBodies.add(new WorldDefPositionItemDTO(
+                assetId,
+                size,
+                this.randomAngle(),
+                posX,
+                posY));
     }
 }

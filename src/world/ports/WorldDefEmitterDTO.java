@@ -4,71 +4,74 @@ import model.bodies.ports.BodyType;
 
 public class WorldDefEmitterDTO {
 
-    public final BodyType type;
-    public final String assetId;
-    public final double size;
-    public final double xOffset;
-    public final double yOffset;
-    public final double speed;
-    public final double acceleration;
-    public final double accelerationTime;
-    public final double angularSpeed;
-    public final double angularAcc;
-    public final double thrust;
-    public final boolean randomAngle;
-    public final boolean randomSize;
-    public final int emisionRate;
-    public final int maxBodiesEmitted;
+    // region Fields
+    public final String bodyAssetId;
+    public final double bodyAngularAcceleration;
+    public final double bodyAngularSpeed;
+    public final boolean bodyAddEmitterSpeedOnHeading;
+    public final double bodyThrust;
+    public final double bodyThrustDuration;
+    public final double bodyMass;
+    public final double bodyMaxLifetime;
+    public final double bodySize;
+    public final double bodyInitialSpeed;
+    public final BodyType bodyType;
+
     public final double burstEmissionRate;
     public final int burstSize;
-    public final double reloadTime;
-    public final double bodyMass;
-    public final double maxLifeTime;
-    public final boolean addEmitterSpeed;
+    public final double emissionRate;
+    public final int maxBodiesEmitted;
+    public final double emitterOffsetHorizontal;
+    public final double emitterOffsetVertical;
+    public final boolean randomizeInitialAngle;
+    public final boolean randomizeSize;
+    public final double emitterReloadTime;
+    // endregion
+
+    // *** CONSTRUCTOR ***
 
     public WorldDefEmitterDTO(
-            BodyType type,
-            String assetId,
-            double size,
-            double xOffset,
-            double yOffset,
-            double speed,
-            double acceleration,
-            double accelerationTime,
-            double angularSpeed,
-            double angularAcc,
-            double thrust,
-            int emisionRate,
-            boolean randomAngle,
-            boolean randomSize,
-            boolean addEmitterSpeed,
-            int maxBodiesEmitted,
+            String bodyAssetId,
+            double bodyAngularAcceleration,
+            double bodyAngularSpeed,
+            boolean bodyAddEmitterSpeedOnHeading,
+            double bodyThrust,
+            double bodyThrustDuration,
+            double bodyMass,
+            double bodyMaxLifetime,
+            double bodySize,
+            double bodyInitialSpeed,
+            BodyType bodyType,
+
             double burstEmissionRate,
             int burstSize,
-            double reloadTime,
-            double bodyMass,
-            double maxLifeTime) {
+            double emissionRate,
+            double emitterOffsetHorizontal,
+            double emitterOffsetVertical,
+            double emitterReloadTime,
+            int maxBodiesEmitted,
+            boolean randomizeInitialAngle,
+            boolean randomizeSize) {
 
-        this.type = type;
-        this.assetId = assetId;
-        this.size = size;
-        this.xOffset = xOffset;
-        this.yOffset = yOffset;
-        this.speed = speed;
-        this.acceleration = acceleration;
-        this.accelerationTime = accelerationTime;
-        this.angularSpeed = angularSpeed;
-        this.angularAcc = angularAcc;
-        this.thrust = thrust;
-        this.randomAngle = randomAngle;
-        this.randomSize = randomSize;
-        this.addEmitterSpeed = addEmitterSpeed;
-        this.emisionRate = emisionRate;
-        this.maxBodiesEmitted = maxBodiesEmitted;
+        this.bodyAddEmitterSpeedOnHeading = bodyAddEmitterSpeedOnHeading;
+        this.bodyAngularAcceleration = bodyAngularAcceleration;
+        this.bodyAngularSpeed = bodyAngularSpeed;
+        this.bodyAssetId = bodyAssetId;
+        this.bodyInitialSpeed = bodyInitialSpeed;
+        this.bodyMass = bodyMass;
+        this.bodyMaxLifetime = bodyMaxLifetime;
+        this.bodySize = bodySize;
+        this.bodyThrust = bodyThrust;
+        this.bodyThrustDuration = bodyThrustDuration;
+        this.bodyType = bodyType;
         this.burstEmissionRate = burstEmissionRate;
         this.burstSize = burstSize;
-        this.reloadTime = reloadTime;
-        this.bodyMass = bodyMass;
-        this.maxLifeTime = maxLifeTime;
+        this.emissionRate = emissionRate;
+        this.emitterOffsetHorizontal = emitterOffsetHorizontal;
+        this.emitterOffsetVertical = emitterOffsetVertical;
+        this.emitterReloadTime = emitterReloadTime;
+        this.maxBodiesEmitted = maxBodiesEmitted;
+        this.randomizeInitialAngle = randomizeInitialAngle;
+        this.randomizeSize = randomizeSize;
     }
 }

@@ -10,12 +10,12 @@ public class WeaponMapper {
             return null;
         }
         return new WeaponDto(
-            WeaponTypeMapper.fromWorldDef(weaponDef.type),
+            WeaponTypeMapper.fromWorldDef(weaponDef.weaponType),
                 weaponDef.assetId,
-                weaponDef.size,
+                weaponDef.projectileSize,
                 weaponDef.projectileSpeed,
-                weaponDef.acceleration,
-                weaponDef.accelerationDuration,
+                weaponDef.projectileAcc,
+                weaponDef.projectileAccDuration,
                 weaponDef.burstSize,
                 weaponDef.burstFireRate,
                 weaponDef.fireRate,

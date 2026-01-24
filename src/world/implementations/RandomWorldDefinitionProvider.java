@@ -112,7 +112,8 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
                     this.randomSize(maxSize, minSize),
                     this.randomAngle(),
                     rnd.nextDouble() * this.width, // x
-                    rnd.nextDouble() * this.height)); // y
+                    rnd.nextDouble() * this.height,
+                    100)); // y
         }
     }
 
@@ -128,43 +129,57 @@ public class RandomWorldDefinitionProvider implements WorldDefinitionProvider {
             assetInfo = this.projectAssets.catalog.get(randomId);
             this.gameAssets.register(assetInfo);
 
-            dBodies.add(new WorldDefItemDTO(
-                    randomId,
-                    this.randomSize(maxSize, minSize),
-                    this.randomAngle()));
+            dBodies.add(new WorldDefItemDTO(randomId));
         }
     }
+
     private void emitters(ArrayList<WorldDefEmitterDTO> emitters, ArrayList<String> assetIds,
             int size) {
 
         AssetInfoDTO assetInfo;
+
+        double bodyAngularAcceleration = 0;
+        double bodyAngularSpeed = 0;
+        boolean bodyAddEmitterSpeedOnHeading = true;
+        double bodyInitialSpeed = 0;
+        double bodyMass = 10;
+        double bodyMaxLifetime = 0;
+        double bodySize = size;
+        double bodyThrust = 0;
+        double bodyThrustDuration = 0;
+        BodyType bodyType = null;
+
+        double burstEmissionRate = 0;
+        int burstSize = 0;
+        double emissionRate = 0;
+        double emitterOffsetHorizontal = 0;
+        double emitterOffsetVertical = 0;
+        double emitterReloadTime = 0;
+        int maxBodiesEmitted = 0;
+        boolean randomizeInitialAngle = true;
+        boolean randomizeSize = false;
 
         for (String assetId : assetIds) {
             assetInfo = this.projectAssets.catalog.get(assetId);
             this.gameAssets.register(assetInfo);
 
             emitters.add(new WorldDefEmitterDTO(
-                    BodyType.DECORATOR,
                     assetId,
-                    size,
-                    -75,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    100,
-                    true,
-                    true,
-                    false,
-                    -1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0.75D));
+                    bodyAngularAcceleration, bodyAngularSpeed,
+                    bodyAddEmitterSpeedOnHeading,
+                    bodyThrust, bodyThrustDuration,
+                    bodyMass,
+                    bodyMaxLifetime,
+                    bodySize,
+                    bodyInitialSpeed,
+                    bodyType,
+
+                    burstEmissionRate, burstSize,
+                    emissionRate,
+                    emitterOffsetHorizontal, emitterOffsetVertical,
+                    emitterReloadTime,
+                    maxBodiesEmitted,
+                    randomizeInitialAngle, randomizeSize));
         }
     }
 

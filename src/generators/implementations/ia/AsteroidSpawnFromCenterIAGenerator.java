@@ -6,7 +6,7 @@ import _helpers.DoubleVector;
 
 import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
-import generators.ports.LifeConfigDTO;
+import generators.ports.IAConfigDTO;
 import world.ports.WorldDefItemDTO;
 import world.ports.WorldDefinition;
 
@@ -17,12 +17,12 @@ public class AsteroidSpawnFromCenterIAGenerator implements Runnable {
     private final WorldEvolver worldEvolver;
     private Thread thread;
     private final WorldDefinition worldDefinition;
-    private final LifeConfigDTO lifeConfig;
+    private final IAConfigDTO lifeConfig;
 
     // *** CONSTRUCTORS ***
 
     public AsteroidSpawnFromCenterIAGenerator(WorldEvolver controller,
-            WorldDefinition worldDefinition, LifeConfigDTO lifeConfig) {
+            WorldDefinition worldDefinition, IAConfigDTO lifeConfig) {
 
         this.worldDefinition = worldDefinition;
         this.items = this.worldDefinition.asteroids;

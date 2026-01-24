@@ -1,7 +1,7 @@
 package generators.implementations;
 
 import controller.ports.WorldEvolver;
-import generators.ports.LifeConfigDTO;
+import generators.ports.IAConfigDTO;
 import world.ports.WorldDefinition;
 
 public class DefaultIAGenerator
@@ -18,7 +18,7 @@ public class DefaultIAGenerator
     // *** CONSTRUCTOR *** //
 
     public DefaultIAGenerator(WorldEvolver controller,
-            WorldDefinition worldDefinition, LifeConfigDTO lifeConfig) {
+            WorldDefinition worldDefinition, IAConfigDTO lifeConfig) {
         super(controller, worldDefinition, lifeConfig);
     }
 }

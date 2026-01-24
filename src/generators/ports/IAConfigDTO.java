@@ -1,6 +1,6 @@
 package generators.ports;
 
-public class LifeConfigDTO {
+public class IAConfigDTO {
 
     public final int maxCreationDelay;
     public final int maxSize;
@@ -16,7 +16,7 @@ public class LifeConfigDTO {
     public final double accX;
     public final double accY;
 
-    public LifeConfigDTO(int maxCreationDelay,
+    public IAConfigDTO(int maxCreationDelay,
             int maxSize, int minSize,
             double maxMass, double minMass,
             int maxSpeedModule, int maxAccModule) {
@@ -38,7 +38,7 @@ public class LifeConfigDTO {
         this.speedY = 0d;
     }
 
-    public LifeConfigDTO(int maxCreationDelay,
+    public IAConfigDTO(int maxCreationDelay,
             int maxSize, int minSize,
             double maxMass, double minMass,
             double accX, double accY,

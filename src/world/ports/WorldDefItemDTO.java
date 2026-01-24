@@ -1,22 +1,12 @@
 package world.ports;
 
-
-/**
- *
- * @author juanm
- */
 public class WorldDefItemDTO {
 
     public final String assetId;
 
-    // Geometry
-    public final double size;
-    public final double angle;
+    // *** CONSTRUCTOR ***
 
-
-    public WorldDefItemDTO(String assetId, double size, double angle) {
+    public WorldDefItemDTO(String assetId) {
         this.assetId = assetId;
-        this.size = size;
-        this.angle = angle;
     }
 }

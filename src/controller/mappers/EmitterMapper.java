@@ -12,26 +12,26 @@ public class EmitterMapper {
             return null;
         }
         return new EmitterConfigDto(
-                emitterDef.type,
-                emitterDef.assetId,
-                emitterDef.size,
-                emitterDef.xOffset,
-                emitterDef.yOffset,
-                emitterDef.speed,
-                emitterDef.acceleration,
-                emitterDef.accelerationTime,
-                emitterDef.angularSpeed,
-                emitterDef.angularAcc,
-                emitterDef.thrust,
-                emitterDef.randomAngle,
-                emitterDef.randomSize,
-                emitterDef.addEmitterSpeed,
-                emitterDef.emisionRate,
+                emitterDef.bodyType,
+                emitterDef.bodyAssetId,
+                emitterDef.bodySize,
+                emitterDef.emitterOffsetHorizontal,
+                emitterDef.emitterOffsetVertical,
+                emitterDef.bodyInitialSpeed,
+                emitterDef.bodyAcceleration,
+                emitterDef.bodyThrustDuration,
+                emitterDef.bodyAngularSpeed,
+                emitterDef.bodyAngularAcceleration,
+                emitterDef.bodyThrust,
+                emitterDef.randomizeInitialAngle,
+                emitterDef.randomizeSize,
+                emitterDef.addEmitterSpeedToBody,
+                emitterDef.emissionRate,
                 emitterDef.maxBodiesEmitted,
                 emitterDef.burstEmissionRate,
                 emitterDef.burstSize,
-                emitterDef.reloadTime,
+                emitterDef.emitterReloadTime,
                 emitterDef.bodyMass,
-                emitterDef.maxLifeTime);
+                emitterDef.bodyMaxLifetime);
     }
 }
