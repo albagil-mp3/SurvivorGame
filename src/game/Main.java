@@ -2,8 +2,8 @@ package game;
 
 import controller.implementations.Controller;
 import game.actions.*;
-import game.actions.level.*;
 import game.ai.*;
+import game.level.*;
 import game.worlddef.RandomWorldDefinitionProvider;
 import model.implementations.Model;
 import utils.assets.implementations.ProjectAssets;

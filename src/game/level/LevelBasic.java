@@ -1,4 +1,4 @@
-package game.actions.level;
+package game.level;
 
 import java.util.ArrayList;
 
