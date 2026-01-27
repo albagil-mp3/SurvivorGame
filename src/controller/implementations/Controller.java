@@ -297,7 +297,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
 
     // region setters
     public void setLocalPlayer(String playerId) {
-        // System.out.println("Controller.setLocalPlayer");
+        System.out.println("*** Controller.setLocalPlayer ***");
         this.view.setLocalPlayer(playerId);
     }
 
@@ -353,7 +353,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     // endregion DomainEventProcessor
 
     // region WorldEvolver
-    @Override // WorldEvolver
+    @Override
     public void addDynamicBody(String assetId, double size, double posX, double posY,
             double speedX, double speedY, double accX, double accY,
             double angle, double angularSpeed, double angularAcc, double thrust) {
@@ -367,13 +367,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.view.addDynamicRenderable(entityId, assetId);
     }
 
-    @Override // WorldEvolver
-    public void bodyEquipTrail(String playerId, DefEmitterDTO bodyEmitterDef) {
-        EmitterConfigDto bodyEmitter = EmitterMapper.fromWorldDef(bodyEmitterDef);
-        this.model.bodyEquipTrail(playerId, bodyEmitter);
-    }
-
-    @Override // WorldEvolver
+    @Override
     public String addPlayer(String assetId, double size, double posX, double posY,
             double speedX, double speedY, double accX, double accY,
             double angle, double angularSpeed, double angularAcc, double thrust) {
@@ -389,8 +383,14 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         return entityId;
     }
 
-    @Override // WorldEvolver
-    public void addWeaponToPlayer(String playerId, DefWeaponDTO weaponDef, int shootingOffset) {
+    @Override
+    public void equipTrail(String playerId, DefEmitterDTO bodyEmitterDef) {
+        EmitterConfigDto bodyEmitter = EmitterMapper.fromWorldDef(bodyEmitterDef);
+        this.model.bodyEquipTrail(playerId, bodyEmitter);
+    }
+
+    @Override
+    public void equipWeapon(String playerId, DefWeaponDTO weaponDef, int shootingOffset) {
 
         WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);
 

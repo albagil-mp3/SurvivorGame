@@ -1,11 +1,13 @@
 package game.core;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import controller.ports.WorldInitializer;
+import world.ports.DefEmitterDTO;
 import world.ports.DefItem;
 import world.ports.DefItemDTO;
-import world.ports.DefItemPrototypeDTO;
+import world.ports.DefWeaponDTO;
 import world.ports.WorldDefinition;
 
 public abstract class AbstractLevelGenerator {
@@ -33,41 +35,63 @@ public abstract class AbstractLevelGenerator {
         this.createWorld();
     }
 
+    // *** PROTECTED ABSTRACT ***
+
+    protected abstract void createStatics();
+
+    protected abstract void createDecorators();
+
+    protected abstract void createPlayers();
+
     // *** PROTECTED ***
+
     protected void addDecoratorIntoTheGame(DefItemDTO deco) {
         this.worldInitializer.addDecorator(deco.assetId, deco.size, deco.posX, deco.posY, deco.angle);
     }
 
-    protected void addStaticTheGame(DefItemDTO bodyDef) {
+    protected String addLocalPlayerIntoTheGame(
+            DefItemDTO bodyDef, ArrayList<DefWeaponDTO> weaponDefs,
+            ArrayList<DefEmitterDTO> trailDefs) {
+
+        String playerId = this.worldInitializer.addPlayer(
+                bodyDef.assetId, bodyDef.size,
+                bodyDef.posX, bodyDef.posY,
+                bodyDef.speedX, bodyDef.speedY,
+                0, 0,
+                bodyDef.angle, bodyDef.angularSpeed,
+                0,
+                bodyDef.thrust);
+
+        if (playerId == null) {
+            throw new IllegalStateException("Failed to create local player.");
+        }
+
+        this.equipEmitters(playerId, trailDefs);
+        this.equipWeapons(playerId, weaponDefs);
+
+        this.worldInitializer.setLocalPlayer(playerId);
+        return playerId;
+    }
+
+    protected void addStaticIntoTheGame(DefItemDTO bodyDef) {
         this.worldInitializer.addStaticBody(
                 bodyDef.assetId, bodyDef.size,
                 bodyDef.posX, bodyDef.posY,
                 bodyDef.angle);
     }
 
-    /**
-     * Standard world creation pipeline.
-     * Subclasses decide which sections they want to create.
-     */
-    protected void createWorld() {
-        this.worldInitializer.loadAssets(this.worldDefinition.gameAssets);
-
-        this.createSpaceDecorators();
-        this.createStaticBodies();
+    protected void equipEmitters(String entityId, ArrayList<DefEmitterDTO> emitterDefs) {
+        for (DefEmitterDTO emitterDef : emitterDefs) {
+            this.worldInitializer.equipTrail(
+                    entityId, emitterDef);
+        }
     }
 
-    /**
-     * Default: no-op. Override if generator needs it.
-     */
-    protected void createStaticBodies() {
-        // no-op by default
-    }
-
-    /**
-     * Default: no-op. Override if generator needs it.
-     */
-    protected void createSpaceDecorators() {
-        // no-op by default
+    protected void equipWeapons(String entityId, ArrayList<DefWeaponDTO> weaponDefs) {
+        for (DefWeaponDTO weaponDef : weaponDefs) {
+            this.worldInitializer.equipWeapon(
+                    entityId, weaponDef, 0);
+        }
     }
 
     protected final DefItemDTO defItemToDTO(DefItem defitem) {
@@ -91,4 +115,16 @@ public abstract class AbstractLevelGenerator {
         }
         return minInclusive + (this.rnd.nextDouble() * (maxInclusive - minInclusive));
     }
+
+    // *** PRIVATE ***
+
+    // Standard world creation pipeline.
+    private final void createWorld() {
+        this.worldInitializer.loadAssets(this.worldDefinition.gameAssets);
+
+        this.createDecorators();
+        this.createStatics();
+        this.createPlayers();
+    }
+
 }

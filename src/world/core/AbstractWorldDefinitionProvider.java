@@ -21,10 +21,25 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // region Constants
     private static final String ASSET_PATH = "src/resources/images/";
-    protected static final double WORLD_MIN = 0.0;
-    protected static final double ANY_HEADING_MIN_DEG = 0.0;
-    protected static final double ANY_HEADING_MAX_DEG = 359.999;
-    protected static final double DEFAULT_DENSITY = 100;
+    private static final double WORLD_MIN = 0.0;
+    private static final double ANY_HEADING_MIN_DEG = 0.0;
+    private static final double ANY_HEADING_MAX_DEG = 359.999;
+    private static final double DEFAULT_DENSITY = 100;
+
+    private final double ZERO_ANGULAR_ACCEL = 0.0;
+    private final double ZERO_ANGULAR_SPEED = 0.0;
+    private final double ZERO_THRUST = 0.0;
+    private final double ZERO_THRUST_DURATION = 0.0;
+    private final double DEFAULT_COSMETIC_MASS = 10.0;
+    private final double LIFETIME = 1.5;
+    private final double ZERO_INITIAL_SPEED = 0.0;
+
+    private final boolean ADD_EMITTER_SPEED_ON_HEADING = true; // typical: particles inherit emitter direction
+
+    private final double ZERO_BURST_RATE = 0.0;
+    private final int ZERO_BURST_SIZE = 0;
+    private final double DEFAULT_RELOAD_TIME = 0.0;
+    private final int ZERO_MAX_BODIES = 0;
     // endregion
 
     // region Fields
@@ -37,19 +52,12 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     public DefBackgroundDTO background;
 
-    // Entity polymorphic lists are grouped by type to simplify core consumption
     public final ArrayList<DefItem> decorators = new ArrayList<>();
     public final ArrayList<DefItem> gravityBodies = new ArrayList<>();
     public final ArrayList<DefItem> asteroids = new ArrayList<>();
     public final ArrayList<DefItem> spaceships = new ArrayList<>();
     public final ArrayList<DefEmitterDTO> trailEmitters = new ArrayList<>();
-
-    // Weapon lists are grouped by type to simplify core consumption
-    public final ArrayList<DefWeaponDTO> bulletWeapons;
-    public final ArrayList<DefWeaponDTO> burstWeapons;
-    public final ArrayList<DefWeaponDTO> mineLaunchers;
-    public final ArrayList<DefWeaponDTO> missileLaunchers;
-    private final WeaponDefRegister weapons;
+    public final ArrayList<DefWeaponDTO> weapons = new ArrayList<>();
     // endregion
 
     // *** CONSTRUCTORS ***
@@ -65,14 +73,8 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
-
         this.projectAssets = assets;
         this.assetsRegister = new WorldAssetsRegister(this.projectAssets, this.gameAssets);
-        this.weapons = new WeaponDefRegister(this.assetsRegister);
-        this.bulletWeapons = weapons.bucket(DefWeaponType.BULLET_WEAPON);
-        this.burstWeapons = weapons.bucket(DefWeaponType.BURST_WEAPON);
-        this.mineLaunchers = weapons.bucket(DefWeaponType.MINE_LAUNCHER);
-        this.missileLaunchers = weapons.bucket(DefWeaponType.MISSILE_LAUNCHER);
     }
 
     // *** PROTECTED ***
@@ -366,6 +368,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
     // region Weapon adders (addWeapon ***)
     protected final void addWeapon(DefWeaponDTO weapon) {
         // Add every weapon type into its respective list
+        this.assetsRegister.registerAssetId(weapon.assetId);
         this.weapons.add(weapon);
     }
 
@@ -499,49 +502,17 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
             boolean randomizeInitialAngle,
             boolean randomizeSize) {
 
-        // Cosmetic defaults:
-        // "no dynamics, no lifetime constraints unless you add them later"
-        final double ZERO_ANGULAR_ACCEL = 0.0;
-        final double ZERO_ANGULAR_SPEED = 0.0;
-        final double ZERO_THRUST = 0.0;
-        final double ZERO_THRUST_DURATION = 0.0;
-        final double DEFAULT_COSMETIC_MASS = 10.0;
-        final double LIFETIME = 1.5;
-        final double ZERO_INITIAL_SPEED = 0.0;
-
-        final boolean ADD_EMITTER_SPEED_ON_HEADING = true; // typical: particles inherit emitter direction
-
-        final double ZERO_BURST_RATE = 0.0;
-        final int ZERO_BURST_SIZE = 0;
-        final double DEFAULT_RELOAD_TIME = 0.0;
-        final int ZERO_MAX_BODIES = 0;
-
         return new DefEmitterDTO(
-                assetId,
-                ZERO_ANGULAR_ACCEL,
-                ZERO_ANGULAR_SPEED,
-                ADD_EMITTER_SPEED_ON_HEADING,
-                ZERO_THRUST,
-                ZERO_THRUST_DURATION,
-                DEFAULT_COSMETIC_MASS,
-                LIFETIME,
-                spriteSize,
-                ZERO_INITIAL_SPEED,
-                bodyType,
-
-                ZERO_BURST_RATE,
-                ZERO_BURST_SIZE,
-                emissionRate,
-                offsetHorizontal,
-                offsetVertical,
-                DEFAULT_RELOAD_TIME,
-                ZERO_MAX_BODIES,
-                randomizeInitialAngle,
-                randomizeSize);
+                assetId, ZERO_ANGULAR_ACCEL, ZERO_ANGULAR_SPEED,
+                ADD_EMITTER_SPEED_ON_HEADING, ZERO_THRUST,
+                ZERO_THRUST_DURATION, DEFAULT_COSMETIC_MASS,
+                LIFETIME, spriteSize, ZERO_INITIAL_SPEED, bodyType,
+                ZERO_BURST_RATE, ZERO_BURST_SIZE, emissionRate,
+                offsetHorizontal, offsetVertical, DEFAULT_RELOAD_TIME,
+                ZERO_MAX_BODIES, randomizeInitialAngle, randomizeSize);
     }
 
     private final void reset() {
-
         // Resets asset catalog to avoid cross-world leakage between provide() calls
         this.gameAssets.reset();
 
@@ -595,10 +566,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
                 new ArrayList<>(this.asteroids),
                 new ArrayList<>(this.spaceships),
                 new ArrayList<>(this.trailEmitters),
-                new ArrayList<>(this.bulletWeapons),
-                new ArrayList<>(this.burstWeapons),
-                new ArrayList<>(this.mineLaunchers),
-                new ArrayList<>(this.missileLaunchers));
+                new ArrayList<>(this.weapons));
     }
     // endregion
 

@@ -1,13 +1,16 @@
 package game.core;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
 import utils.helpers.DoubleVector;
+import world.ports.DefEmitterDTO;
 import world.ports.DefItem;
 import world.ports.DefItemDTO;
 import world.ports.DefItemPrototypeDTO;
+import world.ports.DefWeaponDTO;
 import world.ports.WorldDefinition;
 
 public abstract class AbstractIAGenerator implements Runnable {
@@ -68,6 +71,44 @@ public abstract class AbstractIAGenerator implements Runnable {
                 bodyDef.thrust);
     }
 
+    protected String addLocalPlayerIntoTheGame(
+            DefItemDTO bodyDef, ArrayList<DefWeaponDTO> weaponDefs,
+            ArrayList<DefEmitterDTO> trailDefs) {
+
+        String playerId = this.worldEvolver.addPlayer(
+                bodyDef.assetId, bodyDef.size,
+                bodyDef.posX, bodyDef.posY,
+                bodyDef.speedX, bodyDef.speedY,
+                0, 0,
+                bodyDef.angle, bodyDef.angularSpeed,
+                0,
+                bodyDef.thrust);
+
+        if (playerId == null) {
+            throw new IllegalStateException("Failed to create local player.");
+        }
+
+        this.equipEmitters(playerId, trailDefs);
+        this.equipWeapons(playerId, weaponDefs);
+
+        this.worldEvolver.setLocalPlayer(playerId);
+        return playerId;
+    }
+
+    protected void equipEmitters(String entityId, ArrayList<DefEmitterDTO> emitterDefs) {
+        for (DefEmitterDTO emitterDef : emitterDefs) {
+            this.worldEvolver.equipTrail(
+                    entityId, emitterDef);
+        }
+    }
+
+    protected void equipWeapons(String entityId, ArrayList<DefWeaponDTO> weaponDefs) {
+        for (DefWeaponDTO weaponDef : weaponDefs) {
+            this.worldEvolver.equipWeapon(
+                    entityId, weaponDef, 0);
+        }
+    }
+
     protected String getThreadName() {
         return this.getClass().getSimpleName();
     }
@@ -120,7 +161,6 @@ public abstract class AbstractIAGenerator implements Runnable {
     // }
     // endregion
 
-
     // *** INTERFACE IMPLEMENTATION ***
 
     // region Runnable
@@ -140,7 +180,5 @@ public abstract class AbstractIAGenerator implements Runnable {
         }
     }
     // endregion
-
-
 
 }

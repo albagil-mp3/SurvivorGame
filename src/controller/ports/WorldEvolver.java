@@ -15,9 +15,9 @@ public interface WorldEvolver {
             double speedX, double speedY, double accX, double accY,
             double angle, double angularSpeed, double angularAcc, double thrust);
 
-    public void addWeaponToPlayer(String playerId, DefWeaponDTO weaponDef, int shootingOffset);
+    public void equipWeapon(String playerId, DefWeaponDTO weaponDef, int shootingOffset);
 
-    public void bodyEquipTrail(
+    public void equipTrail(
             String playerId, DefEmitterDTO bodyEmitterDef);
 
     public Dimension getWorldDimension();

@@ -14,17 +14,13 @@ public class WorldDefinition {
 	public final DefBackgroundDTO background;
 
 	// Entity polymorphic lists are grouped by type to simplify core consumption
-	public final ArrayList<DefItem> spaceDecorators; 
-	public final ArrayList<DefItem> gravityBodies; 
-	public final ArrayList<DefItem> asteroids; 
-	public final ArrayList<DefItem> spaceships; 
-	public final ArrayList<DefEmitterDTO> trailEmitters;
+	public final ArrayList<DefItem> spaceDecorators;
+	public final ArrayList<DefItem> gravityBodies;
+	public final ArrayList<DefItem> asteroids;
+	public final ArrayList<DefItem> spaceships;
 
-	// Weapon lists are grouped by type to simplify core consumption
-	public final ArrayList<DefWeaponDTO> bulletWeapons;
-	public final ArrayList<DefWeaponDTO> burstWeapons;
-	public final ArrayList<DefWeaponDTO> mineLaunchers;
-	public final ArrayList<DefWeaponDTO> missileLaunchers;
+	public final ArrayList<DefEmitterDTO> trailEmitters;
+	public final ArrayList<DefWeaponDTO> weapons;
 	// endregion
 
 	// *** CONSTRUCTOR ***
@@ -39,10 +35,7 @@ public class WorldDefinition {
 			ArrayList<DefItem> asteroids,
 			ArrayList<DefItem> spaceships,
 			ArrayList<DefEmitterDTO> trailEmitters,
-			ArrayList<DefWeaponDTO> bulletWeapons,
-			ArrayList<DefWeaponDTO> burstWeapons,
-			ArrayList<DefWeaponDTO> mineLaunchers,
-			ArrayList<DefWeaponDTO> missileLaunchers) {
+			ArrayList<DefWeaponDTO> weapons) {
 
 		this.worldWidth = worldWidth;
 		this.worldHeight = worldHeight;
@@ -51,10 +44,7 @@ public class WorldDefinition {
 		this.spaceDecorators = spaceDecorators;
 		this.gravityBodies = gravityBodies;
 		this.asteroids = asteroids;
-		this.bulletWeapons = bulletWeapons;
-		this.burstWeapons = burstWeapons;
-		this.mineLaunchers = mineLaunchers;
-		this.missileLaunchers = missileLaunchers;
+		this.weapons = weapons;
 		this.spaceships = spaceships;
 		this.trailEmitters = trailEmitters;
 	}

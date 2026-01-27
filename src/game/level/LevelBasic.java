@@ -4,8 +4,10 @@ import java.util.ArrayList;
 
 import controller.ports.WorldInitializer;
 import game.core.AbstractLevelGenerator;
+import world.ports.DefEmitterDTO;
 import world.ports.DefItem;
 import world.ports.DefItemDTO;
+import world.ports.DefWeaponDTO;
 import world.ports.WorldDefinition;
 
 public class LevelBasic extends AbstractLevelGenerator {
@@ -19,7 +21,7 @@ public class LevelBasic extends AbstractLevelGenerator {
     // *** PROTECTED (alphabetic order) ***
 
     @Override
-    protected void createSpaceDecorators() {
+    protected void createDecorators() {
         ArrayList<DefItem> decorators = this.getWorldDefinition().spaceDecorators;
 
         for (DefItem def : decorators) {
@@ -29,12 +31,26 @@ public class LevelBasic extends AbstractLevelGenerator {
     }
 
     @Override
-    protected void createStaticBodies() {
+    protected void createStatics() {
         ArrayList<DefItem> bodyDefs = this.getWorldDefinition().gravityBodies;
 
         for (DefItem def : bodyDefs) {
             DefItemDTO body = this.defItemToDTO(def);
-            this.addStaticTheGame(body);
+            this.addStaticIntoTheGame(body);
+        }
+    }
+
+    @Override
+    protected void createPlayers() {
+        WorldDefinition worldDef = this.getWorldDefinition();
+        ArrayList<DefItem> shipDefs = worldDef.spaceships;
+        ArrayList<DefWeaponDTO> weaponDefs = worldDef.weapons;
+        ArrayList<DefEmitterDTO> trailDefs = worldDef.trailEmitters;
+
+        for (DefItem def : shipDefs) {
+            DefItemDTO body = this.defItemToDTO(def);
+
+            this.addLocalPlayerIntoTheGame(body, weaponDefs, trailDefs);
         }
     }
 }

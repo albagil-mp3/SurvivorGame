@@ -66,17 +66,4 @@ public final class WorldAssetsRegister {
 
         this.gameAssets.register(info);
     }
-
-    public void registerAssetIds(Iterable<String> assetIds) {
-        if (assetIds == null)
-            return;
-
-        for (String id : assetIds) {
-            if (id == null || id.isBlank())
-                throw new IllegalArgumentException("assetIds cannot contain null/blank ids.");
-
-            registerAssetId(id);
-
-        }
-    }
 }
