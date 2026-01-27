@@ -1,459 +1,712 @@
-Informe jerárquico de paquetes para local/MVCGameEngine — rama: work — generado el 2026-01-27.
+# Informe jerárquico de paquetes para local/MVCGameEngine — rama: work — generado el 2026-01-27
 
 ## Micro-resumen arquitectural
-El proyecto sigue un esquema MVC clásico: `model` contiene la simulación y reglas de dominio, `view` se ocupa del rendering y el input, y `controller` coordina el flujo entre ambos. Encima de esa base hay un paquete `game` con configuraciones concretas (acciones, niveles, IA y definición de mundos) y un paquete `world` con DTOs y fábricas de definiciones. `utils` agrupa infraestructura transversal (eventos, assets, imágenes, helpers), mientras `resources` contiene activos no Java.
 
-**Paquetes de primer nivel detectados:** `view`, `world`, `model`, `game`, `utils`, `resources`, `controller`.
+El proyecto implementa un engine 2D educativo con arquitectura MVC donde el `Controller` actúa como coordinador entre la simulación (`Model`) y la presentación (`View`). El `Model` mantiene el estado de entidades, procesa eventos de dominio y ejecuta físicas, mientras que la `View` gestiona renderizado activo, assets e input de usuario; la comunicación se hace mediante DTOs para evitar acceso directo a estado mutable y preservar el aislamiento entre capas. Véase el flujo de coordinación descrito en el controlador y el rol de los snapshots en el modelo y la vista ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java), [Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java), [View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java)).
 
-## Paquetes de primer nivel (grid resumen)
+Se emplean patrones como MVC, Factory (creación de bodies y armas), Strategy (motores de físicas intercambiables) y Template Method para generadores de niveles/IA y proveedores de definición de mundo. Esto habilita un core extensible donde reglas de juego y definición de mundo pueden cambiarse sin tocar las capas de render o simulación ([BodyFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyFactory.java), [WeaponFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponFactory.java), [PhysicsEngine.java](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/ports/PhysicsEngine.java), [AbstractIAGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java), [AbstractLevelGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractLevelGenerator.java), [AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java)).
 
-| Paquete | Descripción breve | Subpaquetes internos (lista corta) |
+Sobre el acoplamiento: los tres paquetes de primer nivel `model`, `view` y `controller` están conectados de forma explícita, pero se mantiene un desacoplamiento efectivo gracias a interfaces/puertos (`controller.ports.*`, `model.ports.*`, `view.renderables.ports.*`) y DTOs que permiten que el render nunca toque entidades físicas directamente y que las reglas de juego se inyecten mediante el contrato `ActionsGenerator`. Este diseño reduce dependencias circulares y permite sustituir reglas o motores de físicas sin modificar la UI ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java), [Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java), [Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java), [View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java)).
+
+### Grid de paquetes de primer nivel
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `view` | Presentación Swing, render loop y HUDs. | `core`, `huds`, `renderables` |
-| `world` | Definiciones y DTOs del mundo/juego. | `ports`, `core` |
-| `model` | Simulación y estado del juego (física, cuerpos, armas). | `ports`, `physics`, `emitter`, `spatial`, `bodies`, `implementations`, `weapons` |
-| `game` | Configuraciones y reglas concretas del juego. | `core`, `implementations` |
-| `utils` | Infraestructura transversal (eventos, assets, helpers). | `actions`, `assets`, `events`, `fx`, `helpers`, `images` |
-| `resources` | Activos no Java (imágenes). | `images` |
-| `controller` | Orquestación MVC, mappers y puertos. | `mappers`, `ports`, `implementations` |
+| `controller` (`src/controller`) | Orquestación MVC y puente entre Model y View. | Inyección de dependencias, mapeo DTOs, reglas de juego, ciclo de vida. |
+| `game` (`src/game`) | Configuración de juego y reglas específicas. | Main, IA, generación de niveles y reglas de colisión/acciones. |
+| `model` (`src/model`) | Núcleo de simulación y físicas. | Entidades, colisiones, eventos, armas, emisores, físicas. |
+| `resources` (`src/resources`) | Assets gráficos del juego. | Imágenes, sprites, fondos, efectos. |
+| `utils` (`src/utils`) | Utilidades compartidas y frameworks transversales. | Assets, eventos, acciones, spatial grid, imágenes, helpers. |
+| `view` (`src/view`) | Presentación, render y HUD. | Render loop, UI, input, DTOs de render. |
+| `world` (`src/world`) | Definición de mundos y catálogos de ítems. | Proveedores de world definitions, DTOs de definición. |
 
 ---
 
-## Paquete: `view`
-**Descripción:** Capa de presentación basada en Swing que administra el rendering activo, HUDs y DTOs de render. Coordina input del usuario y consume snapshots del `controller`.
+## Paquete `controller` (`src/controller`)
 
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave (máx. 5) | Principales clases (máx. 8) |
+Capa de orquestación entre simulación y presentación que implementa el coordinador MVC y encapsula las reglas de juego mediante puertos. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+
+### Grid resumen de subpaquetes
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `core`, `huds`, `renderables` | UI Swing, render loop activo, HUDs, DTOs visuales, sprites/cache de imágenes | [`View`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java), [`Renderer`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/Renderer.java), [`ControlPanel`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/ControlPanel.java), [`PlayerHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/PlayerHUD.java), [`SystemHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SystemHUD.java), [`SpatialGridHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SpatialGridHUD.java), [`DynamicRenderDTO`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/ports/DynamicRenderDTO.java), [`Renderable`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/implementations/Renderable.java) |
+| `controller.implementations` | Implementación concreta del controlador. | Ciclo de vida del engine, orquestación MVC, traducción de eventos. |
+| `controller.mappers` | Mapeos DTO entre Model y View. | Conversión de Body/Player DTOs a Render DTOs. |
+| `controller.ports` | Contratos de integración. | Interfaces para reglas, estado del engine y evolución del mundo. |
 
 ### Análisis detallado
-- **Propósito y responsabilidades:** Rendering activo con buffer triple, HUDs de diagnóstico y conversión de DTOs visuales. También traduce eventos de teclado en comandos del controlador.
-- **Interacción con otras capas:** Consume snapshots del `controller` (e.g., `getDynamicRenderablesData`) y publica acciones de input al controlador. No toca el `model` directamente.
-- **Concurrencia:** El render loop corre en su propio thread; usa colecciones concurrentes y estrategias de copy-on-write para renderables estáticos.
-- **Patrones de diseño:** MVC, DTO, Strategy de renderizado por renderables, doble buffer/triple buffer.
-- **Riesgos/puntos de atención:** La separación de snapshot dinámico vs. estático exige coherencia entre actualizaciones; potenciales costos de sincronización si se incrementa el número de entidades.
-- **Recomendaciones:** Añadir métricas y pruebas de rendimiento para el loop de render; documentar la estrategia de snapshot estático para futuros cambios.
 
-### Subpaquete: `view.core`
-**Descripción:** Núcleo de la UI y el loop de render. Encapsula el canvas, la ventana principal y la interacción con el controlador.
+- **Propósito:** centralizar la coordinación entre simulación y renderizado, inyectando reglas de juego y transformando datos de dominio en DTOs de render. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Responsabilidades principales:**
+  - Activación del engine y configuración de dimensiones; entrega de snapshots y notificaciones a la vista. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+  - Traducción de eventos de dominio a acciones mediante `ActionsGenerator`. ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java))
+  - Uso de mappers para construir DTOs de render. ([DynamicRenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/DynamicRenderableMapper.java), [PlayerRenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/PlayerRenderableMapper.java))
+- **Interacción con otras capas/paquetes:**
+  - Consume `model` y `world` para crear entidades y ejecutar reglas. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+  - Publica DTOs a `view` y recibe input desde `view` mediante inyección directa del controlador en la vista. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+  - Se desacopla mediante interfaces en `controller.ports` (`ActionsGenerator`, `WorldInitializer`, `WorldEvolver`). ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java), [WorldInitializer.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldInitializer.java), [WorldEvolver.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldEvolver.java))
+- **Concurrencia / threading:** el controlador es mayormente un façade con estado mínimo; los accesos de snapshots se realizan en el render loop y se apoyan en DTOs inmutables para evitar compartir estado mutable. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Principales clases/interfaces/DTOs:**
+  - `Controller` (coordinador MVC). ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+  - `ActionsGenerator` (contrato de reglas). ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java))
+  - `WorldInitializer`/`WorldEvolver` (contratos para bootstrap y evolución). ([WorldInitializer.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldInitializer.java), [WorldEvolver.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldEvolver.java))
+- **Patrones de diseño relevantes:** MVC, DTO + Mapper, Dependency Injection a través de puertos.
+- **Puntos de atención:**
+  - Probar integración de mappers para asegurar que cambios en DTOs no rompan el render.
+  - Los métodos de notificación (alta/baja de entidades) son críticos para consistencia entre Model y View.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `controller.implementations`
+
+**Descripción:** implementación principal del controlador MVC con responsabilidades de activación, reglas y bridge entre capas. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Ventana Swing, render loop, input de teclado, configuración de assets | [`View`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java), [`Renderer`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/Renderer.java), [`ControlPanel`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/ControlPanel.java), [`SystemDTO`](https://github.com/local/MVCGameEngine/blob/work/src/view/core/SystemDTO.java) |
+| `controller.implementations` | Implementación concreta del controlador. | Activación del engine, coordinación MVC, reglas de juego. |
 
 **Análisis detallado**
-- **Responsabilidades:** Arranque de ventana, activación del render loop, carga de imágenes, y manejo de input para comandos del jugador.
-- **Interacciones:** `View` recibe un `Controller` inyectado y lo consulta para obtener DTOs de render. `Renderer` consulta `View` para snapshots y estado del motor.
-- **Concurrencia:** `Renderer` corre en thread propio; usa `ConcurrentHashMap` y swaps atómicos para renderables estáticos.
-- **Patrones:** MVC, Active Object (render thread), DTOs.
-- **Puntos de atención:** La sincronización entre el render thread y el thread de simulación depende de snapshots consistentes; cambios aquí pueden impactar estabilidad visual.
-- **Recomendaciones:** Agregar un modo de pausa explícito en `EngineState` para evitar render loop innecesario; documentar expectativas del frame pacing.
 
-**Detalles críticos**
-- Render loop de `Renderer` con BufferStrategy triple y VolatileImage para fondo; cambios deben probarse con diferentes GPUs.
-- Estrategia de copy-on-write para renderables estáticos para evitar locks en el render thread.
-- Acceso concurrente a `dynamicRenderables` desde el render thread y eventos de muerte necesita limpieza consistente.
+- **Propósito:** ejecutar la lógica de orquestación y enlazar Model/View. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Responsabilidades principales:** bootstrap de mundo, creación de entidades y rutas de comandos del jugador. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Interacción:** consume `model` y `view` directamente; usa `world` para configuraciones de armas y emisores. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Concurrencia:** usa estado `EngineState` volatile; los snapshots de render son DTOs nuevos por llamada. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Clases clave:** `Controller`. ([Controller.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java))
+- **Patrones:** Fachada + Coordinador MVC.
 
-### Subpaquete: `view.huds`
-**Descripción:** Widgets de HUD y componentes básicos reutilizables para superposiciones de debugging y UI.
+### Subpaquete `controller.mappers`
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+**Descripción:** conjunto de mapeadores de dominio a render para aislar dependencias de la vista. ([DynamicRenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/DynamicRenderableMapper.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `core`, `implementations` | Componentes base de HUD, render de texto/barras, HUDs concretos | [`GridHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/core/GridHUD.java), [`DataHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/core/DataHUD.java), [`Item`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/core/Item.java), [`PlayerHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/PlayerHUD.java), [`SystemHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SystemHUD.java), [`SpatialGridHUD`](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SpatialGridHUD.java) |
+| `controller.mappers` | Translación DTO de Model a View. | Mapear cuerpos, jugadores, armas y estadísticas. |
 
 **Análisis detallado**
-- **Responsabilidades:** Composición de ítems UI (texto, iconos, barras) y HUDs concretos para jugador, sistema y grid espacial.
-- **Interacciones:** Consumidos por `Renderer` para dibujar overlays; no interactúan con `model`.
-- **Concurrencia:** Operan en el render thread, sin acceso concurrente explícito.
-- **Patrones:** Composite/Renderer para elementos del HUD.
-- **Riesgos:** HUDs podrían impactar performance si se incrementa la lógica por frame.
-- **Recomendaciones:** Asegurar que el dibujo de HUD sea opcional en builds de producción.
 
-### Subpaquete: `view.renderables`
-**Descripción:** DTOs y clases de render que representan snapshots visuales de entidades.
+- **Propósito:** encapsular lógica de conversión entre DTOs del `model` y DTOs del `view`. ([RenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/RenderableMapper.java))
+- **Responsabilidades principales:** convertir `BodyDTO` en `RenderDTO`, `PlayerDTO` en `PlayerRenderDTO`, etc. ([PlayerRenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/PlayerRenderableMapper.java), [DynamicRenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/DynamicRenderableMapper.java))
+- **Interacción:** consumen DTOs del `model` y entregan DTOs para `view`. ([DynamicRenderableMapper.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/DynamicRenderableMapper.java))
+- **Patrones:** Mapper/Assembler.
+- **Puntos de atención:** mantener sincronización de campos cuando se agreguen nuevos atributos a DTOs.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `controller.ports`
+
+**Descripción:** contratos para reglas de juego, estados del engine y construcción/evolución del mundo. ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `ports`, `implementations` | DTOs de render, sprites dinámicos/estáticos | [`RenderDTO`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/ports/RenderDTO.java), [`DynamicRenderDTO`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/ports/DynamicRenderDTO.java), [`PlayerRenderDTO`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/ports/PlayerRenderDTO.java), [`SpatialGridStatisticsRenderDTO`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/ports/SpatialGridStatisticsRenderDTO.java), [`Renderable`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/implementations/Renderable.java), [`DynamicRenderable`](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/implementations/DynamicRenderable.java) |
+| `controller.ports` | Interfaces de integración. | Reglas, evolución del mundo y estados del engine. |
 
 **Análisis detallado**
-- **Responsabilidades:** Encapsular datos de render (posición, ángulo, assetId) y permitir actualización/paint de sprites.
-- **Interacciones:** DTOs son producidos por el `controller` y consumidos por el `Renderer`.
-- **Concurrencia:** Los DTOs se tratan como snapshots inmutables.
-- **Patrones:** DTO, estrategia de render por tipo de entidad.
-- **Recomendaciones:** Documentar contrato de inmutabilidad para evitar referencias compartidas.
 
----
-
-## Paquete: `controller`
-**Descripción:** Orquestador del MVC. Traduce eventos de UI a acciones del modelo y mapea DTOs de dominio a DTOs de render.
-
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `mappers`, `ports`, `implementations` | Coordinación MVC, mapping DTOs, control de estado del motor | [`Controller`](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java), [`ActionsGenerator`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java), [`EngineState`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/EngineState.java), [`WorldInitializer`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldInitializer.java), [`WorldEvolver`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldEvolver.java), [`RenderableMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/RenderableMapper.java), [`DynamicRenderableMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/DynamicRenderableMapper.java), [`PlayerRenderableMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/PlayerRenderableMapper.java) |
-
-### Análisis detallado
-- **Propósito:** Coordinar la activación del motor, iniciar el mundo y mediar entre `model` y `view` mediante DTOs.
-- **Interacción con capas:** Consume `Model` para snapshots y comandos; sirve a `View` con DTOs de render y estado.
-- **Concurrencia:** Recibe calls desde render thread (pull de snapshots) y desde threads de simulación (notificaciones de entidades), evitando estado compartido mediante DTOs nuevos.
-- **Patrones:** Facade, DTO Mapper, MVC.
-- **Riesgos:** Cambio en contratos de DTOs puede romper mappers; revisiones deben mantenerse sincronizadas.
-- **Recomendaciones:** Añadir tests unitarios para mappers y flujos de activación.
-
-### Subpaquete: `controller.mappers`
-**Descripción:** Transformadores entre DTOs de dominio (model/world) y DTOs de render (view).
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| — | Mapping entre capas, separación de concerns | [`RenderableMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/RenderableMapper.java), [`DynamicRenderableMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/DynamicRenderableMapper.java), [`PlayerRenderableMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/PlayerRenderableMapper.java), [`SpatialGridStatisticsMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/SpatialGridStatisticsMapper.java), [`WeaponMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/WeaponMapper.java), [`WeaponTypeMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/WeaponTypeMapper.java), [`EmitterMapper`](https://github.com/local/MVCGameEngine/blob/work/src/controller/mappers/EmitterMapper.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Transformar DTOs de dominio a DTOs de render sin compartir estado mutable.
-- **Interacciones:** Consumidos principalmente por `Controller`.
-- **Patrones:** Mapper, DTO.
-- **Riesgos:** Desalineación con cambios en DTOs; falta de tests.
-- **Recomendaciones:** Asegurar tests de mappers con casos de borde.
-
-### Subpaquete: `controller.ports`
-**Descripción:** Interfaces y enums que definen contratos entre capas.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| — | Contratos del controlador y estado del engine | [`ActionsGenerator`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java), [`EngineState`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/EngineState.java), [`WorldInitializer`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldInitializer.java), [`WorldEvolver`](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldEvolver.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Definir API mínima para inicialización y evolución del mundo.
+- **Propósito:** permitir desacoplamiento entre core del engine y reglas/implementaciones concretas. ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java))
+- **Responsabilidades principales:**
+  - `ActionsGenerator` define el contrato de reglas de juego. ([ActionsGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/ActionsGenerator.java))
+  - `WorldInitializer` y `WorldEvolver` exponen operaciones de bootstrap y runtime. ([WorldInitializer.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldInitializer.java), [WorldEvolver.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/WorldEvolver.java))
+  - `EngineState` define estados del ciclo de vida. ([EngineState.java](https://github.com/local/MVCGameEngine/blob/work/src/controller/ports/EngineState.java))
 - **Patrones:** Ports & Adapters.
-- **Recomendaciones:** Documentar invariantes de `EngineState` para facilitar nuevos modos (pausa).
-
-### Subpaquete: `controller.implementations`
-**Descripción:** Implementación concreta del `Controller`.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| — | Coordinación MVC y flujo de juego | [`Controller`](https://github.com/local/MVCGameEngine/blob/work/src/controller/implementations/Controller.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Arranque del engine, configuración de world dimension, y puente entre capas.
-- **Patrones:** Facade, Dependency Injection.
-- **Recomendaciones:** Tests de integración mínimos para flujos `activate()`.
 
 ---
 
-## Paquete: `model`
-**Descripción:** Núcleo de simulación; gestiona cuerpos, física, armas y eventos de dominio.
+## Paquete `game` (`src/game`)
 
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave | Principales clases |
+Contiene la configuración de la experiencia de juego, desde el `Main` hasta reglas, IA y generadores de niveles. ([Main.java](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java))
+
+### Grid resumen de subpaquetes
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `ports`, `physics`, `emitter`, `spatial`, `bodies`, `implementations`, `weapons` | Simulación, física, colisiones, eventos de dominio, snapshots DTO | [`Model`](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java), [`AbstractBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/core/AbstractBody.java), [`DynamicBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/DynamicBody.java), [`PlayerBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/PlayerBody.java), [`ProjectileBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/ProjectileBody.java), [`SpatialGrid`](https://github.com/local/MVCGameEngine/blob/work/src/model/spatial/core/SpatialGrid.java), [`AbstractPhysicsEngine`](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/core/AbstractPhysicsEngine.java), [`AbstractWeapon`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/core/AbstractWeapon.java) |
-
-> Nota: el paquete `model` contiene más de 15 clases; se listan las más relevantes. Otros archivos no listados — ver enlace al directorio.
+| `game.actions` | Reglas de colisión y límites. | Traducción de eventos a acciones. |
+| `game.ai` | Generadores de IA. | Spawners de entidades dinámicas. |
+| `game.core` | Infraestructura de generadores. | Template Methods para niveles/IA. |
+| `game.level` | Definición de niveles. | Nivel básico y configuración de escenas. |
+| `game.worlddef` | Proveedores de mundos. | World definitions concretas. |
 
 ### Análisis detallado
-- **Propósito:** Ejecutar la simulación, manejar colisiones y generar eventos del dominio.
-- **Interacción con otras capas:** Expone snapshots DTO al `controller` y recibe comandos del `controller` (e.g., thrust, fire).
-- **Concurrencia:** Cada entidad dinámica puede tener su propio thread; uso intensivo de `ConcurrentHashMap` y snapshots inmutables.
-- **Patrones:** Strategy (motores de física/armas), Factory (`BodyFactory`, `WeaponFactory`), DTO, Observer de eventos.
-- **Riesgos:** Alto acoplamiento entre cuerpos, física y eventos; cambios en el modelo pueden impactar IA y render.
-- **Recomendaciones:** Pruebas de colisiones y rendimiento; documentar parámetros de `SpatialGrid`.
 
-**Detalles críticos**
-- Física y colisiones se apoyan en `SpatialGrid` para reducir complejidad; cualquier cambio en tamaño de celda impacta performance.
-- El pipeline de eventos → acciones es central para comportamiento; debe ser validado en escenarios de carga.
-- Concurrencia por entidad requiere vigilancia en estados y sincronización para evitar inconsistencias.
+- **Propósito:** orquestar un juego concreto encima del engine genérico. ([Main.java](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java))
+- **Responsabilidades principales:**
+  - Arranque del motor con `Controller`, `Model` y `View`. ([Main.java](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java))
+  - Aplicación de reglas de juego mediante `ActionsGenerator`. ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+  - Spawning de entidades dinámicas y jugadores. ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+- **Interacción con otras capas/paquetes:**
+  - Se apoya en `controller.ports` para evolucionar el mundo. ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+  - Consume definiciones de mundo (`world`) y assets (`utils.assets`). ([Main.java](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java))
+- **Concurrencia / threading:** los generadores de IA suelen ejecutar su propio ciclo (ver generador abstracto). ([AbstractIAGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java))
+- **Principales clases/interfaces/DTOs:**
+  - `Main` (arranque). ([Main.java](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java))
+  - `ActionsReboundCollisionPlayerImmunity` (reglas base). ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+  - `AIBasicSpawner` (spawner básico). ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+- **Patrones de diseño relevantes:** Template Method en generadores, Strategy para reglas (implementaciones de `ActionsGenerator`).
+- **Puntos de atención:** validar límites de spawners y evitar que reglas de juego ignoren eventos críticos (colisiones, límites).
 
-### Subpaquete: `model.implementations`
-**Descripción:** Implementación principal del modelo y estado general.
+### Subpaquete `game.actions`
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+**Descripción:** implementaciones de reglas que traducen eventos de dominio a acciones del engine. ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Simulación central, snapshots, eventos | [`Model`](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java) |
+| `game.actions` | Reglas de acción. | Resolver colisiones, límites, vida y emisiones. |
 
 **Análisis detallado**
-- **Responsabilidades:** Administración de entidades, generación de snapshots, gestión del estado del motor.
-- **Interacciones:** Consume `DomainEventProcessor` y publica eventos para acciones.
-- **Concurrencia:** `ConcurrentHashMap` para entidades; buffers reutilizables para snapshots.
-- **Recomendaciones:** Aislar la configuración del `SpatialGrid` para facilitar tuning.
 
-### Subpaquete: `model.ports`
-**Descripción:** Contratos del modelo y estado.
+- **Propósito:** aplicar reglas específicas de colisión/limitaciones. ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+- **Responsabilidades principales:** mapear `DomainEvent` a `ActionDTO`. ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+- **Interacción:** consume eventos del `model` vía `controller.ports.ActionsGenerator`. ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+- **Patrones:** Strategy (por implementación de `ActionsGenerator`).
+- **Puntos de atención:** cobertura de casos de inmunidad y colisiones múltiple.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `game.ai`
+
+**Descripción:** lógica de generación de entidades dinámicas y players. ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Interfaces y enums para eventos y estado | [`DomainEventProcessor`](https://github.com/local/MVCGameEngine/blob/work/src/model/ports/DomainEventProcessor.java), [`ModelState`](https://github.com/local/MVCGameEngine/blob/work/src/model/ports/ModelState.java) |
+| `game.ai` | Spawners/IA. | Creación periódica de asteroides y jugadores. |
 
 **Análisis detallado**
-- **Responsabilidades:** Formalizar cómo se procesan eventos y el ciclo de vida del modelo.
-- **Recomendaciones:** Documentar transición de estados.
 
-### Subpaquete: `model.physics`
-**Descripción:** Motores de física y valores de estado físico.
+- **Propósito:** spawnear entidades basado en definiciones de mundo. ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+- **Responsabilidades principales:** seleccionar definiciones y crear dinámicos/jugadores. ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+- **Interacción:** usa `WorldEvolver` para insertar entidades y `WorldDefinition` como fuente. ([AIBasicSpawner.java](https://github.com/local/MVCGameEngine/blob/work/src/game/ai/AIBasicSpawner.java))
+- **Concurrencia:** hereda ciclo de vida de `AbstractIAGenerator` (thread propio). ([AbstractIAGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java))
+- **Patrones:** Template Method (abstract generator).
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `game.core`
+
+**Descripción:** infraestructura base para generadores de IA y niveles. ([AbstractIAGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `ports`, `implementations`, `core` | Cálculo de física, rebotes, DTOs de valores físicos | [`PhysicsEngine`](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/ports/PhysicsEngine.java), [`PhysicsValuesDTO`](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/ports/PhysicsValuesDTO.java), [`AbstractPhysicsEngine`](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/core/AbstractPhysicsEngine.java), [`BasicPhysicsEngine`](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/implementations/BasicPhysicsEngine.java), [`NullPhysicsEngine`](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/implementations/NullPhysicsEngine.java) |
+| `game.core` | Infraestructura base. | Ciclo de vida y utilidades para generadores. |
 
 **Análisis detallado**
-- **Responsabilidades:** Mantener y actualizar posición, velocidad, aceleración, rebotes.
-- **Interacciones:** Usado por cuerpos dinámicos y proyectiles.
-- **Concurrencia:** Uso de `AtomicReference` para valores físicos en `AbstractPhysicsEngine`.
-- **Patrones:** Strategy (motores de física), DTO.
-- **Riesgos:** Cambios en cálculos pueden afectar determinismo; requiere pruebas de colisión.
 
-### Subpaquete: `model.emitter`
-**Descripción:** Emisores para trails o partículas.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `ports`, `implementations`, `core` | Emisión de cuerpos o partículas | [`Emitter`](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/ports/Emitter.java), [`EmitterConfigDto`](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/ports/EmitterConfigDto.java), [`AbstractEmitter`](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/core/AbstractEmitter.java), [`BasicEmitter`](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/implementations/BasicEmitter.java), [`BurstEmitter`](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/implementations/BurstEmitter.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Generar eventos de emisión para efectos o proyectiles.
-- **Interacciones:** Controlado por `Model` y `Controller` al equipar jugadores.
-- **Patrones:** Strategy, Template Method en emisores abstractos.
-- **Recomendaciones:** Documentar tasas de emisión y límites.
-
-### Subpaquete: `model.spatial`
-**Descripción:** Particionamiento espacial para colisiones.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `ports`, `core` | Grid espacial, estadísticas de colisión | [`SpatialGrid`](https://github.com/local/MVCGameEngine/blob/work/src/model/spatial/core/SpatialGrid.java), [`Cells`](https://github.com/local/MVCGameEngine/blob/work/src/model/spatial/core/Cells.java), [`SpatialGridStatisticsDTO`](https://github.com/local/MVCGameEngine/blob/work/src/model/spatial/ports/SpatialGridStatisticsDTO.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Asignar cuerpos a celdas y proveer candidatos para colisiones.
-- **Interacciones:** Consumido por `Model` y HUDs de `view` para estadísticas.
-- **Concurrencia:** Buckets concurrentes con consistencia débil.
-- **Patrones:** Spatial partitioning.
-- **Recomendaciones:** Exponer métricas para tuning dinámico.
-
-### Subpaquete: `model.bodies`
-**Descripción:** Definición de cuerpos físicos y estados.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `ports`, `implementations`, `core` | Entidades físicas, DTOs y estados | [`AbstractBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/core/AbstractBody.java), [`DynamicBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/DynamicBody.java), [`StaticBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/StaticBody.java), [`ProjectileBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/ProjectileBody.java), [`PlayerBody`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/PlayerBody.java), [`BodyDTO`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyDTO.java), [`PlayerDTO`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/PlayerDTO.java), [`BodyFactory`](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyFactory.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Modelar cuerpos dinámicos/estáticos y su estado.
-- **Interacciones:** `Model` crea y gestiona instancias; `Controller` consume DTOs.
-- **Concurrencia:** Los cuerpos dinámicos pueden correr en threads propios; estados compartidos deben sincronizarse.
-- **Patrones:** Factory, State (BodyState).
-- **Recomendaciones:** Tests de integridad para cuerpos y conversiones DTO.
-
-### Subpaquete: `model.weapons`
-**Descripción:** Armas y comportamiento de disparo.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `ports`, `implementations`, `core` | Armas, estados, fábricas | [`Weapon`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/Weapon.java), [`WeaponFactory`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponFactory.java), [`WeaponDto`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponDto.java), [`WeaponState`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponState.java), [`AbstractWeapon`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/core/AbstractWeapon.java), [`BasicWeapon`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/implementations/BasicWeapon.java), [`BurstWeapon`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/implementations/BurstWeapon.java), [`MissileLauncher`](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/implementations/MissileLauncher.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Encapsular lógica de fire rate, munición y generación de proyectiles.
-- **Interacciones:** Armas equipadas en `PlayerBody`, configuradas desde `world` y `controller`.
-- **Patrones:** Strategy, Factory.
-- **Recomendaciones:** Tests para cada arma y condiciones de recarga.
-
----
-
-## Paquete: `world`
-**Descripción:** Definiciones estáticas de mundo, assets y armas.
-
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `ports`, `core` | DTOs de definiciones, fábricas de definiciones | [`WorldDefinition`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinition.java), [`WorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinitionProvider.java), [`DefItemDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefItemDTO.java), [`DefWeaponDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefWeaponDTO.java), [`DefWeaponType`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefWeaponType.java), [`DefEmitterDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefEmitterDTO.java), [`WeaponDefFactory`](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WeaponDefFactory.java), [`WorldAssetsRegister`](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WorldAssetsRegister.java) |
-
-### Análisis detallado
-- **Propósito:** Encapsular definiciones de assets y prototipos del mundo, desacopladas del runtime.
-- **Interacciones:** `game` aporta implementaciones de `WorldDefinitionProvider`; `controller` consume `WorldDefinition`.
-- **Patrones:** Factory, DTO, Provider.
-- **Puntos de atención:** Alinear assets registrados con catálogos de `utils.assets`.
-- **Recomendaciones:** Validaciones más estrictas para definiciones inválidas.
-
-### Subpaquete: `world.ports`
-**Descripción:** Contratos y DTOs para la definición del mundo.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| — | DTOs de assets, items y armas | [`WorldDefinition`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinition.java), [`WorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinitionProvider.java), [`DefItem`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefItem.java), [`DefItemDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefItemDTO.java), [`DefItemPrototypeDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefItemPrototypeDTO.java), [`DefWeaponDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefWeaponDTO.java), [`DefWeaponType`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefWeaponType.java), [`DefBackgroundDTO`](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefBackgroundDTO.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Tipos y DTOs del mundo con serialización fácil.
-- **Recomendaciones:** Añadir documentación de campos para integraciones externas.
-
-### Subpaquete: `world.core`
-**Descripción:** Fábricas y registros de definiciones.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| — | Crear presets de armas, registro de assets | [`WeaponDefFactory`](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WeaponDefFactory.java), [`WeaponDefRegister`](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WeaponDefRegister.java), [`WorldAssetsRegister`](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WorldAssetsRegister.java), [`AbstractWorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Centralizar definiciones preconfiguradas y registros.
-- **Patrones:** Factory, Registry.
-- **Recomendaciones:** Añadir pruebas de consistencia para presets.
-
----
-
-## Paquete: `game`
-**Descripción:** Configuraciones concretas (niveles, IA, acciones y mundos) que usan las APIs de `controller` y `world`.
-
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| `core`, `implementations` | Arranque del juego, reglas concretas, IA y niveles | [`Main`](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java), [`AbstractLevelGenerator`](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractLevelGenerator.java), [`AbstractIAGenerator`](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java), [`LevelBasic`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/level/LevelBasic.java), [`AIBasicSpawner`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/ai/AIBasicSpawner.java), [`ActionsReboundCollisionPlayerImmunity`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/actions/ActionsReboundCollisionPlayerImmunity.java), [`RandomWorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/world/RandomWorldDefinitionProvider.java), [`EarthInCenterWorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/world/EarthInCenterWorldDefinitionProvider.java) |
-
-### Análisis detallado
-- **Propósito:** Componer el juego con reglas concretas usando el motor.
-- **Interacciones:** Invoca `controller` para configurar y poblar el mundo; consume `world` para definiciones.
-- **Concurrencia:** IA se ejecuta en threads dedicados (`AbstractIAGenerator`).
-- **Patrones:** Template Method (generadores), Strategy (reglas de acciones), MVC en el entry point.
-- **Riesgos:** Ajustes de reglas impactan equilibrio y dificultad; deben testearse en escenarios de carga.
-- **Recomendaciones:** Introducir configuración externa para facilitar tuning.
-
-### Subpaquete: `game.core`
-**Descripción:** Clases base para generadores de niveles e IA.
-
-| Subpaquetes | Responsabilidades clave | Principales clases |
-| --- | --- | --- |
-| — | Generadores base de IA y niveles | [`AbstractLevelGenerator`](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractLevelGenerator.java), [`AbstractIAGenerator`](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java) |
-
-**Análisis detallado**
-- **Responsabilidades:** Proveer plantillas para niveles y generación de entidades.
+- **Propósito:** proveer un esqueleto para generadores con hooks (`onActivate`, `tickAlive`). ([AbstractIAGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java))
+- **Responsabilidades principales:** ciclo de vida y acceso a `WorldEvolver`. ([AbstractIAGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractIAGenerator.java))
 - **Patrones:** Template Method.
-- **Recomendaciones:** Instrumentar logs y métricas por nivel.
 
-### Subpaquete: `game.implementations`
-**Descripción:** Implementaciones concretas de acciones, IA, niveles y mundos.
+### Subpaquete `game.level`
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+**Descripción:** niveles y composición de escenas. ([LevelBasic.java](https://github.com/local/MVCGameEngine/blob/work/src/game/level/LevelBasic.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `actions`, `ai`, `level`, `world` | Reglas de acción, spawners, niveles y definición de mundos | [`ActionsReboundCollisionPlayerImmunity`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/actions/ActionsReboundCollisionPlayerImmunity.java), [`ActionsReboundAndCollision`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/actions/ActionsReboundAndCollision.java), [`AIBasicSpawner`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/ai/AIBasicSpawner.java), [`LevelBasic`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/level/LevelBasic.java), [`RandomWorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/world/RandomWorldDefinitionProvider.java), [`EarthInCenterWorldDefinitionProvider`](https://github.com/local/MVCGameEngine/blob/work/src/game/implementations/world/EarthInCenterWorldDefinitionProvider.java) |
+| `game.level` | Niveles. | Configurar decoradores, estáticos, jugadores. |
 
 **Análisis detallado**
-- **Responsabilidades:** Implementar reglas específicas de gameplay.
-- **Concurrencia:** Spawners y generadores usan threads independientes.
-- **Patrones:** Strategy, Template Method.
-- **Recomendaciones:** Añadir tests de reglas de colisión y emisión.
+
+- **Propósito:** encapsular reglas de composición de un nivel. ([LevelBasic.java](https://github.com/local/MVCGameEngine/blob/work/src/game/level/LevelBasic.java))
+- **Responsabilidades principales:** invocar `WorldInitializer` para inyectar entidades estáticas y decoradores. ([LevelBasic.java](https://github.com/local/MVCGameEngine/blob/work/src/game/level/LevelBasic.java))
+- **Patrones:** Template Method (en generadores de nivel). ([AbstractLevelGenerator.java](https://github.com/local/MVCGameEngine/blob/work/src/game/core/AbstractLevelGenerator.java))
+
+### Subpaquete `game.worlddef`
+
+**Descripción:** proveedores concretos de `WorldDefinition`. ([RandomWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/game/worlddef/RandomWorldDefinitionProvider.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `game.worlddef` | World providers concretos. | Variantes de definiciones de mundo. |
+
+**Análisis detallado**
+
+- **Propósito:** materializar definiciones de mundo para escenarios específicos. ([RandomWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/game/worlddef/RandomWorldDefinitionProvider.java))
+- **Responsabilidades principales:** configurar assets y listas de entidades definidas. ([RandomWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/game/worlddef/RandomWorldDefinitionProvider.java))
+- **Interacción:** extiende base `world.core.AbstractWorldDefinitionProvider`. ([RandomWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/game/worlddef/RandomWorldDefinitionProvider.java))
+- **Patrones:** Template Method/Factory en la definición de mundos.
 
 ---
 
-## Paquete: `utils`
-**Descripción:** Utilidades y módulos transversales del motor.
+## Paquete `model` (`src/model`)
 
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave | Principales clases |
+Capa de simulación que gestiona entidades, eventos, físicas, armas y emisores con soporte concurrente. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+
+### Grid resumen de subpaquetes
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `actions`, `assets`, `events`, `fx`, `helpers`, `images` | Acciones, assets, eventos de dominio, imágenes, helpers matemáticos | [`Action`](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/Action.java), [`ActionDTO`](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/ActionDTO.java), [`AssetCatalog`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java), [`ProjectAssets`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/implementations/ProjectAssets.java), [`Images`](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/Images.java), [`ImageCache`](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCache.java), [`DomainEvent`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/DomainEvent.java), [`DoubleVector`](https://github.com/local/MVCGameEngine/blob/work/src/utils/helpers/DoubleVector.java) |
+| `model.bodies` | Entidades físicas del mundo. | Bodies dinámicos, estáticos, jugador y DTOs. |
+| `model.emitter` | Emisores de partículas. | Emisión de cuerpos/efectos. |
+| `model.implementations` | Núcleo del modelo. | Simulación, eventos, snapshots. |
+| `model.physics` | Motores de físicas. | Integración de movimiento y límites. |
+| `model.ports` | Interfaces del modelo. | Contratos de eventos y estado. |
+| `model.weapons` | Sistema de armas. | Tipos, estados y disparos. |
 
 ### Análisis detallado
-- **Propósito:** Ofrecer módulos reutilizables para el core y el game.
-- **Interacciones:** Consumido por `model`, `view`, `controller` y `game`.
-- **Patrones:** DTO, Event objects, Cache.
-- **Riesgos:** Cambios en eventos o assets afectan múltiples capas.
-- **Recomendaciones:** Documentar contracts de eventos y asset IDs.
 
-### Subpaquete: `utils.events.domain`
-**Descripción:** Definiciones de eventos de dominio y payloads.
+- **Propósito:** ejecutar la simulación, detectar eventos y coordinar acciones. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Responsabilidades principales:**
+  - Gestión de entidades y snapshots para render. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+  - Detección de colisiones con `SpatialGrid`. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+  - Procesamiento de eventos y ejecución de acciones. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Interacción con otras capas/paquetes:**
+  - Envía eventos al `controller` mediante `DomainEventProcessor`. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+  - Usa `utils.events` y `utils.actions` para el pipeline evento→acción. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Concurrencia / threading:** cada entidad dinámica corre en su propio thread y el modelo usa `ConcurrentHashMap` para colecciones compartidas. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Principales clases/interfaces/DTOs:** `Model`, `BodyFactory`, `WeaponFactory`, `PhysicsEngine`. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java), [BodyFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyFactory.java), [WeaponFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponFactory.java), [PhysicsEngine.java](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/ports/PhysicsEngine.java))
+- **Patrones de diseño relevantes:** Factory, Strategy, DTO, MVC.
+- **Puntos de atención:**
+  - Validar throughput del `SpatialGrid` bajo alta densidad.
+  - Asegurar coherencia en snapshots frente a concurrencia.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `model.bodies`
+
+**Descripción:** entidades base del mundo (dinámicos, estáticos, jugador, proyectiles) y sus DTOs. ([AbstractBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/core/AbstractBody.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `ports`, `core` | Eventos de colisión, límites, emisión | [`DomainEvent`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/DomainEvent.java), [`CollisionEvent`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/CollisionEvent.java), [`EmitEvent`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/EmitEvent.java), [`LimitEvent`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/LimitEvent.java), [`LifeOver`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/LifeOver.java), [`AbstractDomainEvent`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/core/AbstractDomainEvent.java), [`CollisionPayload`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/payloads/CollisionPayload.java), [`EmitPayloadDTO`](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/payloads/EmitPayloadDTO.java) |
+| `model.bodies.core` | Clase base de bodies. | Ciclo de vida y lógica común. |
+| `model.bodies.implementations` | Implementaciones concretas. | Player, dinámicos, proyectiles, estáticos. |
+| `model.bodies.ports` | DTOs y contratos. | Interfaces, estados, factories. |
 
 **Análisis detallado**
-- **Responsabilidades:** Representar eventos del dominio con payloads específicos.
-- **Interacciones:** `Model` genera eventos; `Controller` decide acciones.
-- **Patrones:** Event Object, DTO.
-- **Recomendaciones:** Definir catálogo de eventos con documentación pública.
 
-### Subpaquete: `utils.assets`
-**Descripción:** Catálogo de assets y metadatos.
+- **Propósito:** encapsular entidades físicas y su integración con el motor. ([AbstractBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/core/AbstractBody.java))
+- **Responsabilidades principales:** actualizar físicas, emitir eventos, exponer DTOs. ([AbstractBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/core/AbstractBody.java))
+- **Interacción:** usa `model.physics` y `utils.spatial`. ([BodyFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyFactory.java))
+- **Concurrencia:** bodies dinámicos ejecutan threads propios. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Clases clave:** `AbstractBody`, `DynamicBody`, `PlayerBody`, `ProjectileBody`, `StaticBody`. ([AbstractBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/core/AbstractBody.java), [DynamicBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/DynamicBody.java), [PlayerBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/PlayerBody.java), [ProjectileBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/ProjectileBody.java), [StaticBody.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/implementations/StaticBody.java))
+- **Patrones:** Factory (`BodyFactory`). ([BodyFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyFactory.java))
+- **Detalles críticos:**
+  - Hot path en actualización de físicas y colisiones.
+  - Manejo de inmunidad de proyectiles es clave para reglas de colisión.
+  - Uso de `BodyState` para evitar reentrancia concurrente.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `model.emitter`
+
+**Descripción:** emisores de partículas y proyectiles asociados a entidades. ([AbstractEmitter.java](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/core/AbstractEmitter.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `ports`, `implementations`, `core` | Registro de assets y metadata | [`AssetCatalog`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java), [`ProjectAssets`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/implementations/ProjectAssets.java), [`AssetInfoDTO`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/ports/AssetInfoDTO.java), [`AssetType`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/ports/AssetType.java), [`AssetIntensity`](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/ports/AssetIntensity.java) |
+| `model.emitter.core` | Base de emisores. | Ciclo de vida y configuración. |
+| `model.emitter.implementations` | Emisores concretos. | Emisión básica y en ráfaga. |
+| `model.emitter.ports` | Contratos/DTOs. | Interfaces y configuración. |
 
 **Análisis detallado**
-- **Responsabilidades:** Registrar assets y ofrecer selección aleatoria por tipo.
-- **Interacciones:** Consumido por `view` y `world`.
-- **Recomendaciones:** Validar existencia de archivos en tiempo de carga.
 
-### Subpaquete: `utils.images`
-**Descripción:** Carga y cacheo de imágenes.
+- **Propósito:** generar cuerpos/efectos a partir de configuraciones. ([AbstractEmitter.java](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/core/AbstractEmitter.java))
+- **Responsabilidades:** ejecutar lógica de spawn según configuración. ([BasicEmitter.java](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/implementations/BasicEmitter.java))
+- **Interacción:** acoplado a `model` para creación de entidades. ([BasicEmitter.java](https://github.com/local/MVCGameEngine/blob/work/src/model/emitter/implementations/BasicEmitter.java))
+- **Patrones:** Template Method/Factory de emisores.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `model.implementations`
+
+**Descripción:** implementación del modelo con pipeline de eventos y snapshots. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Cache de imágenes y DTOs | [`Images`](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/Images.java), [`ImageCache`](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCache.java), [`ImageDTO`](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageDTO.java), [`ImageCacheKeyDTO`](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCacheKeyDTO.java) |
+| `model.implementations` | Núcleo de simulación. | Eventos, colisiones, snapshots, lifecycle. |
 
 **Análisis detallado**
-- **Responsabilidades:** Cargar imágenes y gestionar cache eficiente para render.
-- **Interacciones:** Usado por `view.Renderer`.
-- **Patrones:** Cache.
-- **Recomendaciones:** Añadir métricas de hit rate y tamaño.
 
-### Subpaquete: `utils.actions`
-**Descripción:** Acciones del motor.
+- **Propósito:** orquestar simulación, colisiones y acciones. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Responsabilidades:** manejar mapas de entidades y generar DTOs para render. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Concurrencia:** colecciones concurrentes y threads por entidad. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java))
+- **Detalles críticos:**
+  - Pipeline eventos→acciones es sensible a orden/prioridad.
+  - `SpatialGrid` reduce complejidad de colisiones.
+  - Snapshot sin asignaciones excesivas (buffers scratch).
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `model.physics`
+
+**Descripción:** motores de físicas intercambiables y DTOs de físicas. ([PhysicsEngine.java](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/ports/PhysicsEngine.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Enumeración y DTO de acciones | [`Action`](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/Action.java), [`ActionDTO`](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/ActionDTO.java) |
+| `model.physics.core` | Base de motores. | Comportamiento común. |
+| `model.physics.implementations` | Motores concretos. | Física básica y null. |
+| `model.physics.ports` | Interfaces/DTOs. | Contratos de engine y valores. |
 
 **Análisis detallado**
-- **Responsabilidades:** Representar acciones generadas por reglas.
-- **Interacciones:** `Model` ejecuta acciones; `Controller` las genera.
-- **Recomendaciones:** Documentar prioridad y orden de acciones.
 
-### Subpaquete: `utils.helpers`
-**Descripción:** Helpers matemáticos y de colecciones.
+- **Propósito:** encapsular lógica de movimiento/colisiones por estrategia. ([PhysicsEngine.java](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/ports/PhysicsEngine.java))
+- **Responsabilidades:** cálculo de nuevas físicas y rebotes. ([BasicPhysicsEngine.java](https://github.com/local/MVCGameEngine/blob/work/src/model/physics/implementations/BasicPhysicsEngine.java))
+- **Interacción:** usado por bodies mediante `PhysicsEngine` (Strategy). ([BodyFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/bodies/ports/BodyFactory.java))
+- **Patrones:** Strategy, Factory.
+- **Detalles críticos:**
+  - Cambios en física afectan a toda la simulación.
+  - Reglas de rebote deben alinearse con límites del mundo.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `model.ports`
+
+**Descripción:** contratos para estado y procesamiento de eventos en el modelo. ([DomainEventProcessor.java](https://github.com/local/MVCGameEngine/blob/work/src/model/ports/DomainEventProcessor.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Vectores, listas aleatorias | [`DoubleVector`](https://github.com/local/MVCGameEngine/blob/work/src/utils/helpers/DoubleVector.java), [`RandomArrayList`](https://github.com/local/MVCGameEngine/blob/work/src/utils/helpers/RandomArrayList.java) |
+| `model.ports` | Interfaces del modelo. | Estado del modelo y eventos. |
 
 **Análisis detallado**
-- **Responsabilidades:** Ayudas para cálculos y randomización.
-- **Recomendaciones:** Añadir tests de consistencia.
 
-### Subpaquete: `utils.fx`
-**Descripción:** Efectos visuales básicos.
+- **Propósito:** desacoplar el modelo de reglas específicas. ([DomainEventProcessor.java](https://github.com/local/MVCGameEngine/blob/work/src/model/ports/DomainEventProcessor.java))
+- **Responsabilidades:** exponer `ModelState` y contrato de procesamiento de eventos. ([ModelState.java](https://github.com/local/MVCGameEngine/blob/work/src/model/ports/ModelState.java), [DomainEventProcessor.java](https://github.com/local/MVCGameEngine/blob/work/src/model/ports/DomainEventProcessor.java))
+- **Patrones:** Ports & Adapters.
 
-| Subpaquetes | Responsabilidades clave | Principales clases |
+### Subpaquete `model.weapons`
+
+**Descripción:** sistema de armas, tipos, estados y factories. ([AbstractWeapon.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/core/AbstractWeapon.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| — | Efectos y tipos de FX | [`Fx`](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/Fx.java), [`FxType`](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/FxType.java), [`FxImage`](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/FxImage.java), [`Spin`](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/Spin.java) |
+| `model.weapons.core` | Base de armas. | Lógica común de disparo. |
+| `model.weapons.implementations` | Armas concretas. | Basic, burst, missile, mine. |
+| `model.weapons.ports` | Contratos/DTOs. | Interfaces, factory y enums. |
 
 **Análisis detallado**
-- **Responsabilidades:** Tipos de efectos y transformaciones visuales.
-- **Interacciones:** Potencialmente usado por renderables.
-- **Recomendaciones:** Clarificar uso actual y futuro.
+
+- **Propósito:** encapsular comportamientos de disparo y configuración. ([AbstractWeapon.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/core/AbstractWeapon.java))
+- **Responsabilidades principales:** crear armas desde DTOs y manejar estados. ([WeaponFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponFactory.java), [WeaponState.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponState.java))
+- **Interacción:** dependencias con `model.bodies` y `model.emitter` para proyectiles. ([WeaponFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/model/weapons/ports/WeaponFactory.java))
+- **Patrones:** Factory, Strategy.
+- **Detalles críticos:**
+  - Configuración incorrecta puede afectar balance de juego y spam de entidades.
+  - Sincronización con reglas de colisión (inmunidad). 
 
 ---
 
-## Paquete: `resources`
-**Descripción:** Contiene recursos estáticos (imágenes). No hay clases Java bajo este árbol.
+## Paquete `resources` (`src/resources`)
 
-### Resumen del paquete
-| Subpaquetes | Responsabilidades clave | Principales clases |
+Contiene los assets gráficos del juego (imágenes, fondos, sprites). No hay código Java aquí, pero el contenido es consumido por `utils.assets` y `view`. (Directorio `src/resources`)
+
+### Grid resumen
+
+| Paquete | Descripción breve | Responsabilidades clave |
 | --- | --- | --- |
-| `images` | Activos gráficos | — |
+| `resources` | Assets binarios. | Proveer sprites, fondos, efectos visuales. |
 
-**Análisis detallado**
-- **Responsabilidades:** Almacenar assets consumidos por `utils.assets` y `view`.
-- **Interacciones:** Referenciado mediante rutas en `ProjectAssets`.
-- **Recomendaciones:** Verificar naming consistente y estructura de carpetas.
+### Análisis detallado
+
+- **Propósito:** almacenar recursos gráficos para el engine.
+- **Interacción:** se referencian desde `AssetCatalog` y `WorldDefinitionProvider` para construir catálogos. ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java), [AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java))
+- **Puntos de atención:** verificar rutas y consistencia de IDs de assets.
 
 ---
 
-## Explora más
-- Árbol del repo: https://github.com/local/MVCGameEngine/tree/work/src
+## Paquete `utils` (`src/utils`)
 
-## Limitaciones
-Este informe se basa en exploración automática del árbol `src/` y podría omitir archivos no Java u otros recursos fuera de `src/`. Se recomienda revisar manualmente el repositorio para confirmar cambios recientes y configuraciones externas.
+Biblioteca de utilidades y módulos transversales (assets, eventos, spatial grid, imágenes, helpers). ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java), [SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
 
-## Siguientes pasos sugeridos
-1. Revisar el pipeline de colisiones y eventos en `model` con tests de estrés y escenarios de alta densidad.
-2. Añadir pruebas unitarias para mappers en `controller.mappers`.
-3. Documentar contratos de DTOs y eventos en `utils.events.domain` para facilitar extensibilidad.
+### Grid resumen de subpaquetes
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.actions` | Acciones del engine. | Enum y DTO de acciones. |
+| `utils.assets` | Catálogo de assets. | Registro y consulta de assets. |
+| `utils.events` | Eventos de dominio. | Eventos, payloads y tipos. |
+| `utils.fx` | Efectos visuales. | Tipos de FX y recursos asociados. |
+| `utils.helpers` | Helpers genéricos. | Vectores, colecciones, random. |
+| `utils.images` | Carga y cacheo de imágenes. | Cache de imágenes y DTOs. |
+| `utils.spatial` | Particionado espacial. | Grid, estadísticas, celdas. |
+
+### Análisis detallado
+
+- **Propósito:** dar soporte transversal al engine sin acoplar a capas MVC. ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java))
+- **Responsabilidades principales:**
+  - Definir acciones y eventos de dominio. ([Action.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/Action.java), [AbstractDomainEvent.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/core/AbstractDomainEvent.java))
+  - Proveer assets e imágenes. ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java), [ImageCache.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCache.java))
+  - Optimizar colisiones con `SpatialGrid`. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+- **Interacción:** consumido por `model`, `view`, `world` y `game`. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java), [View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+- **Concurrencia:** estructuras concurrentes en `SpatialGrid`. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+- **Patrones:** DTO, Ports & Adapters, caching.
+
+### Subpaquete `utils.actions`
+
+**Descripción:** catálogo de acciones del motor y DTO asociado. ([Action.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/Action.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.actions` | Definición de acciones. | Enum y DTO para acciones del engine. |
+
+**Análisis detallado**
+
+- **Propósito:** normalizar el conjunto de acciones ejecutables. ([Action.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/Action.java))
+- **Responsabilidades:** listar tipos de acción y su DTO. ([Action.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/Action.java), [ActionDTO.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/actions/ActionDTO.java))
+- **Interacción:** usado por `game.actions` y `model`. ([ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+
+### Subpaquete `utils.assets`
+
+**Descripción:** catálogo y DTOs para assets de juego. ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.assets.core` | Catálogo de assets. | Registro, lookup, randomización. |
+| `utils.assets.implementations` | Catálogos concretos. | Assets del proyecto. |
+| `utils.assets.ports` | DTOs/enums. | Tipos e intensidades de assets. |
+
+**Análisis detallado**
+
+- **Propósito:** gestionar IDs y metadata de assets. ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java))
+- **Responsabilidades:** registrar assets y exponer selecciones aleatorias. ([AssetCatalog.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/assets/core/AssetCatalog.java))
+- **Interacción:** `world` y `view` consumen catálogos. ([AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java), [View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+
+### Subpaquete `utils.events`
+
+**Descripción:** eventos de dominio y payloads que alimentan el pipeline de acciones. ([AbstractDomainEvent.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/core/AbstractDomainEvent.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.events.domain` | Eventos de dominio. | Eventos, tipos, payloads. |
+
+#### Subpaquete `utils.events.domain`
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.events.domain.core` | Base de eventos. | Clase abstracta común. |
+| `utils.events.domain.ports` | DTOs y tipos. | Tipos de evento y payloads. |
+
+**Análisis detallado**
+
+- **Propósito:** modelar eventos del dominio de juego. ([AbstractDomainEvent.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/core/AbstractDomainEvent.java))
+- **Responsabilidades:**
+  - Definir clase base `AbstractDomainEvent`. ([AbstractDomainEvent.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/core/AbstractDomainEvent.java))
+  - Enumerar tipos y payloads. ([DomainEventType.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/DomainEventType.java), [CollisionPayload.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/payloads/CollisionPayload.java))
+- **Interacción:** usado por `model` y `game.actions`. ([Model.java](https://github.com/local/MVCGameEngine/blob/work/src/model/implementations/Model.java), [ActionsReboundCollisionPlayerImmunity.java](https://github.com/local/MVCGameEngine/blob/work/src/game/actions/ActionsReboundCollisionPlayerImmunity.java))
+
+#### Subpaquete `utils.events.domain.ports`
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.events.domain.ports.eventtype` | Tipos concretos de evento. | CollisionEvent, EmitEvent, LimitEvent, etc. |
+| `utils.events.domain.ports.payloads` | Payloads de eventos. | Datos asociados a colisiones/emisiones. |
+
+**Análisis detallado**
+
+- **Propósito:** representar eventos con tipos y payloads tipados. ([CollisionEvent.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/CollisionEvent.java))
+- **Responsabilidades:** clasificar eventos y transportar datos. ([CollisionEvent.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/eventtype/CollisionEvent.java), [EmitPayloadDTO.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/events/domain/ports/payloads/EmitPayloadDTO.java))
+
+### Subpaquete `utils.fx`
+
+**Descripción:** tipos y estructuras para efectos visuales. ([Fx.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/Fx.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.fx` | Efectos. | Tipos y config de efectos. |
+
+**Análisis detallado**
+
+- **Propósito:** describir efectos de partículas/sprites. ([Fx.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/Fx.java))
+- **Responsabilidades:** enumeración de tipos y DTOs asociados. ([Fx.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/Fx.java), [FxType.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/fx/FxType.java))
+
+### Subpaquete `utils.helpers`
+
+**Descripción:** utilidades genéricas para colecciones y vectores. ([RandomArrayList.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/helpers/RandomArrayList.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.helpers` | Helpers generales. | Listas aleatorias, vectores. |
+
+**Análisis detallado**
+
+- **Propósito:** simplificar operaciones comunes (vectores y random). ([DoubleVector.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/helpers/DoubleVector.java))
+
+### Subpaquete `utils.images`
+
+**Descripción:** carga y cacheo de imágenes. ([ImageCache.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCache.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.images` | Imágenes y caché. | Cache, DTOs, acceso por ID. |
+
+**Análisis detallado**
+
+- **Propósito:** evitar recarga de assets y mejorar performance en render. ([ImageCache.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCache.java))
+- **Responsabilidades:** cache y metadata de imágenes. ([ImageCache.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageCache.java), [ImageDTO.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/images/ImageDTO.java))
+
+### Subpaquete `utils.spatial`
+
+**Descripción:** estructura de particionado espacial para colisiones. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `utils.spatial.core` | Implementación de grid. | Inserción, query, stats. |
+| `utils.spatial.ports` | DTOs de estadísticas. | Estadísticas del grid. |
+
+**Análisis detallado**
+
+- **Propósito:** reducir complejidad de colisiones. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+- **Responsabilidades:** registrar celdas y obtener candidatos de colisión. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+- **Concurrencia:** buckets concurrentes y acceso weakly consistent. ([SpatialGrid.java](https://github.com/local/MVCGameEngine/blob/work/src/utils/spatial/core/SpatialGrid.java))
+- **Detalles críticos:**
+  - Ajuste de tamaño de celda impacta rendimiento.
+  - La consulta de candidatos es parte del hot path del motor.
+
+---
+
+## Paquete `view` (`src/view`)
+
+Capa de presentación que maneja render activo, HUD e input. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+
+### Grid resumen de subpaquetes
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `view.core` | Infraestructura de vista. | JFrame, render loop, input. |
+| `view.huds` | HUDs y UI. | Widgets y paneles de HUD. |
+| `view.renderables` | Renderables y DTOs. | Render de entidades y DTOs de render. |
+
+### Análisis detallado
+
+- **Propósito:** mostrar el estado del juego y recibir input de usuario. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+- **Responsabilidades principales:**
+  - Render loop dedicado con `Renderer`. ([Renderer.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/Renderer.java))
+  - Gestión de assets y cachés. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+  - HUD y métricas de performance. ([SystemHUD.java](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SystemHUD.java))
+- **Interacción:** consume snapshots vía `controller`, no accede al `model` directamente. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+- **Concurrencia:** render thread separado, estrategia copy-on-write para estáticos. ([Renderer.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/Renderer.java))
+- **Patrones:** MVC, DTO, Active Rendering Loop.
+- **Detalles críticos:**
+  - Render loop es hot path; optimización de cache y buffers es clave.
+  - La estrategia de snapshots evita locks en tiempo real.
+
+### Subpaquete `view.core`
+
+**Descripción:** núcleo de la vista y render loop. ([Renderer.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/Renderer.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `view.core` | Core de View. | JFrame, Renderer, ControlPanel. |
+
+**Análisis detallado**
+
+- **Propósito:** crear UI y lanzar render loop. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+- **Responsabilidades:** gestión de input, render y assets. ([View.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/View.java))
+- **Concurrencia:** `Renderer` mantiene thread propio. ([Renderer.java](https://github.com/local/MVCGameEngine/blob/work/src/view/core/Renderer.java))
+
+### Subpaquete `view.huds`
+
+**Descripción:** implementación de HUDs y elementos UI. ([SystemHUD.java](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SystemHUD.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `view.huds.core` | Widgets base. | Items, barras, textos. |
+| `view.huds.implementations` | HUDs concretos. | HUD de sistema, jugador, grid. |
+
+**Análisis detallado**
+
+- **Propósito:** mostrar métricas y estado de juego. ([SystemHUD.java](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SystemHUD.java))
+- **Responsabilidades:** render de elementos del HUD en el canvas. ([SystemHUD.java](https://github.com/local/MVCGameEngine/blob/work/src/view/huds/implementations/SystemHUD.java))
+
+### Subpaquete `view.renderables`
+
+**Descripción:** clases de renderables y DTOs de render. ([Renderable.java](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/implementations/Renderable.java))
+
+**Grid resumen de subpaquetes**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `view.renderables.implementations` | Renderables concretos. | Render de entidades dinámicas/estáticas. |
+| `view.renderables.ports` | DTOs de render. | Datos de render para view. |
+
+**Análisis detallado**
+
+- **Propósito:** materializar sprites en pantalla. ([Renderable.java](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/implementations/Renderable.java))
+- **Responsabilidades:** actualización de posiciones y estado de render. ([DynamicRenderable.java](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/implementations/DynamicRenderable.java))
+- **Interacción:** consume DTOs del `controller`. ([RenderDTO.java](https://github.com/local/MVCGameEngine/blob/work/src/view/renderables/ports/RenderDTO.java))
+
+---
+
+## Paquete `world` (`src/world`)
+
+Define el esquema de mundo y catálogos de ítems para inicializar escenarios. ([AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java))
+
+### Grid resumen de subpaquetes
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `world.core` | Infraestructura de definición. | Registro de assets y armas. |
+| `world.ports` | DTOs y contratos. | Definición del mundo y tipos de ítems. |
+
+### Análisis detallado
+
+- **Propósito:** centralizar definiciones de escenarios y assets. ([AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java))
+- **Responsabilidades principales:**
+  - Registrar assets y armas disponibles. ([WorldAssetsRegister.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WorldAssetsRegister.java), [WeaponDefRegister.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WeaponDefRegister.java))
+  - Exponer listas de entidades y fondos. ([WorldDefinition.java](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinition.java))
+- **Interacción:** consumido por `game` para inicialización y por `controller` para crear entidades. ([Main.java](https://github.com/local/MVCGameEngine/blob/work/src/game/Main.java))
+- **Patrones:** Factory/Registry, DTOs.
+- **Puntos de atención:** consistencia entre IDs de assets y recursos reales.
+
+### Subpaquete `world.core`
+
+**Descripción:** registro de assets y armas, y base de proveedores de mundos. ([AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `world.core` | Base de world definition. | Registro de assets, armas, builders. |
+
+**Análisis detallado**
+
+- **Propósito:** centralizar helpers de definición de mundo. ([AbstractWorldDefinitionProvider.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/AbstractWorldDefinitionProvider.java))
+- **Responsabilidades:** creación de DTOs de ítems y armas. ([WeaponDefFactory.java](https://github.com/local/MVCGameEngine/blob/work/src/world/core/WeaponDefFactory.java))
+
+### Subpaquete `world.ports`
+
+**Descripción:** contratos y DTOs de definición de mundo. ([WorldDefinition.java](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinition.java))
+
+**Grid resumen**
+
+| Paquete | Descripción breve | Responsabilidades clave |
+| --- | --- | --- |
+| `world.ports` | DTOs de world definition. | Definiciones de ítems, armas, fondos. |
+
+**Análisis detallado**
+
+- **Propósito:** estructurar definiciones consumidas por generadores. ([WorldDefinition.java](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/WorldDefinition.java))
+- **Responsabilidades:** tipos de ítems y DTOs de definición. ([DefItemDTO.java](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefItemDTO.java), [DefWeaponDTO.java](https://github.com/local/MVCGameEngine/blob/work/src/world/ports/DefWeaponDTO.java))
+
+---
+
+## Observaciones finales
+
+- No se encontraron issues referenciados en el repositorio que afecten la comprensión de los paquetes.
+- Se recomienda añadir pruebas de integración alrededor de `Model` y `Controller`, donde confluyen eventos, reglas y render.
