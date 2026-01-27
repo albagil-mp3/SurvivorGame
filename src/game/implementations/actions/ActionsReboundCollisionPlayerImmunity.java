@@ -2,7 +2,7 @@ package game.implementations.actions;
 
 import java.util.List;
 
-import game.ports.ActionsGenerator;
+import controller.ports.ActionsGenerator;
 import model.bodies.ports.BodyType;
 import utils.actions.Action;
 import utils.actions.ActionDTO;

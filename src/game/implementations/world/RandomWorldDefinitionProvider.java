@@ -1,4 +1,4 @@
-package world.implementations;
+package game.implementations.world;
 
 import model.bodies.ports.BodyType;
 import utils.assets.implementations.ProjectAssets;
