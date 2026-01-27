@@ -1,4 +1,4 @@
-package generators.implementations.actions;
+package game.implementations.actions;
 
 import java.util.List;
 
@@ -10,10 +10,9 @@ import events.domain.ports.eventtype.DomainEvent;
 import events.domain.ports.eventtype.EmitEvent;
 import events.domain.ports.eventtype.LifeOver;
 import events.domain.ports.eventtype.LimitEvent;
-import generators.ports.ActionsGenerator;
-import model.bodies.ports.BodyType;
+import game.ports.ActionsGenerator;
 
-public class ReboundAndCollisionActionsGenerator implements ActionsGenerator {
+public class ActionsDeadInLimits implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -32,25 +31,7 @@ public class ReboundAndCollisionActionsGenerator implements ActionsGenerator {
         switch (event) {
             case LimitEvent limitEvent -> {
                 Action action;
-
-                switch (limitEvent.type) {
-                    case REACHED_EAST_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_EAST;
-                        break;
-                    case REACHED_WEST_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_WEST;
-                        break;
-                    case REACHED_NORTH_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_NORTH;
-                        break;
-                    case REACHED_SOUTH_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_SOUTH;
-                        break;
-                    default:
-                        action = Action.NO_MOVE;
-                        break;
-                }
-
+                action = Action.DIE;
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
                         action, event));
@@ -83,36 +64,8 @@ public class ReboundAndCollisionActionsGenerator implements ActionsGenerator {
 
             case CollisionEvent e -> {
 
-                resolveCollision(e, actions);
-
-            }
-
-            default -> {
-                // No action for unhandled event types
+                // No action for collision events in this generator
             }
         }
     }
-
-    private void resolveCollision(CollisionEvent event, List<ActionDTO> actions) {
-        BodyType primary = event.primaryBodyRef.type();
-        BodyType secondary = event.secondaryBodyRef.type();
-
-        // Ignore collisions with DECORATOR bodies
-        if (primary == BodyType.DECORATOR || secondary == BodyType.DECORATOR) {
-            return;
-        }
-
-        // Check shooter immunity for PLAYER vs PROJECTILE and viceversa
-        if (event.payload.haveImmunity) {
-            return; // Projectile passes through its shooter during immunity period
-        }
-
-        // Default: Both die
-        actions.add(new ActionDTO(
-                event.primaryBodyRef.id(), event.primaryBodyRef.type(), Action.DIE, event));
-
-        actions.add(new ActionDTO(
-                event.secondaryBodyRef.id(), event.secondaryBodyRef.type(), Action.DIE, event));
-    }
-
 }

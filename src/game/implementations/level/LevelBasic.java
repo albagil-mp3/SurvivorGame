@@ -1,18 +1,18 @@
-package generators.implementations.level;
+package game.implementations.level;
 
 import java.util.ArrayList;
 
 import controller.ports.WorldInitializer;
-import generators.core.AbstractLevelGenerator;
+import game.core.AbstractLevelGenerator;
 import world.ports.DefItem;
 import world.ports.DefItemDTO;
 import world.ports.WorldDefinition;
 
-public class BigSunInCenterLevelGenerator extends AbstractLevelGenerator {
+public class LevelBasic extends AbstractLevelGenerator {
 
     // *** CONSTRUCTORS ***
 
-    public BigSunInCenterLevelGenerator(WorldInitializer worldInitializer, WorldDefinition worldDef) {
+    public LevelBasic(WorldInitializer worldInitializer, WorldDefinition worldDef) {
         super(worldInitializer, worldDef);
     }
 

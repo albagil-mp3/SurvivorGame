@@ -1,4 +1,4 @@
-package generators.ports;
+package game.ports;
 
 import java.util.List;
 

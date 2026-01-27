@@ -1,4 +1,4 @@
-package generators.implementations.actions;
+package game.implementations.actions;
 
 import java.util.List;
 
@@ -10,10 +10,9 @@ import events.domain.ports.eventtype.DomainEvent;
 import events.domain.ports.eventtype.EmitEvent;
 import events.domain.ports.eventtype.LifeOver;
 import events.domain.ports.eventtype.LimitEvent;
-import generators.ports.ActionsGenerator;
-import model.bodies.ports.BodyType;
+import game.ports.ActionsGenerator;
 
-public class DeadInLimitsPlayerImmunityActionGenerator implements ActionsGenerator {
+public class ActionsInLimitsGoToCenter implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -32,9 +31,7 @@ public class DeadInLimitsPlayerImmunityActionGenerator implements ActionsGenerat
         switch (event) {
             case LimitEvent limitEvent -> {
 
-                Action action = Action.DIE;
-                if (limitEvent.primaryBodyRef.type() == BodyType.PLAYER)
-                    action = Action.NO_MOVE;
+                Action action = Action.MOVE_TO_CENTER;
 
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),

@@ -17,7 +17,7 @@ import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
 import controller.ports.WorldInitializer;
 import events.domain.ports.eventtype.DomainEvent;
-import generators.ports.ActionsGenerator;
+import game.ports.ActionsGenerator;
 import model.bodies.ports.BodyDTO;
 import model.emitter.ports.EmitterConfigDto;
 import model.implementations.Model;

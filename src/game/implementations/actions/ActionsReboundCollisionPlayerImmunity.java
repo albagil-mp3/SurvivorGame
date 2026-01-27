@@ -1,20 +1,19 @@
-package generators.implementations.actions;
+package game.implementations.actions;
 
 import java.util.List;
 
-import actions.ActionDTO;
 import actions.Action;
+import actions.ActionDTO;
 import events.domain.ports.DomainEventType;
 import events.domain.ports.eventtype.CollisionEvent;
 import events.domain.ports.eventtype.DomainEvent;
 import events.domain.ports.eventtype.EmitEvent;
 import events.domain.ports.eventtype.LifeOver;
 import events.domain.ports.eventtype.LimitEvent;
-import generators.ports.ActionsGenerator;
+import game.ports.ActionsGenerator;
 import model.bodies.ports.BodyType;
 
-
-public class LimitReboundActionsGenerator implements ActionsGenerator {
+public class ActionsReboundCollisionPlayerImmunity implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -84,9 +83,42 @@ public class LimitReboundActionsGenerator implements ActionsGenerator {
 
             case CollisionEvent e -> {
 
-                // No action for collision events in this generator
+                // Check for PLAYER immunity
+                if (e.primaryBodyRef.type() != BodyType.PLAYER &&
+                        e.secondaryBodyRef.type() != BodyType.PLAYER) {
+                    // No special immunity rules apply
+                    this.resolveCollision(e, actions);
+                    break;
+                }
 
+            }
+
+            default -> {
+                // No action for unhandled event types
             }
         }
     }
+
+    private void resolveCollision(CollisionEvent event, List<ActionDTO> actions) {
+        BodyType primary = event.primaryBodyRef.type();
+        BodyType secondary = event.secondaryBodyRef.type();
+
+        // Ignore collisions with DECORATOR bodies
+        if (primary == BodyType.DECORATOR || secondary == BodyType.DECORATOR) {
+            return;
+        }
+
+        // Check shooter immunity for PLAYER vs PROJECTILE and viceversa
+        if (event.payload.haveImmunity) {
+            return; // Projectile passes through its shooter during immunity period
+        }
+
+        // Default: Both die
+        actions.add(new ActionDTO(
+                event.primaryBodyRef.id(), event.primaryBodyRef.type(), Action.DIE, event));
+
+        actions.add(new ActionDTO(
+                event.secondaryBodyRef.id(), event.secondaryBodyRef.type(), Action.DIE, event));
+    }
+
 }

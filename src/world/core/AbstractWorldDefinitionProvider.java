@@ -19,11 +19,13 @@ import world.ports.WorldDefinitionProvider;
 
 public abstract class AbstractWorldDefinitionProvider implements WorldDefinitionProvider {
 
+    // region Constants
     private static final String ASSET_PATH = "src/resources/images/";
     protected static final double WORLD_MIN = 0.0;
     protected static final double ANY_HEADING_MIN_DEG = 0.0;
     protected static final double ANY_HEADING_MAX_DEG = 359.999;
-    protected static final double DENSITY = 100;
+    protected static final double DEFAULT_DENSITY = 100;
+    // endregion
 
     // region Fields
     private static final Random rnd = new Random();
@@ -104,22 +106,31 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
             double minAngle, double maxAngle,
             double minSize, double maxSize,
             double posMinX, double posMaxX,
-            double posMinY, double posMaxY) {
+            double posMinY, double posMaxY,
+            double speedMin, double speedMax,
+            double angularSpeedMin, double angularSpeedMax) {
 
         this.addRandomPrototypeRandomAsset(this.asteroids, num, assetType, density,
                 minAngle, maxAngle, minSize, maxSize,
-                posMinX, posMaxX, posMinY, posMaxY);
+                posMinX, posMaxX, posMinY, posMaxY,
+                speedMin, speedMax,
+                0, 0,
+                angularSpeedMin, angularSpeedMax);
     }
 
     protected final void addAsteroidPrototypeAnywhereRandomAsset(
-            int num, AssetType assetType, double density, double minSize, double maxSize) {
+            int num, AssetType assetType, double minSize, double maxSize,
+            double speedMin, double speedMax,
+            double angularSpeedMin, double angularSpeedMax) {
 
         this.addAsteroidPrototypeRandomAsset(
-                num, assetType, density,
+                num, assetType, DEFAULT_DENSITY,
                 ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG,
                 minSize, maxSize,
                 WORLD_MIN, this.worldWidth,
-                WORLD_MIN, this.worldHeight);
+                WORLD_MIN, this.worldHeight,
+                speedMin, speedMax,
+                angularSpeedMin, angularSpeedMax);
     }
     // endregion
 
@@ -130,14 +141,15 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
         requireNotNull(assetId, "assetId cannot be null");
         this.assetsRegister.registerAssetId(assetId);
-        this.decorators.add(new DefItemDTO(assetId, size, angle, posX, posY, density));
+        this.decorators.add(new DefItemDTO(
+                assetId, size, angle, posX, posY, density));
     }
 
     protected final void addDecorator(
             String assetId, double posX, double posY,
             double size) {
 
-        addDecorator(assetId, posX, posY, size, randomAngle(), DENSITY);
+        addDecorator(assetId, posX, posY, size, randomAngle(), DEFAULT_DENSITY);
     }
 
     protected final void addDecoratorRandomAsset(
@@ -201,7 +213,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
             String assetId, double posX, double posY, double size) {
 
         addGravityBody(
-                assetId, posX, posY, size, randomAngle(), DENSITY);
+                assetId, posX, posY, size, randomAngle(), DEFAULT_DENSITY);
     }
 
     protected final void addGravityBodyRandomAsset(
@@ -265,7 +277,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
             String assetId, double posX, double posY, double size) {
 
         addSpaceship(
-                assetId, posX, posY, size, randomAngle(), DENSITY);
+                assetId, posX, posY, size, randomAngle(), DEFAULT_DENSITY);
     }
 
     protected final void addSpaceshipRandomAsset(
@@ -293,7 +305,9 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
             double minAngle, double maxAngle,
             double minSize, double maxSize,
             double posMinX, double posMaxX,
-            double posMinY, double posMaxY) {
+            double posMinY, double posMaxY, double speedMin, double speedMax,
+            double thrustMin, double thrustMax,
+            double angularSpeedMin, double angularSpeedMax) {
 
         this.addRandomPrototypeRandomAsset(this.spaceships, num, assetType, density,
                 minAngle, maxAngle, minSize, maxSize,
@@ -308,7 +322,8 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
                 ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG,
                 minSize, maxSize,
                 WORLD_MIN, this.worldWidth,
-                WORLD_MIN, this.worldHeight);
+                WORLD_MIN, this.worldHeight,
+                maxSize, maxSize, maxSize, maxSize, maxSize, maxSize);
     }
     // endregion
 
@@ -341,10 +356,10 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
         this.addTrailEmitterCosmetic(
                 assetId, spriteSize, bodyType, emissionRate,
-                /* offsetHorizontal */ 0.0,
-                /* offsetVertical */ 0.0,
-                /* randomizeInitialAngle */ true,
-                /* randomizeSize */ false);
+                0.0,
+                0.0,
+                true,
+                false);
     }
     // endregion
 
@@ -395,6 +410,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // *** PRIVATES ***
 
+    // region private adders (private addRandom***)
     private final void addRandomAsset(
             ArrayList<DefItem> defItems, int num, AssetType assetType,
             double angle, double density, double size, double posX, double posY) {
@@ -417,12 +433,15 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
     }
 
     private final void addRandomPrototypeRandomAsset(
-            ArrayList<DefItem> defItems, int num, AssetType assetType,
-            double density,
+            ArrayList<DefItem> defItems, int num,
+            AssetType assetType, double density,
             double minAngle, double maxAngle,
             double minSize, double maxSize,
             double posMinX, double posMaxX,
-            double posMinY, double posMaxY) {
+            double posMinY, double posMaxY,
+            double speedMin, double speedMax,
+            double thrustMin, double thrustMax,
+            double angularSpeedMin, double angularSpeedMax) {
 
         requireNotNull(defItems, "defItems cannot be null.");
         requirePositiveInt(num, "num must be a positive integer.");
@@ -434,7 +453,8 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
                 "minSize and maxSize must be positive values, and minSize <= maxSize.");
         requireRangeNonNegative(posMinX, posMaxX,
                 "posMinX and posMaxX cannot be negative, and posMinX <= posMaxX.");
-        requireRangeNonNegative(posMinY, posMaxY, "posMinY and posMaxY cannot be negative, and posMinY <= posMaxY.");
+        requireRangeNonNegative(posMinY, posMaxY,
+                "posMinY and posMaxY cannot be negative, and posMinY <= posMaxY.");
 
         String randomAssetId;
         for (int i = 0; i < num; i++) {
@@ -442,23 +462,32 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
             defItems.add(new DefItemPrototypeDTO(
                     randomAssetId, density, minAngle, maxAngle, minSize, maxSize,
-                    posMinX, posMaxX, posMinY, posMaxY));
+                    posMinX, posMaxX, posMinY, posMaxY, speedMin, speedMax,
+                    thrustMin, thrustMax, angularSpeedMin, angularSpeedMax));
         }
     }
 
-    private final void reset() {
+    private final void addRandomPrototypeRandomAsset(
+            ArrayList<DefItem> defItems, int num,
+            AssetType assetType, double density,
+            double minAngle, double maxAngle,
+            double minSize, double maxSize,
+            double posMinX, double posMaxX,
+            double posMinY, double posMaxY) {
 
-        // Resets asset catalog to avoid cross-world leakage between provide() calls
-        this.gameAssets.reset();
+        this.addRandomPrototypeRandomAsset(
+                defItems, num,
+                assetType, density,
+                minAngle, maxAngle,
+                minSize, maxSize,
+                posMinX, posMaxX,
+                posMinY, posMaxY,
+                0.0, 0.0,
+                0.0, 0.0,
+                0.0, 0.0);
 
-        this.background = null;
-        this.decorators.clear();
-        this.gravityBodies.clear();
-        this.asteroids.clear();
-        this.spaceships.clear();
-        this.trailEmitters.clear();
-        this.weapons.clear();
     }
+    // endregion
 
     protected final DefEmitterDTO cosmeticTrailEmitter(
             String assetId,
@@ -511,6 +540,20 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
                 randomizeSize);
     }
 
+    private final void reset() {
+
+        // Resets asset catalog to avoid cross-world leakage between provide() calls
+        this.gameAssets.reset();
+
+        this.background = null;
+        this.decorators.clear();
+        this.gravityBodies.clear();
+        this.asteroids.clear();
+        this.spaceships.clear();
+        this.trailEmitters.clear();
+        this.weapons.clear();
+    }
+
     private final void validateDefinition() {
         // Root cause first: no entities => no world
         if (this.decorators.isEmpty() &&
@@ -561,6 +604,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // *** STATICS ***
 
+    // region Random helpers (random***)
     protected static double randomAngle() {
         return rnd.nextDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
     }
@@ -586,6 +630,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
         return rnd.nextDouble(minSize, maxSize);
     }
+    // endregion
 
     // region Validation helpers (require***)
     private static void requireNotNull(Object v, String msg) {

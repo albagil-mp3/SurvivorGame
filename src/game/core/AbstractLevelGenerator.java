@@ -1,4 +1,4 @@
-package generators.core;
+package game.core;
 
 import java.util.Random;
 

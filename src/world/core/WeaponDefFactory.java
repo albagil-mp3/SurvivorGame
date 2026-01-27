@@ -33,18 +33,16 @@ public final class WeaponDefFactory {
         // Fail-fast validations (keep them light but useful)
         if (projectileSize <= 0)
             throw new IllegalArgumentException("projectileSize must be > 0");
-        if (projectileSpeed < 0)
-            throw new IllegalArgumentException("projectileSpeed must be >= 0");
         if (projectileMass <= 0)
             throw new IllegalArgumentException("projectileMass must be > 0");
         if (projectileMaxLifetime <= 0)
             throw new IllegalArgumentException("projectileMaxLifetime must be > 0");
-        if (burstSize <= 0)
-            throw new IllegalArgumentException("burstSize must be >= 1");
+        if (burstSize < 0)
+            throw new IllegalArgumentException("burstSize must be >= 0");
         if (fireRate < 0)
             throw new IllegalArgumentException("fireRate must be >= 0");
-        if (maxAmmo < 0)
-            throw new IllegalArgumentException("maxAmmo must be >= 0");
+        if (maxAmmo <= 0)
+            throw new IllegalArgumentException("maxAmmo must be > 0");
         if (reloadTime < 0)
             throw new IllegalArgumentException("reloadTime must be >= 0");
 
@@ -75,18 +73,18 @@ public final class WeaponDefFactory {
                 assetId,
                 DefWeaponType.BULLET_WEAPON,
 
-                8.0, // projectileSize
+                14.0, // projectileSize
                 650.0, // projectileSpeed
                 0.0, // projectileThrust
                 0.0, // projectileThrustDuration
                 1.0, // projectileMass
                 2.0, // projectileMaxLifetime
 
-                1, // burstSize
+                0, // burstSize
                 0, // burstFireRate
-                8, // fireRate (shots/s)
-                200, // maxAmmo
-                1.5 // reloadTime
+                30, // fireRate (shots/s)
+                1000, // maxAmmo
+                5 // reloadTime
         );
     }
 
@@ -95,18 +93,18 @@ public final class WeaponDefFactory {
                 assetId,
                 DefWeaponType.BURST_WEAPON,
 
-                7.0,
-                600.0,
+                20.0,
+                800.0,
                 0.0,
                 0.0,
                 0.8,
-                1.6,
+                1,
 
-                3, // burstSize
-                12, // burstFireRate inside burst
+                1, // burstSize
+                20, // burstFireRate inside burst
                 2, // fireRate (bursts/s)
                 60,
-                2.0);
+                5.0);
     }
 
     public static DefWeaponDTO createPresetedMissileLauncher(String assetId) {
@@ -114,18 +112,18 @@ public final class WeaponDefFactory {
                 assetId,
                 DefWeaponType.MISSILE_LAUNCHER,
 
-                14.0,
-                250.0,
-                180.0, // projectileThrust
+                40.0,
+                0.0,
+                880.0, // projectileThrust
                 1.8, // projectileThrustDuration
-                6.0,
+                100.0,
                 5.0,
 
                 1,
                 0,
                 1, // fireRate (missiles/s)
-                12,
-                3.5);
+                100,
+                5);
     }
 
     public static DefWeaponDTO createPresetedMineLauncher(String assetId) {
@@ -133,8 +131,8 @@ public final class WeaponDefFactory {
                 assetId,
                 DefWeaponType.MINE_LAUNCHER,
 
-                18.0,
-                120.0,
+                48.0,
+                -100.0,
                 0.0,
                 0.0,
                 10.0,

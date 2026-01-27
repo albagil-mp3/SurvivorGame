@@ -7,33 +7,48 @@ import world.core.AbstractWorldDefinitionProvider;
 
 public final class EarthInCenterWorldDefinitionProvider extends AbstractWorldDefinitionProvider {
 
+    // *** CONSTRUCTORS ***
+
     public EarthInCenterWorldDefinitionProvider(double worldWidth, double worldHeight, ProjectAssets assets) {
         super(worldWidth, worldHeight, assets);
     }
 
+    // *** PROTECTED (alphabetical order) ***
+
     @Override
     protected void define() {
 
-        setBackgroundStatic("back_3");
+        this.setBackgroundStatic("back_3");
 
-        addGravityBody("stars_2", 2100, 300, 600);
+        // region Statics
+        this.addGravityBody("stars_2", 2100, 300, 600);
 
-        addGravityBody("planet_4", worldWidth / 2.0, worldHeight / 2.0, 500);
+        this.addGravityBody("planet_4", worldWidth / 2.0, worldHeight / 2.0, 500);
+        // endregion
 
-        addAsteroidPrototypeAnywhereRandomAsset(
-                6, AssetType.ASTEROID, 1, 40, 90);
+        // region Dynamic bodies
+        this.addAsteroidPrototypeAnywhereRandomAsset(
+                6, AssetType.ASTEROID,
+                1, 40,
+                10, 175,
+                0, 150);
+        // endregion
 
-        addSpaceshipPrototypeAnywhereRandomAsset(
+        // region Players
+        this.addSpaceshipPrototypeAnywhereRandomAsset(
                 1, AssetType.SPACESHIP, 1, 60, 120);
 
-        addTrailEmitterCosmetic("stars_6", 100.0, BodyType.DECORATOR, 100.0);
+        this.addTrailEmitterCosmetic("stars_6", 100.0, BodyType.DECORATOR, 100.0);
+        // endregion
 
-        addWeaponPresetBulletRandomAsset(AssetType.BULLET);
+        // region Weapons
+        this.addWeaponPresetBulletRandomAsset(AssetType.BULLET);
 
-        addWeaponPresetBurstRandomAsset(AssetType.BULLET);
+        this.addWeaponPresetBurstRandomAsset(AssetType.BULLET);
 
-        addWeaponPresetMineLauncherRandomAsset(AssetType.MINE);
+        this.addWeaponPresetMineLauncherRandomAsset(AssetType.MINE);
 
-        addWeaponPresetMissileLauncherRandomAsset(AssetType.MISSILE);
+        this.addWeaponPresetMissileLauncherRandomAsset(AssetType.MISSILE);
+        // endregion
     }
 }

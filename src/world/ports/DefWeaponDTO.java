@@ -29,7 +29,14 @@ public class DefWeaponDTO {
         this.assetId = assetId;
 
         this.burstSize = burstSize;
-        this.burstFireRate = burstFireRate;
+
+        // NO burst condition
+        if (this.burstSize <= 1) {
+            this.burstFireRate = 0;
+        } else {
+            this.burstFireRate = burstFireRate;
+        }
+
         this.fireRate = fireRate;
         this.maxAmmo = maxAmmo;
         this.reloadTime = reloadTime;
