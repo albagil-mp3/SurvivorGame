@@ -2,7 +2,7 @@ package game.implementations.actions;
 
 import java.util.List;
 
-import game.ports.ActionsGenerator;
+import controller.ports.ActionsGenerator;
 import utils.actions.Action;
 import utils.actions.ActionDTO;
 import utils.events.domain.ports.DomainEventType;

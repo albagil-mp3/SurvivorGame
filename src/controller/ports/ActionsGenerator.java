@@ -1,4 +1,4 @@
-package game.ports;
+package controller.ports;
 
 import java.util.List;
 

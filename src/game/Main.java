@@ -4,6 +4,7 @@ import controller.implementations.Controller;
 import game.implementations.actions.*;
 import game.implementations.ai.*;
 import game.implementations.level.*;
+import game.implementations.world.RandomWorldDefinitionProvider;
 import model.implementations.Model;
 import utils.assets.implementations.ProjectAssets;
 import view.core.View;
