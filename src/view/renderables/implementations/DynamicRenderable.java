@@ -4,7 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import images.ImageCache;
+import utils.images.ImageCache;
 import view.renderables.ports.DynamicRenderDTO;
 
 public class DynamicRenderable extends Renderable {

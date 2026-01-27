@@ -1,0 +1,98 @@
+package utils.fx;
+
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+
+import view.renderables.implementations.DynamicRenderable;
+
+
+/**
+ *
+ * @author juanm
+ */
+public abstract class Fx extends Thread {
+
+    private long delayMills;
+    private DynamicRenderable renderable;
+    private FxImage fxImage;
+    private FxType animationType;
+
+
+    /**
+     * CONSTRUCTORS
+     */
+    public Fx() {
+        this.delayMills = 0;
+    }
+
+
+    /**
+     * STATICS
+     */
+    static public BufferedImage loadImage(String fileName) {
+        BufferedImage img;
+
+        img = null;
+        try {
+            img = ImageIO.read(new File(fileName));
+        } catch (IOException e) {
+            System.err.println("ERROR: Loading image · <Animation> · [" + fileName + "] · " + e.getMessage());
+            img = null;
+        }
+
+        return img;
+    }
+
+
+    /**
+     * PUBLICS
+     */
+    public FxType getAnimationType() {
+        return this.animationType;
+    }
+
+
+    public long getDelayMillis() {
+        return this.delayMills;
+    }
+
+
+    public DynamicRenderable getRenderable() {
+        return this.renderable;
+    }
+
+
+    public FxImage getVOImage() {
+        return this.fxImage;
+    }
+
+
+    public boolean isVOImageSetted() {
+        return this.fxImage != null;
+    }
+
+
+    public void setAnimationType(FxType animationType) {
+        this.animationType = animationType;
+    }
+
+
+    public void setDelayMillis(long delayMillis) {
+        this.delayMills = delayMillis;
+    }
+
+
+    public void setRenderable(DynamicRenderable renderable) {
+        this.renderable = renderable;
+    }
+
+
+    public void setVOImage(FxImage fxImg) {
+        this.fxImage = fxImg;
+        this.fxImage.setAnimation(this);
+    }
+
+}

@@ -2,9 +2,9 @@ package game.core;
 
 import java.util.Random;
 
-import _helpers.DoubleVector;
 import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
+import utils.helpers.DoubleVector;
 import world.ports.DefItem;
 import world.ports.DefItemDTO;
 import world.ports.DefItemPrototypeDTO;

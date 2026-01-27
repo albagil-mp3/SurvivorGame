@@ -1,7 +1,7 @@
 package model.weapons.ports;
 
-import events.domain.ports.BodyToEmitDTO;
 import model.bodies.ports.BodyType;
+import utils.events.domain.ports.BodyToEmitDTO;
 
 /**
  * WeaponDto

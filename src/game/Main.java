@@ -1,11 +1,11 @@
 package game;
 
-import assets.implementations.ProjectAssets;
 import controller.implementations.Controller;
 import game.implementations.actions.*;
 import game.implementations.ai.*;
 import game.implementations.level.*;
 import model.implementations.Model;
+import utils.assets.implementations.ProjectAssets;
 import view.core.View;
 import world.implementations.*;
 import world.ports.WorldDefinition;

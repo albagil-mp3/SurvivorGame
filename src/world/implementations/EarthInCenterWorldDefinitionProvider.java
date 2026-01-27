@@ -1,8 +1,8 @@
 package world.implementations;
 
-import assets.implementations.ProjectAssets;
-import assets.ports.AssetType;
 import model.bodies.ports.BodyType;
+import utils.assets.implementations.ProjectAssets;
+import utils.assets.ports.AssetType;
 import world.core.AbstractWorldDefinitionProvider;
 
 public final class EarthInCenterWorldDefinitionProvider extends AbstractWorldDefinitionProvider {

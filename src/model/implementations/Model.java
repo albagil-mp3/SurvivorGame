@@ -2,23 +2,8 @@ package model.implementations;
 
 import static java.lang.System.nanoTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import actions.ActionDTO;
-import actions.Action;
-import events.domain.ports.BodyRefDTO;
-import events.domain.ports.BodyToEmitDTO;
-import events.domain.ports.DomainEventType;
-import events.domain.ports.eventtype.CollisionEvent;
-import events.domain.ports.eventtype.DomainEvent;
-import events.domain.ports.eventtype.EmitEvent;
-import events.domain.ports.eventtype.LifeOver;
-import events.domain.ports.eventtype.LimitEvent;
-import events.domain.ports.payloads.CollisionPayload;
-import events.domain.ports.payloads.EmitPayloadDTO;
-
 import java.awt.Dimension;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +29,18 @@ import model.spatial.ports.SpatialGridStatisticsDTO;
 import model.weapons.ports.Weapon;
 import model.weapons.ports.WeaponDto;
 import model.weapons.ports.WeaponFactory;
+import utils.actions.Action;
+import utils.actions.ActionDTO;
+import utils.events.domain.ports.BodyRefDTO;
+import utils.events.domain.ports.BodyToEmitDTO;
+import utils.events.domain.ports.DomainEventType;
+import utils.events.domain.ports.eventtype.CollisionEvent;
+import utils.events.domain.ports.eventtype.DomainEvent;
+import utils.events.domain.ports.eventtype.EmitEvent;
+import utils.events.domain.ports.eventtype.LifeOver;
+import utils.events.domain.ports.eventtype.LimitEvent;
+import utils.events.domain.ports.payloads.CollisionPayload;
+import utils.events.domain.ports.payloads.EmitPayloadDTO;
 
 /**
  * Model

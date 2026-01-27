@@ -3,10 +3,10 @@ package world.core;
 import java.util.ArrayList;
 import java.util.Random;
 
-import assets.core.AssetCatalog;
-import assets.implementations.ProjectAssets;
-import assets.ports.AssetType;
 import model.bodies.ports.BodyType;
+import utils.assets.core.AssetCatalog;
+import utils.assets.implementations.ProjectAssets;
+import utils.assets.ports.AssetType;
 import world.ports.DefBackgroundDTO;
 import world.ports.DefEmitterDTO;
 import world.ports.DefItem;

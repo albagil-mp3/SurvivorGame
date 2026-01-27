@@ -3,9 +3,9 @@ package model.emitter.core;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-import events.domain.ports.BodyToEmitDTO;
 import model.emitter.ports.Emitter;
 import model.emitter.ports.EmitterConfigDto;
+import utils.events.domain.ports.BodyToEmitDTO;
 
 public abstract class AbstractEmitter implements Emitter {
 

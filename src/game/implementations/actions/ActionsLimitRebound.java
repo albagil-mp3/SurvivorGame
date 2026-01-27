@@ -2,15 +2,15 @@ package game.implementations.actions;
 
 import java.util.List;
 
-import actions.ActionDTO;
-import actions.Action;
-import events.domain.ports.DomainEventType;
-import events.domain.ports.eventtype.CollisionEvent;
-import events.domain.ports.eventtype.DomainEvent;
-import events.domain.ports.eventtype.EmitEvent;
-import events.domain.ports.eventtype.LifeOver;
-import events.domain.ports.eventtype.LimitEvent;
 import game.ports.ActionsGenerator;
+import utils.actions.Action;
+import utils.actions.ActionDTO;
+import utils.events.domain.ports.DomainEventType;
+import utils.events.domain.ports.eventtype.CollisionEvent;
+import utils.events.domain.ports.eventtype.DomainEvent;
+import utils.events.domain.ports.eventtype.EmitEvent;
+import utils.events.domain.ports.eventtype.LifeOver;
+import utils.events.domain.ports.eventtype.LimitEvent;
 
 
 public class ActionsLimitRebound implements ActionsGenerator {

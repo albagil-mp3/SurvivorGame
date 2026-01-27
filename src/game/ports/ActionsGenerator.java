@@ -2,8 +2,8 @@ package game.ports;
 
 import java.util.List;
 
-import actions.ActionDTO;
-import events.domain.ports.eventtype.DomainEvent;
+import utils.actions.ActionDTO;
+import utils.events.domain.ports.eventtype.DomainEvent;
 
 /**
  * GameRulesEngine

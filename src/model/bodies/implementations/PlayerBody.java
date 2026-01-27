@@ -2,7 +2,6 @@ package model.bodies.implementations;
 
 import java.util.List;
 
-import events.domain.ports.BodyToEmitDTO;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyType;
 import model.bodies.ports.PlayerDTO;
@@ -11,6 +10,7 @@ import model.physics.ports.PhysicsValuesDTO;
 import model.spatial.core.SpatialGrid;
 import model.weapons.ports.Weapon;
 import model.weapons.ports.WeaponDto;
+import utils.events.domain.ports.BodyToEmitDTO;
 
 public class PlayerBody extends DynamicBody {
 

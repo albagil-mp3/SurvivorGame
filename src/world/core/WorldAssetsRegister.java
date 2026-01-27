@@ -1,9 +1,9 @@
 package world.core;
 
-import assets.core.AssetCatalog;
-import assets.implementations.ProjectAssets;
-import assets.ports.AssetInfoDTO;
-import assets.ports.AssetType;
+import utils.assets.core.AssetCatalog;
+import utils.assets.implementations.ProjectAssets;
+import utils.assets.ports.AssetInfoDTO;
+import utils.assets.ports.AssetType;
 
 public final class WorldAssetsRegister {
 

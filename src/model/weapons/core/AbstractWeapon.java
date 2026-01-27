@@ -4,10 +4,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import events.domain.ports.BodyToEmitDTO;
 import model.weapons.ports.Weapon;
 import model.weapons.ports.WeaponDto;
 import model.weapons.ports.WeaponState;
+import utils.events.domain.ports.BodyToEmitDTO;
 
 /**
  * AbstractWeapon

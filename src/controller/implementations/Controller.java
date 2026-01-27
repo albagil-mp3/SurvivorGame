@@ -4,9 +4,6 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 
-import actions.ActionDTO;
-import assets.core.AssetCatalog;
-
 import controller.mappers.DynamicRenderableMapper;
 import controller.mappers.EmitterMapper;
 import controller.mappers.PlayerRenderableMapper;
@@ -16,12 +13,14 @@ import controller.mappers.WeaponMapper;
 import controller.ports.EngineState;
 import controller.ports.WorldEvolver;
 import controller.ports.WorldInitializer;
-import events.domain.ports.eventtype.DomainEvent;
 import game.ports.ActionsGenerator;
 import model.bodies.ports.BodyDTO;
 import model.emitter.ports.EmitterConfigDto;
 import model.implementations.Model;
 import model.weapons.ports.WeaponDto;
+import utils.actions.ActionDTO;
+import utils.assets.core.AssetCatalog;
+import utils.events.domain.ports.eventtype.DomainEvent;
 import model.ports.DomainEventProcessor;
 import view.core.View;
 import view.renderables.ports.DynamicRenderDTO;
