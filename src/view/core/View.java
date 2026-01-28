@@ -15,6 +15,7 @@ import controller.impl.Controller;
 import controller.ports.EngineState;
 import utils.assets.core.AssetCatalog;
 import utils.assets.ports.AssetType;
+import utils.helpers.DoubleVector;
 import utils.images.Images;
 import view.renderables.ports.DynamicRenderDTO;
 import view.renderables.ports.PlayerRenderDTO;
@@ -112,12 +113,12 @@ public class View extends JFrame implements KeyListener {
     private final Images images;
     private String localPlayerId;
     private final Renderer renderer;
-    private Dimension viewDimension;
-    private Dimension worldDimension;
+    private DoubleVector viewDimension;
+    private DoubleVector worldDimension;
     private boolean fireKeyDown = false;
     // endregion Fields
 
-    // *** CONSTRUCTOR ***
+    // region Constructors
     public View() {
         this.images = new Images("");
         this.controlPanel = new ControlPanel(this);
@@ -125,12 +126,13 @@ public class View extends JFrame implements KeyListener {
         this.createFrame();
     }
 
-    public View(Dimension worldDimension, Dimension viewDimension) {
+    public View(DoubleVector worldDimension, DoubleVector viewDimension) {
         this();
-        this.worldDimension = new Dimension(worldDimension);
-        this.viewDimension = new Dimension(viewDimension);
+        this.worldDimension = new DoubleVector(worldDimension);
+        this.viewDimension = new DoubleVector(viewDimension);
         this.createFrame();
     }
+    // endregion
 
     // *** PUBLIC ***
 
@@ -151,10 +153,10 @@ public class View extends JFrame implements KeyListener {
             throw new IllegalArgumentException("World dimensions not setted");
         }
 
-        this.renderer.SetViewDimension(this.viewDimension);
+        this.renderer.setViewDimension(this.viewDimension);
         this.renderer.activate();
         this.pack();
-        System.out.println("View activated");
+        System.out.println("View: Activated");
     }
 
     // region adders (add***)
@@ -168,12 +170,12 @@ public class View extends JFrame implements KeyListener {
     // endregion
 
     // region Getters (get***)
-    public Dimension getWorldDimension() {
-        return new Dimension(this.worldDimension);
+    public DoubleVector getWorldDimension() {
+        return new DoubleVector(this.worldDimension);
     }
 
-    public Dimension getViewDimension() {
-        return new Dimension(this.viewDimension);
+    public DoubleVector getViewDimension() {
+        return new DoubleVector(this.viewDimension);
     }
     // endregion
 
@@ -184,13 +186,14 @@ public class View extends JFrame implements KeyListener {
 
     public void setLocalPlayer(String localPlayerId) {
         this.localPlayerId = localPlayerId;
+        System.out.println("Viewer: Local player setted " + localPlayerId);
     }
 
-    public void setViewDimension(Dimension worldDim) {
-        this.viewDimension = worldDim;
+    public void setViewDimension(DoubleVector viewDim) {
+        this.viewDimension = viewDim;
     }
 
-    public void setWorldDimension(Dimension worldDim) {
+    public void setWorldDimension(DoubleVector worldDim) {
         this.worldDimension = worldDim;
     }
     // endregion
@@ -232,7 +235,7 @@ public class View extends JFrame implements KeyListener {
 
     // *** PROTECTED ***
 
-    // region Getters (get***)
+    // region protected Getters (get***)
     protected ArrayList<DynamicRenderDTO> getDynamicRenderablesData() {
         if (this.controller == null) {
             throw new IllegalArgumentException("Controller not setted");
@@ -265,6 +268,10 @@ public class View extends JFrame implements KeyListener {
         return this.controller.getPlayerRenderData(this.localPlayerId);
     }
 
+    protected String getLocalPlayerId() {
+        return this.localPlayerId;
+    }
+    
     protected SpatialGridStatisticsRenderDTO getSpatialGridStatistics() {
         return this.controller.getSpatialGridStatistics();
     }

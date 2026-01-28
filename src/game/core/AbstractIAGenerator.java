@@ -122,8 +122,9 @@ public abstract class AbstractIAGenerator implements Runnable {
     protected abstract void onTick();
 
     protected final DoubleVector centerPosition() {
-        double x = this.worldEvolver.getWorldDimension().width / 2.0;
-        double y = this.worldEvolver.getWorldDimension().height / 2.0;
+        DoubleVector worldDim = this.worldEvolver.getWorldDimension();
+        double x = worldDim.x / 2.0;
+        double y = worldDim.y / 2.0;
         return new DoubleVector(x, y);
     }
 

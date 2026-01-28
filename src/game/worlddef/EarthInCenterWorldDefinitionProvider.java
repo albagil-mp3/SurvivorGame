@@ -5,16 +5,16 @@ import java.awt.Dimension;
 import model.bodies.ports.BodyType;
 import utils.assets.impl.ProjectAssets;
 import utils.assets.ports.AssetType;
+import utils.helpers.DoubleVector;
 import world.core.AbstractWorldDefinitionProvider;
 
 public final class EarthInCenterWorldDefinitionProvider extends AbstractWorldDefinitionProvider {
 
     // *** CONSTRUCTORS ***
 
-    public EarthInCenterWorldDefinitionProvider(Dimension worldDimension, ProjectAssets assets) {
+    public EarthInCenterWorldDefinitionProvider(DoubleVector worldDimension, ProjectAssets assets) {
         super(worldDimension, assets);
     }
-
     // *** PROTECTED (alphabetical order) ***
 
     @Override

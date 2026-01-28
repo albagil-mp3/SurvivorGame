@@ -21,6 +21,7 @@ import model.emitter.ports.EmitterConfigDto;
 import model.impl.Model;
 import model.weapons.ports.WeaponDto;
 import utils.assets.core.AssetCatalog;
+import utils.helpers.DoubleVector;
 import model.ports.DomainEventProcessor;
 import view.core.View;
 import view.renderables.ports.DynamicRenderDTO;
@@ -173,15 +174,14 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     private final ActionsGenerator gameRulesEngine;
     private Model model;
     private View view;
-    private Dimension viewDimension;
-    private Dimension worldDimension;
+    private DoubleVector viewDimension;
+    private DoubleVector worldDimension;
     private int maxBodies;
     // endregion
 
-    // *** CONSTRUCTORS ***
-
+    // region Constructors
     public Controller(
-            Dimension worldDim, Dimension viewDime, int maxBodies,
+             DoubleVector worldDim, DoubleVector viewDime, int maxBodies,
             View view, Model model,
             ActionsGenerator gameRulesEngine) {
 
@@ -213,6 +213,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.setWorldDimension(worldDim);
         this.setViewDimension(viewDime);
     }
+    // endregion
 
     // *** PUBLICS (alphabetical sort) ***
 
@@ -236,7 +237,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.view.activate();
         this.model.activate();
         this.engineState = EngineState.ALIVE;
-        System.out.println("Controller activated " + this.worldDimension + " / " + this.viewDimension);
+        System.out.println("Controller: Activated ");
     }
 
     // region Engine (engine**)
@@ -278,7 +279,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         return this.model.getDeadQuantity();
     }
 
-    public Dimension getWorldDimension() {
+    public DoubleVector getWorldDimension() {
         return this.worldDimension;
     }
 
@@ -329,7 +330,6 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
 
     // region setters
     public void setLocalPlayer(String playerId) {
-        System.out.println("*** Controller.setLocalPlayer ***");
         this.view.setLocalPlayer(playerId);
     }
 
@@ -343,26 +343,26 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.view.setController(this);
     }
 
-    public void setViewDimension(Dimension d) {
+    public void setViewDimension(DoubleVector d) {
         if (d == null) {
             throw new IllegalArgumentException("View dimension cannot be null");
         }
-        if (d.width <= 0 || d.height <= 0) {
+        if (d.x <= 0 || d.y <= 0) {
             throw new IllegalArgumentException("Invalid view dimension: " + d);
         }
         this.viewDimension = d;
         this.view.setViewDimension(d);
     }
 
-    public void setWorldDimension(Dimension d) {
+    public void setWorldDimension(DoubleVector d) {
         if (d == null) {
             throw new IllegalArgumentException("World dimension cannot be null");
         }
-        if (d.width <= 0 || d.height <= 0) {
+        if (d.x <= 0 || d.y <= 0) {
             throw new IllegalArgumentException("Invalid world dimension: " + d);
         }
 
-        this.worldDimension = new Dimension(d);
+        this.worldDimension = new DoubleVector(d);
         this.model.setWorldDimension(d);
         this.view.setWorldDimension(d);
     }

@@ -1,7 +1,6 @@
 package controller.ports;
 
-import java.awt.Dimension;
-
+import utils.helpers.DoubleVector;
 import world.ports.DefEmitterDTO;
 import world.ports.DefWeaponDTO;
 
@@ -20,7 +19,7 @@ public interface WorldEvolver {
     public void equipTrail(
             String playerId, DefEmitterDTO bodyEmitterDef);
 
-    public Dimension getWorldDimension();
+    public DoubleVector getWorldDimension();
 
     public EngineState getEngineState();
 

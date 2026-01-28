@@ -41,6 +41,7 @@ import model.ports.ModelState;
 import model.weapons.ports.Weapon;
 import model.weapons.ports.WeaponDto;
 import model.weapons.ports.WeaponFactory;
+import utils.helpers.DoubleVector;
 import utils.spatial.core.SpatialGrid;
 import utils.spatial.ports.SpatialGridStatisticsDTO;
 
@@ -184,7 +185,7 @@ public class Model implements BodyEventProcessor {
     private final ArrayList<BodyDTO> scratchDynamicsBuffer = new ArrayList<>(MAX_BODIES);
     // endregion
 
-    // *** CONSTRUCTORS ***
+    // region Constructors
     public Model() {
         this.maxBodies = MAX_BODIES;
     }
@@ -205,6 +206,7 @@ public class Model implements BodyEventProcessor {
                 worldDimension.getWidth(), worldDimension.getHeight(),
                 48, 24);
     }
+    // endregion
 
     // *** PUBLICS ***
 
@@ -219,7 +221,7 @@ public class Model implements BodyEventProcessor {
             throw new IllegalArgumentException("Invalid world dimension");
         }
 
-        System.out.println("Model activated");
+        System.out.println("Model: Activated");
         this.state = ModelState.ALIVE;
     }
 
@@ -563,15 +565,15 @@ public class Model implements BodyEventProcessor {
         this.maxBodies = maxDynamicBody;
     }
 
-    public void setWorldDimension(Dimension worldDim) {
-        if (worldDim == null || worldDim.getWidth() <= 0 || worldDim.getHeight() <= 0) {
+    public void setWorldDimension(DoubleVector worldDim) {
+        if (worldDim == null || worldDim.x <= 0 || worldDim.y <= 0) {
             throw new IllegalArgumentException("Invalid world dimension");
         }
 
-        this.worldWidth = worldDim.getWidth();
-        this.worldHeight = worldDim.getHeight();
+        this.worldWidth = worldDim.x;
+        this.worldHeight = worldDim.y;
         this.spatialGrid = new SpatialGrid(
-                worldDim.getWidth(), worldDim.getHeight(),
+                worldDim.x, worldDim.y,
                 48, 24);
     }
     // endregion

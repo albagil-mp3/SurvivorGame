@@ -59,6 +59,14 @@ public class Renderable {
         return this.lastFrameSeen;
     }
 
+    public String getAssetId() {
+        return this.assetId;
+    }
+
+    public String getEntityId() {
+        return this.entityId;
+    }
+
     public RenderDTO getRenderableValues() {
         return this.renderableValues;
     }
@@ -79,20 +87,19 @@ public class Renderable {
             return;
         }
 
-        AffineTransform defaultTransform = g.getTransform();
+        AffineTransform old = g.getTransform();
 
-        AffineTransform mainRotation = AffineTransform.getRotateInstance(
-                Math.toRadians(this.renderableValues.angle),
-                this.renderableValues.posX, this.renderableValues.posY);
-
-        g.setTransform(mainRotation);
+        g.rotate(Math.toRadians(this.renderableValues.angle),
+                this.renderableValues.posX,
+                this.renderableValues.posY);
 
         g.drawImage(
                 this.image,
                 (int) (this.renderableValues.posX - this.renderableValues.size / 2),
                 (int) (this.renderableValues.posY - this.renderableValues.size / 2),
                 null);
-        g.setTransform(defaultTransform);
+
+        g.setTransform(old);
     }
 
     public void updateImageFromCache(RenderDTO entityInfo) {

@@ -8,6 +8,7 @@ import model.bodies.ports.BodyType;
 import utils.assets.core.AssetCatalog;
 import utils.assets.impl.ProjectAssets;
 import utils.assets.ports.AssetType;
+import utils.helpers.DoubleVector;
 import world.ports.DefBackgroundDTO;
 import world.ports.DefEmitterDTO;
 import world.ports.DefItem;
@@ -62,19 +63,19 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // *** CONSTRUCTORS ***
 
-    public AbstractWorldDefinitionProvider(Dimension worldDimension, ProjectAssets assets) {
+    public AbstractWorldDefinitionProvider(DoubleVector worldDimension, ProjectAssets assets) {
         if (assets == null) {
             throw new IllegalArgumentException("ProjectAssets cannot be null.");
         }
         if (worldDimension == null) {
             throw new IllegalArgumentException("WorldDimension cannot be null.");
         }   
-        if (worldDimension.width <= 0 || worldDimension.height <= 0) {
+        if (worldDimension.x <= 0 || worldDimension.y <= 0) {
             throw new IllegalArgumentException("World dimensions must be positive values.");
         }
 
-        this.worldWidth = worldDimension.width;
-        this.worldHeight = worldDimension.height;
+        this.worldWidth = worldDimension.x;
+        this.worldHeight = worldDimension.y;
         this.projectAssets = assets;
         this.assetsRegister = new WorldAssetsRegister(this.projectAssets, this.gameAssets);
     }

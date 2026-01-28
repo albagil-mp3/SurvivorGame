@@ -31,7 +31,7 @@ public class AIBasicSpawner extends AbstractIAGenerator {
 
     @Override
     protected String getThreadName() {
-        return "Asteroid IA generator (AIBasicSpawner)";
+        return "AIBasicSpawner";
     }
 
     @Override

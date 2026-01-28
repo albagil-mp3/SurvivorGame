@@ -5,13 +5,14 @@ import java.awt.Dimension;
 import model.bodies.ports.BodyType;
 import utils.assets.impl.ProjectAssets;
 import utils.assets.ports.AssetType;
+import utils.helpers.DoubleVector;
 import world.core.AbstractWorldDefinitionProvider;
 
 public final class RandomWorldDefinitionProvider extends AbstractWorldDefinitionProvider {
 
 	// *** CONSTRUCTORS ***
 
-	public RandomWorldDefinitionProvider(Dimension worldDimension, ProjectAssets assets) {
+	public RandomWorldDefinitionProvider(DoubleVector worldDimension, ProjectAssets assets) {
 		super(worldDimension, assets);
 	}
 
@@ -53,8 +54,8 @@ public final class RandomWorldDefinitionProvider extends AbstractWorldDefinition
 		// endregion
 
 		// region Players
-		this.addSpaceshipAnywhereRandomAsset(
-				1, AssetType.SPACESHIP, density, 50, 50);
+		this.addSpaceshipRandomAsset(
+			1, AssetType.SPACESHIP, density, 50, 50, 200, 200);
 
 		this.addTrailEmitterCosmetic("stars_6", 100, BodyType.DECORATOR, 20);
 		// endregion
