@@ -1,6 +1,5 @@
 package world.core;
 
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -96,10 +95,10 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
         requirePositiveInt(num, "num must be a positive integer.");
 
         for (int i = 0; i < num; i++) {
-            double angle = rnd.nextDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
-            double posX = rnd.nextDouble(WORLD_MIN, this.worldWidth);
-            double posY = rnd.nextDouble(WORLD_MIN, this.worldHeight);
-            double size = rnd.nextDouble(minSize, maxSize);
+            double angle = randomDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
+            double posX = randomDouble(WORLD_MIN, this.worldWidth);
+            double posY = randomDouble(WORLD_MIN, this.worldHeight);
+            double size = randomDouble(minSize, maxSize);
 
             this.addAsteroidRandomAsset(
                     1, assetType, angle, density, size, posX, posY);
@@ -171,10 +170,10 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
         for (int i = 0; i < num; i++) {
 
-            double angle = rnd.nextDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
-            double posX = rnd.nextDouble(WORLD_MIN, this.worldWidth);
-            double posY = rnd.nextDouble(WORLD_MIN, this.worldHeight);
-            double size = rnd.nextDouble(minSize, maxSize);
+            double angle = randomDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
+            double posX = randomDouble(WORLD_MIN, this.worldWidth);
+            double posY = randomDouble(WORLD_MIN, this.worldHeight);
+            double size = randomDouble(minSize, maxSize);
 
             this.addDecoratorRandomAsset(1, assetType, angle, density, size, posX, posY);
         }
@@ -235,12 +234,10 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
         for (int i = 0; i < num; i++) {
 
-            double angle = rnd.nextDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
-            double posX = rnd.nextDouble(WORLD_MIN, this.worldWidth);
-            double posY = rnd.nextDouble(WORLD_MIN, this.worldHeight);
-
-            System.out.println("*** MinSize: " + minSize + " | MaxSize: " + maxSize);
-            double size = rnd.nextDouble(minSize, maxSize);
+            double angle = randomDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
+            double posX = randomDouble(WORLD_MIN, this.worldWidth);
+            double posY = randomDouble(WORLD_MIN, this.worldHeight);
+            double size = randomDouble(minSize, maxSize);
 
             this.addGravityBodyRandomAsset(1, assetType, angle, density, size, posX, posY);
         }
@@ -579,7 +576,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // region Random helpers (random***)
     protected static double randomAngle() {
-        return rnd.nextDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
+        return randomDouble(ANY_HEADING_MIN_DEG, ANY_HEADING_MAX_DEG);
     }
 
     protected static double randomDouble(double min, double max) {

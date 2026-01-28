@@ -167,6 +167,8 @@ public class Model implements BodyEventProcessor {
 
     // region Constants
     private static final int MAX_BODIES = 1000;
+    private static final int SPATIAL_GRID_CELL_SIZE = 128;
+    private static final int MAX_CELLS_PER_BODY = 48;
     // endregion
 
     // region Fields
@@ -176,9 +178,9 @@ public class Model implements BodyEventProcessor {
     private double worldWidth;
     private double worldHeight;
     private SpatialGrid spatialGrid;
-    private final Map<String, AbstractBody> decorators = new ConcurrentHashMap<>(100);
+    private final Map<String, AbstractBody> decorators = new ConcurrentHashMap<>(200);
     private final Map<String, AbstractBody> dynamicBodies = new ConcurrentHashMap<>(MAX_BODIES);
-    private final Map<String, AbstractBody> gravityBodies = new ConcurrentHashMap<>(50);
+    private final Map<String, AbstractBody> gravityBodies = new ConcurrentHashMap<>(200);
     // endregion
 
     // regions Scratch buffers (for zero-allocation snapshot generation)
@@ -204,7 +206,7 @@ public class Model implements BodyEventProcessor {
         this.worldHeight = worldDimension.y;
         this.spatialGrid = new SpatialGrid(
                 worldDimension.x, worldDimension.y,
-                48, 24);
+                SPATIAL_GRID_CELL_SIZE, MAX_CELLS_PER_BODY);
     }
     // endregion
 
@@ -574,7 +576,7 @@ public class Model implements BodyEventProcessor {
         this.worldHeight = worldDim.y;
         this.spatialGrid = new SpatialGrid(
                 worldDim.x, worldDim.y,
-                48, 24);
+                SPATIAL_GRID_CELL_SIZE, MAX_CELLS_PER_BODY);
     }
     // endregion
 

@@ -1,7 +1,5 @@
 package game.worlddef;
 
-import java.awt.Dimension;
-
 import assets.impl.ProjectAssets;
 import assets.ports.AssetType;
 import model.bodies.ports.BodyType;
@@ -28,21 +26,39 @@ public final class RandomWorldDefinitionProvider extends AbstractWorldDefinition
 
 		// region Decorations
 		this.addDecoratorAnywhereRandomAsset(
-				20, AssetType.STARS, density, 800, 2000);
+				3, AssetType.STARS, density, 200, 400);
 		// endregion
 
 		// region Gravity bodies => Static bodies
 		this.addGravityBodyAnywhereRandomAsset(
-				5, AssetType.PLANET, density, 800, 1600);
+				2, AssetType.PLANET, density, 100, 600);
 
 		this.addGravityBodyAnywhereRandomAsset(
-				2, AssetType.MOON, density, 1000, 2000);
+				3, AssetType.GALAXY, density, 100, 400);
 
 		this.addGravityBodyAnywhereRandomAsset(
-				2, AssetType.SUN, density, 100, 600);
+				1, AssetType.COSMIC_PORTAL, density, 200, 400);
 
 		this.addGravityBodyAnywhereRandomAsset(
-				2, AssetType.BLACK_HOLE, density, 50, 250);
+				1, AssetType.LAB, density, 100, 200);
+
+		this.addGravityBodyAnywhereRandomAsset(
+				2, AssetType.HALO, density, 100, 400);
+
+		this.addGravityBodyAnywhereRandomAsset(
+				1, AssetType.RAINBOW, density, 2000, 4000);
+
+		this.addGravityBodyAnywhereRandomAsset(
+				2, AssetType.MOON, density, 100, 1000);
+
+		this.addGravityBodyAnywhereRandomAsset(
+				1, AssetType.SUN, density, 800, 1400);
+
+		this.addGravityBodyAnywhereRandomAsset(
+				10, AssetType.MINE, density, 50, 100);
+
+		this.addGravityBodyAnywhereRandomAsset(
+				1, AssetType.BLACK_HOLE, density, 100, 400);
 		// endregion
 
 		// region Dynamic bodies
@@ -55,7 +71,7 @@ public final class RandomWorldDefinitionProvider extends AbstractWorldDefinition
 
 		// region Players
 		this.addSpaceshipRandomAsset(
-			1, AssetType.SPACESHIP, density, 50, 50, 200, 200);
+				1, AssetType.SPACESHIP, density, 50, 60, 200, 200);
 
 		this.addTrailEmitterCosmetic("stars_6", 100, BodyType.DECORATOR, 20);
 		// endregion
