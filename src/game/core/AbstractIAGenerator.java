@@ -119,7 +119,7 @@ public abstract class AbstractIAGenerator implements Runnable {
     }
 
     // Override to implement logic for ALIVE tick
-    protected abstract void tickAlive();
+    protected abstract void onTick();
 
     protected final DoubleVector centerPosition() {
         double x = this.worldEvolver.getWorldDimension().width / 2.0;
@@ -169,7 +169,7 @@ public abstract class AbstractIAGenerator implements Runnable {
         while (this.worldEvolver.getEngineState() != EngineState.STOPPED) {
 
             if (this.worldEvolver.getEngineState() == EngineState.ALIVE) {
-                this.tickAlive();
+                this.onTick();
             }
 
             try {

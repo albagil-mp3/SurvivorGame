@@ -8,15 +8,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import actions.ActionDTO;
+import events.domain.ports.BodyRefDTO;
+import events.domain.ports.eventtype.DomainEvent;
 import model.bodies.ports.BodyEventProcessor;
 import model.bodies.ports.BodyState;
 import model.bodies.ports.BodyType;
 import model.emitter.ports.Emitter;
 import model.physics.ports.PhysicsEngine;
 import model.physics.ports.PhysicsValuesDTO;
-import utils.actions.ActionDTO;
-import utils.events.domain.ports.BodyRefDTO;
-import utils.events.domain.ports.eventtype.DomainEvent;
 import utils.spatial.core.SpatialGrid;
 
 /**

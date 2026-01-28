@@ -1,8 +1,8 @@
-package utils.events.domain.core;
+package events.domain.core;
 
-import utils.events.domain.ports.BodyRefDTO;
-import utils.events.domain.ports.DomainEventType;
-import utils.events.domain.ports.payloads.DomainEventPayload;
+import events.domain.ports.BodyRefDTO;
+import events.domain.ports.DomainEventType;
+import events.domain.ports.payloads.DomainEventPayload;
 
 public abstract class AbstractDomainEvent <P extends DomainEventPayload>{
 

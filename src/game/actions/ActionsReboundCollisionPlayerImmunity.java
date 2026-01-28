@@ -2,16 +2,16 @@ package game.actions;
 
 import java.util.List;
 
+import actions.Action;
+import actions.ActionDTO;
 import controller.ports.ActionsGenerator;
+import events.domain.ports.DomainEventType;
+import events.domain.ports.eventtype.CollisionEvent;
+import events.domain.ports.eventtype.DomainEvent;
+import events.domain.ports.eventtype.EmitEvent;
+import events.domain.ports.eventtype.LifeOver;
+import events.domain.ports.eventtype.LimitEvent;
 import model.bodies.ports.BodyType;
-import utils.actions.Action;
-import utils.actions.ActionDTO;
-import utils.events.domain.ports.DomainEventType;
-import utils.events.domain.ports.eventtype.CollisionEvent;
-import utils.events.domain.ports.eventtype.DomainEvent;
-import utils.events.domain.ports.eventtype.EmitEvent;
-import utils.events.domain.ports.eventtype.LifeOver;
-import utils.events.domain.ports.eventtype.LimitEvent;
 
 public class ActionsReboundCollisionPlayerImmunity implements ActionsGenerator {
 

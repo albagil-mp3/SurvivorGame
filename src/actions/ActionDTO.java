@@ -1,7 +1,7 @@
-package utils.actions;
+package actions;
 
+import events.domain.ports.eventtype.DomainEvent;
 import model.bodies.ports.BodyType;
-import utils.events.domain.ports.eventtype.DomainEvent;
 
 public class ActionDTO {
     final public String entityId;

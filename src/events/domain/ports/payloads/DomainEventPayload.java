@@ -1,4 +1,4 @@
-package utils.events.domain.ports.payloads;
+package events.domain.ports.payloads;
 
 /**
  * Optional extra data attached to a DomainEvent.

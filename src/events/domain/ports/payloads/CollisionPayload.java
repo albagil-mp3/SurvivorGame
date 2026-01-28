@@ -1,4 +1,4 @@
-package utils.events.domain.ports.payloads;
+package events.domain.ports.payloads;
 
 public final class CollisionPayload implements DomainEventPayload {
     public final boolean haveImmunity;

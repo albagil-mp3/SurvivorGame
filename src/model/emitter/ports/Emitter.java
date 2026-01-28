@@ -1,6 +1,6 @@
 package model.emitter.ports;
 
-import utils.events.domain.ports.BodyToEmitDTO;
+import events.domain.ports.BodyToEmitDTO;
 
 public interface Emitter {
 

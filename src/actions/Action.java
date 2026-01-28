@@ -1,4 +1,4 @@
-package utils.actions;
+package actions;
 
 
 public enum Action {

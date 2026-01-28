@@ -1,9 +1,9 @@
-package utils.events.domain.ports.eventtype;
+package events.domain.ports.eventtype;
 
-import utils.events.domain.core.AbstractDomainEvent;
-import utils.events.domain.ports.BodyRefDTO;
-import utils.events.domain.ports.DomainEventType;
-import utils.events.domain.ports.payloads.CollisionPayload;
+import events.domain.core.AbstractDomainEvent;
+import events.domain.ports.BodyRefDTO;
+import events.domain.ports.DomainEventType;
+import events.domain.ports.payloads.CollisionPayload;
 
 public final class CollisionEvent extends AbstractDomainEvent<CollisionPayload> implements DomainEvent {
 

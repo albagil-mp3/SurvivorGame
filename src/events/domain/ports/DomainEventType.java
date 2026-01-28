@@ -1,4 +1,4 @@
-package utils.events.domain.ports;
+package events.domain.ports;
 
 public enum DomainEventType {
     COLLISION,

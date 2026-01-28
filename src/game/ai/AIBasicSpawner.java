@@ -42,7 +42,7 @@ public class AIBasicSpawner extends AbstractIAGenerator {
     }
 
     @Override
-    protected void tickAlive() {
+    protected void onTick() {
         // Select a random asteroid definition
         DefItem defItem = this.asteroidDefs.get(
                 this.rnd.nextInt(this.asteroidDefs.size()));
