@@ -172,7 +172,7 @@ public class View extends JFrame implements KeyListener {
         this.controller = controller;
     }
 
-    public void setDimension(Dimension worldDim) {
+    public void setViewportDimension(Dimension worldDim) {
         this.viewDimension = worldDim;
     }
 

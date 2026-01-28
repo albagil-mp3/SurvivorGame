@@ -172,6 +172,7 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
     private final ActionsGenerator gameRulesEngine;
     private Model model;
     private View view;
+    private Dimension viewDimension;
     private Dimension worldDimension;
 
     // *** CONSTRUCTORS ***
@@ -181,7 +182,8 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
 
         this.engineState = EngineState.STARTING;
         this.gameRulesEngine = gameRulesEngine;
-        this.setWorldDimension(worldWidth, worldHigh);
+        this.view.setViewportDimension(this.viewDimension);
+        this.view.setWorldDimension(this.worldDimension);
         this.setModel(model);
         this.setView(view);
     }
@@ -201,7 +203,8 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
             throw new IllegalArgumentException("No model injected");
         }
 
-        this.view.setDimension(this.worldDimension);
+        this.view.setViewportDimension(this.viewDimension);
+        this.view.setWorldDimension(this.worldDimension);
         this.view.activate();
         this.model.activate();
         this.engineState = EngineState.ALIVE;
@@ -311,8 +314,18 @@ public class Controller implements WorldEvolver, WorldInitializer, DomainEventPr
         this.view.setController(this);
     }
 
-    public void setWorldDimension(int width, int height) {
-        this.worldDimension = new Dimension(width, height);
+    public void setViewportDimension(Dimension dim) {
+        if (dim == null) {
+            throw new IllegalArgumentException("View dimension cannot be null");
+        }
+        if (dim.width <= 0 || dim.height <= 0) {
+            throw new IllegalArgumentException("Invalid view dimension: " + dim);
+        }
+        this.viewDimension = dim;
+    }
+
+    public void setWorldDimension(Dimension dim) {
+        this.worldDimension = new Dimension(dim);
     }
     // endregion setters
 
