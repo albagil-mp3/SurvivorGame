@@ -1,8 +1,8 @@
-package assets.impl;
+package world;
 
-import assets.core.AssetCatalog;
-import assets.ports.AssetIntensity;
-import assets.ports.AssetType;
+import engine.assets.core.AssetCatalog;
+import engine.assets.ports.AssetIntensity;
+import engine.assets.ports.AssetType;
 
 public final class ProjectAssets {
 

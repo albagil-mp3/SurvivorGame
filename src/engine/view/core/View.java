@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import assets.core.AssetCatalog;
-import assets.ports.AssetType;
+import engine.assets.core.AssetCatalog;
+import engine.assets.ports.AssetType;
 import engine.controller.impl.Controller;
 import engine.controller.ports.EngineState;
 import engine.utils.helpers.DoubleVector;

@@ -1,9 +1,9 @@
 package engine.worlddef.core;
 
-import assets.core.AssetCatalog;
-import assets.impl.ProjectAssets;
-import assets.ports.AssetInfoDTO;
-import assets.ports.AssetType;
+import engine.assets.core.AssetCatalog;
+import engine.assets.ports.AssetInfoDTO;
+import engine.assets.ports.AssetType;
+import world.ProjectAssets;
 
 public final class WorldAssetsRegister {
 

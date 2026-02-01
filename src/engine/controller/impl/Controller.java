@@ -3,8 +3,8 @@ package engine.controller.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import assets.core.AssetCatalog;
 import engine.actions.ActionDTO;
+import engine.assets.core.AssetCatalog;
 import engine.controller.mappers.DynamicRenderableMapper;
 import engine.controller.mappers.EmitterMapper;
 import engine.controller.mappers.PlayerRenderableMapper;

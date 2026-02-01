@@ -1,7 +1,6 @@
 package world;
 
-import assets.impl.ProjectAssets;
-import assets.ports.AssetType;
+import engine.assets.ports.AssetType;
 import engine.model.bodies.ports.BodyType;
 import engine.utils.helpers.DoubleVector;
 import engine.worlddef.core.AbstractWorldDefinitionProvider;

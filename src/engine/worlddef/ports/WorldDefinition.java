@@ -2,7 +2,7 @@ package engine.worlddef.ports;
 
 import java.util.ArrayList;
 
-import assets.core.AssetCatalog;
+import engine.assets.core.AssetCatalog;
 
 public class WorldDefinition {
 

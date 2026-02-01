@@ -1,7 +1,6 @@
 
 
 import ai.*;
-import assets.impl.ProjectAssets;
 import engine.controller.impl.Controller;
 import engine.controller.ports.ActionsGenerator;
 import engine.model.impl.Model;
@@ -10,6 +9,7 @@ import engine.view.core.View;
 import engine.worlddef.ports.WorldDefinition;
 import engine.worlddef.ports.WorldDefinitionProvider;
 import level.*;
+import world.ProjectAssets;
 
 public class Main {
 

@@ -1,6 +1,6 @@
 package engine.controller.ports;
 
-import assets.core.AssetCatalog;
+import engine.assets.core.AssetCatalog;
 import engine.utils.helpers.DoubleVector;
 import engine.worlddef.ports.DefEmitterDTO;
 import engine.worlddef.ports.DefWeaponDTO;
