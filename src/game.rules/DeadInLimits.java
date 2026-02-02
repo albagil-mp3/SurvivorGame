@@ -1,4 +1,4 @@
-package rules;
+package game.rules;
 
 import java.util.List;
 
@@ -11,9 +11,8 @@ import engine.events.domain.ports.eventtype.DomainEvent;
 import engine.events.domain.ports.eventtype.EmitEvent;
 import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
-import engine.model.bodies.ports.BodyType;
 
-public class DeadInLimitsPlayerImmunity implements ActionsGenerator {
+public class DeadInLimits implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -31,63 +30,42 @@ public class DeadInLimitsPlayerImmunity implements ActionsGenerator {
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
             case LimitEvent limitEvent -> {
-
-                Action action = Action.DIE;
-                if (limitEvent.primaryBodyRef.type() == BodyType.PLAYER)
-                    action = Action.NO_MOVE;
-
+                Action action;
+                action = Action.DIE;
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
                         action, event));
-                break;
 
             }
 
-            case LifeOver lifeOver ->
+            case LifeOver e ->
                 actions.add(new ActionDTO(
-                        lifeOver.primaryBodyRef.id(), lifeOver.primaryBodyRef.type(),
+                        e.primaryBodyRef.id(), e.primaryBodyRef.type(),
                         Action.DIE, event));
 
-            case EmitEvent emitEvent -> {
+            case EmitEvent e -> {
 
-                if (emitEvent.type == DomainEventType.EMIT_REQUESTED) {
+                if (e.type == DomainEventType.EMIT_REQUESTED) {
                     actions.add(new ActionDTO(
-                            emitEvent.primaryBodyRef.id(),
-                            emitEvent.primaryBodyRef.type(),
+                            e.primaryBodyRef.id(),
+                            e.primaryBodyRef.type(),
                             Action.SPAWN_BODY,
                             event));
 
                 } else {
                     actions.add(new ActionDTO(
-                            emitEvent.primaryBodyRef.id(),
-                            emitEvent.primaryBodyRef.type(),
+                            e.primaryBodyRef.id(),
+                            e.primaryBodyRef.type(),
                             Action.SPAWN_PROJECTILE,
                             event));
                 }
 
             }
 
-            case CollisionEvent collisionEvent -> {
+            case CollisionEvent e -> {
 
-                this.resolveCollision(collisionEvent, actions);
+                // No action for collision events in this generator
             }
         }
     }
-
-    private void resolveCollision(CollisionEvent event, List<ActionDTO> actions) {
-        BodyType primary = event.primaryBodyRef.type();
-        BodyType secondary = event.secondaryBodyRef.type();
-
-        // Ignore collisions with DECORATOR bodies
-        if (primary == BodyType.PLAYER)
-            actions.add(new ActionDTO(
-                    event.primaryBodyRef.id(), event.primaryBodyRef.type(),
-                    Action.NO_MOVE, event));
-
-        if (secondary == BodyType.PLAYER)
-            actions.add(new ActionDTO(
-                    event.secondaryBodyRef.id(), event.secondaryBodyRef.type(),
-                    Action.NO_MOVE, event));
-    }
-
 }

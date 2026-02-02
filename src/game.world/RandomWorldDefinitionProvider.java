@@ -1,4 +1,4 @@
-package world;
+package game.world;
 
 import engine.assets.ports.AssetType;
 import engine.model.bodies.ports.BodyType;

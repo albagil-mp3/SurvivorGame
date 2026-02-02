@@ -1,4 +1,4 @@
-package ai;
+package game.ai;
 
 import java.util.ArrayList;
 import java.util.Random;

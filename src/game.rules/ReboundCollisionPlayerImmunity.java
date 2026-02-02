@@ -1,4 +1,4 @@
-package rules;
+package game.rules;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
 import engine.model.bodies.ports.BodyType;
 
-public class ReboundAndCollision implements ActionsGenerator {
+public class ReboundCollisionPlayerImmunity implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -83,7 +83,13 @@ public class ReboundAndCollision implements ActionsGenerator {
 
             case CollisionEvent e -> {
 
-                resolveCollision(e, actions);
+                // Check for PLAYER immunity
+                if (e.primaryBodyRef.type() != BodyType.PLAYER &&
+                        e.secondaryBodyRef.type() != BodyType.PLAYER) {
+                    // No special immunity rules apply
+                    this.resolveCollision(e, actions);
+                    break;
+                }
 
             }
 

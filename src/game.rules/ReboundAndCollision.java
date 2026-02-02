@@ -1,4 +1,4 @@
-package rules;
+package game.rules;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ import engine.events.domain.ports.eventtype.DomainEvent;
 import engine.events.domain.ports.eventtype.EmitEvent;
 import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
+import engine.model.bodies.ports.BodyType;
 
-
-public class LimitRebound implements ActionsGenerator {
+public class ReboundAndCollision implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -83,9 +83,36 @@ public class LimitRebound implements ActionsGenerator {
 
             case CollisionEvent e -> {
 
-                // No action for collision events in this generator
+                resolveCollision(e, actions);
 
+            }
+
+            default -> {
+                // No action for unhandled event types
             }
         }
     }
+
+    private void resolveCollision(CollisionEvent event, List<ActionDTO> actions) {
+        BodyType primary = event.primaryBodyRef.type();
+        BodyType secondary = event.secondaryBodyRef.type();
+
+        // Ignore collisions with DECORATOR bodies
+        if (primary == BodyType.DECORATOR || secondary == BodyType.DECORATOR) {
+            return;
+        }
+
+        // Check shooter immunity for PLAYER vs PROJECTILE and viceversa
+        if (event.payload.haveImmunity) {
+            return; // Projectile passes through its shooter during immunity period
+        }
+
+        // Default: Both die
+        actions.add(new ActionDTO(
+                event.primaryBodyRef.id(), event.primaryBodyRef.type(), Action.DIE, event));
+
+        actions.add(new ActionDTO(
+                event.secondaryBodyRef.id(), event.secondaryBodyRef.type(), Action.DIE, event));
+    }
+
 }

@@ -15,7 +15,7 @@ import engine.world.ports.DefItemPrototypeDTO;
 import engine.world.ports.DefWeaponDTO;
 import engine.world.ports.WorldDefinition;
 import engine.world.ports.WorldDefinitionProvider;
-import world.ProjectAssets;
+import game.world.ProjectAssets;
 
 public abstract class AbstractWorldDefinitionProvider implements WorldDefinitionProvider {
 
