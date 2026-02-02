@@ -466,8 +466,7 @@ public class Controller implements WorldManager, DomainEventProcessor {
     @Override
     public void equipWeapon(String playerId, DefWeaponDTO weaponDef, int shootingOffset) {
 
-        WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);
-
+        WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);      
         this.model.playerEquipWeapon(playerId, weapon);
     }
 

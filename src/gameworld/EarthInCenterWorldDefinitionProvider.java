@@ -1,4 +1,4 @@
-package game.world;
+package gameworld;
 
 import java.awt.Dimension;
 

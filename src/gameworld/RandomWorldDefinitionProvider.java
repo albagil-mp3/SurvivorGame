@@ -1,4 +1,4 @@
-package game.world;
+package gameworld;
 
 import engine.assets.ports.AssetType;
 import engine.model.bodies.ports.BodyType;
@@ -57,7 +57,7 @@ public final class RandomWorldDefinitionProvider extends AbstractWorldDefinition
 
 		// region Players
 		this.addSpaceshipRandomAsset(1, AssetType.SPACESHIP, density, 50, 55, 19000, 19000);
-		this.addTrailEmitterCosmetic("stars_06", 200, BodyType.DECORATOR, 20);
+		this.addTrailEmitterCosmetic("stars_06", 150, BodyType.DECORATOR, 25);
 		// endregion
 
 		// region Weapons (addWeapon***)

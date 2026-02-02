@@ -14,6 +14,7 @@ import engine.utils.spatial.core.SpatialGrid;
 
 public class PlayerBody extends DynamicBody {
 
+    // region Fields
     private final List<Weapon> weapons = new java.util.ArrayList<>(4);
     private int currentWeaponIndex = -1; // -1 = sin arma
     private double damage = 0D;
@@ -21,6 +22,7 @@ public class PlayerBody extends DynamicBody {
     private int temperature = 1;
     private double shield = 1D;
     private int score = 0;
+    // endregion
 
     public PlayerBody(BodyEventProcessor bodyEventProcessor,
             SpatialGrid spatialGrid,
@@ -47,6 +49,7 @@ public class PlayerBody extends DynamicBody {
         }
     }
 
+    // region Getters (get***)
     public Weapon getActiveWeapon() {
         if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
             return null;
@@ -142,6 +145,7 @@ public class PlayerBody extends DynamicBody {
     public int getTemperature() {
         return this.temperature;
     }
+    // endregion
 
     public void registerFireRequest() {
         if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {

@@ -95,6 +95,7 @@ import engine.model.weapons.ports.WeaponState;
  */
 public abstract class AbstractWeapon implements Weapon {
 
+    // region Fields
     private final String id;
     private final WeaponDto weaponConfig;
     private final AtomicLong lastFireRequest = new AtomicLong(0L);
@@ -102,6 +103,7 @@ public abstract class AbstractWeapon implements Weapon {
     private AtomicLong lastHandledRequest = new AtomicLong(0L);
     private AtomicInteger currentAmmo = new AtomicInteger(0);
     private volatile double cooldown = 0.0; // seconds
+    // endregion
 
     public AbstractWeapon(WeaponDto weaponConfig) {
 

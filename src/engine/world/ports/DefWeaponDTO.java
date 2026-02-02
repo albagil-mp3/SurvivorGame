@@ -49,4 +49,22 @@ public class DefWeaponDTO {
         this.projectileSize = projectileSize;
         this.projectileSpeed = projectileSpeed;
     }
+
+    public String toString() {
+        return "DefWeaponDTO{" +
+                "assetId='" + assetId + '\n' +
+                "\t burstSize=" + burstSize + "\n" +
+                "\t burstFireRate=" + burstFireRate + "\n" +
+                "\t fireRate=" + fireRate + "\n" +
+                "\t maxAmmo=" + maxAmmo + "\n" +
+                "\t reloadTime=" + reloadTime + "\n" +
+                "\t weaponType=" + weaponType + "\n" +
+                "\t projectileThrust=" + projectileThrust + "\n" +
+                "\t projectileThrustDuration=" + projectileThrustDuration + "\n" +
+                "\t projectileMass=" + projectileMass + "\n" +
+                "\t projectileMaxLifetime=" + projectileMaxLifetime + "\n" +
+                "\t projectileSize=" + projectileSize + "\n" +
+                "\t projectileSpeed=" + projectileSpeed +
+                '}';
+    }
 }

@@ -131,4 +131,16 @@ public class WeaponDto {
         this.reloadTime = reloadTime;
         this.maxLifeTime = maxlifeTime;
     }
+
+    public String toString() {
+        return "WeaponDto[type=" + type + "\n" +
+                "\t projectileConfig=" + projectileConfig + "\n" +
+                "\t burstSize=" + burstSize + "\n" +
+                "\t burstFireRate=" + burstFireRate + "\n" +
+                "\t fireRate=" + fireRate + "\n" +
+                "\t maxAmmo=" + maxAmmo + "\n" +
+                "\t reloadTime=" + reloadTime + "\n" +
+                "\t maxLifeTime=" + maxLifeTime + "\n" +
+                "]";
+    }
 }

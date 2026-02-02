@@ -1,4 +1,4 @@
-package game.world;
+package gameworld;
 
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetIntensity;

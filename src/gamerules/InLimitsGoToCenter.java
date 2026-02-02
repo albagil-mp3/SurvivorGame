@@ -1,4 +1,4 @@
-package game.rules;
+package gamerules;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import engine.events.domain.ports.eventtype.EmitEvent;
 import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
 
-public class DeadInLimits implements ActionsGenerator {
+public class InLimitsGoToCenter implements ActionsGenerator {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -30,11 +30,13 @@ public class DeadInLimits implements ActionsGenerator {
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
             case LimitEvent limitEvent -> {
-                Action action;
-                action = Action.DIE;
+
+                Action action = Action.MOVE_TO_CENTER;
+
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
                         action, event));
+                break;
 
             }
 

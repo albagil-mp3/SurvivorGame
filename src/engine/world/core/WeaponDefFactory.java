@@ -82,7 +82,7 @@ public final class WeaponDefFactory {
 
                 0, // burstSize
                 0, // burstFireRate
-                30, // fireRate (shots/s)
+                100, // fireRate (shots/s)
                 1000, // maxAmmo
                 5 // reloadTime
         );
@@ -93,18 +93,18 @@ public final class WeaponDefFactory {
                 assetId,
                 DefWeaponType.BURST_WEAPON,
 
-                20.0,
-                800.0,
+                24.0,
+                1000.0,
                 0.0,
                 0.0,
                 0.8,
                 1,
 
-                1, // burstSize
-                20, // burstFireRate inside burst
-                2, // fireRate (bursts/s)
+                5, // burstSize
+                300, // burstFireRate inside burst
+                50, // fireRate (bursts/s)
                 60,
-                5.0);
+                1.0);
     }
 
     public static DefWeaponDTO createPresetedMissileLauncher(String assetId) {
@@ -112,8 +112,8 @@ public final class WeaponDefFactory {
                 assetId,
                 DefWeaponType.MISSILE_LAUNCHER,
 
-                40.0,
-                0.0,
+                60.0,
+                4000.0,
                 880.0, // projectileThrust
                 1.8, // projectileThrustDuration
                 100.0,
@@ -121,7 +121,7 @@ public final class WeaponDefFactory {
 
                 1,
                 0,
-                1, // fireRate (missiles/s)
+                10, // fireRate (missiles/s)
                 100,
                 5);
     }

@@ -3,7 +3,7 @@ package engine.world.core;
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetInfoDTO;
 import engine.assets.ports.AssetType;
-import game.world.ProjectAssets;
+import gameworld.ProjectAssets;
 
 public final class WorldAssetsRegister {
 

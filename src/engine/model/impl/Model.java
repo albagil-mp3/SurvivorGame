@@ -471,7 +471,7 @@ public class Model implements BodyEventProcessor {
 
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody == null) {
-            return; // ========= Player not found =========>
+            throw new IllegalArgumentException("Equip weapon: Player not found");
         }
 
         Weapon weapon = WeaponFactory.create(weaponConfig);
@@ -1053,7 +1053,7 @@ public class Model implements BodyEventProcessor {
         }
         double size = bodyConfig.size;
         if (bodyConfig.randomSize) {
-            size = bodyConfig.size * (2.5 * Math.random());
+            size = bodyConfig.size * (3 * Math.random());
         }
 
         double maxLifeTime = bodyConfig.maxLifeTime;

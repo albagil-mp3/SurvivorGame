@@ -16,6 +16,7 @@ public class BasicWeapon extends AbstractWeapon {
             // Cool down weapon. Any pending requests are discarded.
             this.decCooldown(dtSeconds);
             this.markAllRequestsHandled();
+    
             return false; // ======== Weapon is overheated =========>
         }
 
@@ -25,6 +26,7 @@ public class BasicWeapon extends AbstractWeapon {
             this.markAllRequestsHandled();
             this.setCooldown(this.getWeaponConfig().reloadTime);
             this.setCurrentAmmo(this.getWeaponConfig().maxAmmo);
+
             return false;
         }
 

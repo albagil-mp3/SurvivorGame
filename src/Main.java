@@ -7,9 +7,7 @@ import engine.utils.helpers.DoubleVector;
 import engine.view.core.View;
 import engine.world.ports.WorldDefinition;
 import engine.world.ports.WorldDefinitionProvider;
-import game.ai.*;
-import game.level.*;
-import game.world.ProjectAssets;
+import gameworld.ProjectAssets;
 
 public class Main {
 
@@ -23,8 +21,8 @@ public class Main {
 		int maxAsteroidCreationDelay = 100;
 
 		ProjectAssets projectAssets = new ProjectAssets();
-		ActionsGenerator gameRules = new game.rules.DeadInLimitsPlayerImmunity();
-		WorldDefinitionProvider worldProv = new game.world.RandomWorldDefinitionProvider(
+		ActionsGenerator gameRules = new gamerules.DeadInLimitsPlayerImmunity();
+		WorldDefinitionProvider worldProv = new gameworld.RandomWorldDefinitionProvider(
 				worldDimension, projectAssets);
 
 		// *** CORE ENGINE ***
@@ -48,11 +46,11 @@ public class Main {
 		// endregion
 
 		// region Level generator (Level***)
-		new game.level.LevelBasic(controller, worldDef);
+		new gamelevel.LevelBasic(controller, worldDef);
 		// endregion
 
 		// region AI generator (AI***)
-		new game.ai.AIBasicSpawner(controller, worldDef, maxAsteroidCreationDelay).activate();
+		new gameai.AIBasicSpawner(controller, worldDef, maxAsteroidCreationDelay).activate();
 		// endregion
 
 	}
