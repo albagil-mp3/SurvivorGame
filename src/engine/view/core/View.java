@@ -7,6 +7,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
@@ -114,7 +116,7 @@ public class View extends JFrame implements KeyListener {
     private final Renderer renderer;
     private DoubleVector viewDimension;
     private DoubleVector worldDimension;
-    private boolean fireKeyDown = false;
+    private AtomicBoolean fireKeyDown = new AtomicBoolean(false);
     // endregion Fields
 
     // region Constructors
@@ -349,8 +351,8 @@ public class View extends JFrame implements KeyListener {
                 break;
 
             case KeyEvent.VK_SPACE:
-                if (!this.fireKeyDown) { // Discard autoreptition PRESS
-                    this.fireKeyDown = true;
+                if (!this.fireKeyDown.get()) { // Discard autoreptition PRESS
+                    this.fireKeyDown.set(true);
                     this.controller.playerFire(this.localPlayerId);
                 }
                 break;
@@ -395,7 +397,7 @@ public class View extends JFrame implements KeyListener {
                 break;
 
             case KeyEvent.VK_SPACE:
-                fireKeyDown = false; // << permite el siguiente disparo
+                this.fireKeyDown.set(false); // << permite el siguiente disparo
                 break;
         }
     }

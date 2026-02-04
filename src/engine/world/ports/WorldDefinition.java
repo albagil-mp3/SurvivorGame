@@ -20,7 +20,7 @@ public class WorldDefinition {
 	public final ArrayList<DefItem> spaceships;
 
 	public final ArrayList<DefEmitterDTO> trailEmitters;
-	public final ArrayList<DefWeaponDTO> weapons;
+	public final ArrayList<DefEmitterDTO> weapons;
 	// endregion
 
 	// *** CONSTRUCTOR ***
@@ -35,7 +35,7 @@ public class WorldDefinition {
 			ArrayList<DefItem> asteroids,
 			ArrayList<DefItem> spaceships,
 			ArrayList<DefEmitterDTO> trailEmitters,
-			ArrayList<DefWeaponDTO> weapons) {
+			ArrayList<DefEmitterDTO> weapons) {
 
 		this.worldWidth = worldWidth;
 		this.worldHeight = worldHeight;

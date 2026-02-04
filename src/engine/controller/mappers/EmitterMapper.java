@@ -12,42 +12,30 @@ public class EmitterMapper {
         }
 
         return new EmitterConfigDto(
+                // Spawn body config
                 emitterDef.bodyType,
                 emitterDef.bodyAssetId,
                 emitterDef.bodySize,
-
-                // offsets (forward/side)
                 emitterDef.emitterOffsetVertical,
                 emitterDef.emitterOffsetHorizontal,
-
-                // kinematics
                 emitterDef.bodyInitialSpeed,
-
-                // acceleration (deprecated in new world def) -> neutral
                 0.0,
-
-                // duration for propulsion
                 emitterDef.bodyThrustDuration,
-
                 emitterDef.bodyAngularSpeed,
                 emitterDef.bodyAngularAcceleration,
-
-                // thrust
                 emitterDef.bodyThrust,
-
                 emitterDef.randomizeInitialAngle,
                 emitterDef.randomizeSize,
-
                 emitterDef.bodyAddEmitterSpeedOnHeading,
 
+                // Emitter config
                 emitterDef.emissionRate,
+                emitterDef.unlimitedBodies,
                 emitterDef.maxBodiesEmitted,
                 emitterDef.burstEmissionRate,
                 emitterDef.burstSize,
                 emitterDef.emitterReloadTime,
-
                 emitterDef.bodyMass,
-                emitterDef.bodyMaxLifetime
-        );
+                emitterDef.bodyMaxLifetime);
     }
 }

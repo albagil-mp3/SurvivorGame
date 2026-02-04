@@ -67,7 +67,7 @@ public abstract class AbstractLevelGenerator {
     }
 
     protected String addLocalPlayerIntoTheGame(
-            DefItemDTO bodyDef, ArrayList<DefWeaponDTO> weaponDefs,
+            DefItemDTO bodyDef, ArrayList<DefEmitterDTO> weaponDefs,
             ArrayList<DefEmitterDTO> trailDefs) {
 
         String playerId = this.worldManager.addPlayer(
@@ -106,8 +106,8 @@ public abstract class AbstractLevelGenerator {
         }
     }
 
-    protected void equipWeapons(String entityId, ArrayList<DefWeaponDTO> weaponDefs) {
-        for (DefWeaponDTO weaponDef : weaponDefs) {
+    protected void equipWeapons(String entityId, ArrayList<DefEmitterDTO> weaponDefs) {
+        for (DefEmitterDTO weaponDef : weaponDefs) {
             this.worldManager.equipWeapon(
                     entityId, weaponDef, 0);
         }

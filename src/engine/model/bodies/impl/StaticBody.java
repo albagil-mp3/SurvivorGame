@@ -51,13 +51,13 @@ public class StaticBody extends AbstractBody implements Runnable {
             BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             BodyType bodyType,
             double size, double x, double y, double angle,
-            double maxLifeInSeconds) {
+            double maxLifeInSeconds, String emitterId) {
 
         super(
                 bodyEventProcessor, spatialGrid,
                 new NullPhysicsEngine(size, x, y, angle),
                 bodyType,
-                maxLifeInSeconds);
+                maxLifeInSeconds, emitterId);
     }
 
     //

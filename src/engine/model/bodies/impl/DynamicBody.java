@@ -4,7 +4,7 @@ import engine.model.bodies.core.AbstractBody;
 import engine.model.bodies.ports.BodyEventProcessor;
 import engine.model.bodies.ports.BodyState;
 import engine.model.bodies.ports.BodyType;
-import engine.model.emitter.ports.Emitter;
+import engine.model.emitter.impl.BasicEmitter;
 import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.spatial.core.SpatialGrid;
@@ -45,22 +45,25 @@ import engine.utils.spatial.core.SpatialGrid;
  */
 public class DynamicBody extends AbstractBody implements Runnable {
 
+    // region Fields
     private double maxThrustForce; //
     private double maxAngularAcc; // degrees*s^-2
     private double angularSpeed; // degrees*s^-1
-
     private String trailId;
+    // endregion
 
-    // *** CONSTRUCTORS ***
 
+    // region Constructors
     public DynamicBody(BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
-            PhysicsEngine phyEngine, BodyType bodyType, double maxLifeInSeconds) {
+            PhysicsEngine phyEngine, BodyType bodyType, double maxLifeInSeconds, String emitterId) {
 
         super(bodyEventProcessor, spatialGrid,
                 phyEngine,
                 bodyType,
-                maxLifeInSeconds);
+                maxLifeInSeconds, 
+                emitterId);
     }
+    // endregion
 
     // *** PUBLICS ***
 
@@ -87,7 +90,7 @@ public class DynamicBody extends AbstractBody implements Runnable {
     // endregion
 
     // region Trail management (trail***)
-    public String trailEquip(Emitter trailEmitter) {
+    public String trailEquip(BasicEmitter trailEmitter) {
         this.trailId = this.emitterEquip(trailEmitter);
 
         return this.trailId;

@@ -6,16 +6,16 @@ import engine.events.domain.ports.BodyToEmitDTO;
 import engine.model.bodies.ports.BodyEventProcessor;
 import engine.model.bodies.ports.BodyType;
 import engine.model.bodies.ports.PlayerDTO;
+import engine.model.emitter.impl.BasicEmitter;
+import engine.model.emitter.ports.EmitterConfigDto;
 import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
-import engine.model.weapons.ports.Weapon;
-import engine.model.weapons.ports.WeaponDto;
 import engine.utils.spatial.core.SpatialGrid;
 
 public class PlayerBody extends DynamicBody {
 
     // region Fields
-    private final List<Weapon> weapons = new java.util.ArrayList<>(4);
+    private final List<String> weaponIds = new java.util.ArrayList<>(4);
     private int currentWeaponIndex = -1; // -1 = sin arma
     private double damage = 0D;
     private double energye = 1D;
@@ -27,21 +27,23 @@ public class PlayerBody extends DynamicBody {
     public PlayerBody(BodyEventProcessor bodyEventProcessor,
             SpatialGrid spatialGrid,
             PhysicsEngine physicsEngine,
-            double maxLifeInSeconds) {
+            double maxLifeInSeconds,
+            String emitterId) {
 
         super(bodyEventProcessor,
                 spatialGrid,
                 physicsEngine,
                 BodyType.PLAYER,
-                maxLifeInSeconds);
+                maxLifeInSeconds,
+                emitterId);
 
         this.setMaxThrustForce(800);
         this.setMaxAngularAcceleration(1000);
         this.setAngularSpeed(30);
     }
 
-    public void addWeapon(Weapon weapon) {
-        this.weapons.add(weapon);
+    public void addWeapon(String emitterId) {
+        this.weaponIds.add(emitterId);
 
         if (this.currentWeaponIndex < 0) {
             // Signaling existence of weapon in the spaceship
@@ -50,54 +52,57 @@ public class PlayerBody extends DynamicBody {
     }
 
     // region Getters (get***)
-    public Weapon getActiveWeapon() {
-        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
+    public BasicEmitter getActiveWeapon() {
+        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weaponIds.size()) {
             return null;
         }
 
-        return this.weapons.get(this.currentWeaponIndex);
+        // return this.weapons.get(this.currentWeaponIndex);
+        return this.getEmitter(this.weaponIds.get(this.currentWeaponIndex));
+
     }
 
     public int getActiveWeaponIndex() {
-        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
+        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weaponIds.size()) {
             return -1;
         }
 
         return this.currentWeaponIndex;
     }
 
-    public WeaponDto getActiveWeaponConfig() {
-        Weapon weapon = getActiveWeapon();
-        return (weapon != null) ? weapon.getWeaponConfig() : null;
+    public EmitterConfigDto getActiveWeaponConfig() {
+        BasicEmitter emitter = getActiveWeapon();
+
+        return (emitter != null) ? emitter.getConfig() : null;
     }
 
-    public double getAmmoStatusPrimary() {
+    public int getAmmoStatusPrimary() {
         return getAmmoStatus(0);
     }
 
-    public double getAmmoStatusSecondary() {
+    public int getAmmoStatusSecondary() {
         return getAmmoStatus(1);
     }
 
-    public double getAmmoStatusMines() {
+    public int getAmmoStatusMines() {
         return getAmmoStatus(2);
     }
 
-    public double getAmmoStatusMissiles() {
+    public int getAmmoStatusMissiles() {
         return getAmmoStatus(3);
     }
 
-    private double getAmmoStatus(int weaponIndex) {
-        if (weaponIndex < 0 || weaponIndex >= this.weapons.size()) {
-            return 0D;
+    private int getAmmoStatus(int weaponIndex) {
+        if (weaponIndex < 0 || weaponIndex >= this.weaponIds.size()) {
+            return 0;
         }
 
-        Weapon weapon = this.weapons.get(weaponIndex);
-        if (weapon == null) {
-            return 0D;
+        BasicEmitter emitter = this.getEmitter(this.weaponIds.get(weaponIndex));
+        if (emitter == null) {
+            return 0;
         }
 
-        return weapon.getAmmoStatus();
+        return emitter.getBodiesRemaining();
     }
 
     public double getDamage() {
@@ -126,16 +131,16 @@ public class PlayerBody extends DynamicBody {
     }
 
     public BodyToEmitDTO getProjectileConfig() {
-        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
+        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weaponIds.size()) {
             return null;
         }
 
-        Weapon weapon = this.weapons.get(this.currentWeaponIndex);
-        if (weapon == null) {
+        BasicEmitter emitter = this.getEmitter(this.weaponIds.get(this.currentWeaponIndex));
+        if (emitter == null) {
             return null;
         }
 
-        return weapon.getProjectileConfig();
+        return emitter.getBodyToEmitConfig();
     }
 
     public double getShield() {
@@ -148,18 +153,18 @@ public class PlayerBody extends DynamicBody {
     // endregion
 
     public void registerFireRequest() {
-        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
+        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weaponIds.size()) {
             System.out.println("> No weapon active or no weapons!");
             return;
         }
 
-        Weapon weapon = this.weapons.get(this.currentWeaponIndex);
-        if (weapon == null) {
+        BasicEmitter emitter = this.getEmitter(this.weaponIds.get(this.currentWeaponIndex));
+        if (emitter == null) {
             // There is no weapon in this slot
             return;
         }
 
-        weapon.registerRequest();
+        emitter.registerRequest();
     }
 
     public void reverseThrust() {
@@ -199,16 +204,16 @@ public class PlayerBody extends DynamicBody {
     }
 
     public void selectNextWeapon() {
-        if (this.weapons.size() <= 0) {
+        if (this.weaponIds.size() <= 0) {
             return;
         }
 
         this.currentWeaponIndex++;
-        this.currentWeaponIndex = this.currentWeaponIndex % this.weapons.size();
+        this.currentWeaponIndex = this.currentWeaponIndex % this.weaponIds.size();
     }
 
     public void selectWeapon(int weaponIndex) {
-        if (weaponIndex >= 0 && weaponIndex < this.weapons.size()) {
+        if (weaponIndex >= 0 && weaponIndex < this.weaponIds.size()) {
             this.currentWeaponIndex = weaponIndex;
         }
     }
@@ -222,18 +227,18 @@ public class PlayerBody extends DynamicBody {
     }
 
     public boolean mustFireNow(PhysicsValuesDTO newPhyValues) {
-        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weapons.size()) {
+        if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weaponIds.size()) {
             return false;
         }
 
-        Weapon weapon = this.weapons.get(this.currentWeaponIndex);
-        if (weapon == null) {
+        BasicEmitter emitter = this.getEmitter(this.weaponIds.get(this.currentWeaponIndex));
+        if (emitter == null) {
             return false;
         }
 
         double dtNanos = newPhyValues.timeStamp - this.getPhysicsValues().timeStamp;
         double dtSeconds = ((double) dtNanos) / 1_000_000_0000.0d;
 
-        return weapon.mustFireNow(dtSeconds);
+        return emitter.mustEmitNow(dtSeconds);
     }
 }

@@ -7,12 +7,14 @@ public class EmitterConfigDto {
 
     public final BodyToEmitDTO bodyEmitted;
     public final double emisionRate;
+    public final boolean unlimitedBodies;
     public final int maxBodiesEmitted;
     public final double burstEmissionRate;
     public final int burstSize;
     public final double reloadTime;
 
     public EmitterConfigDto(
+            // Body emitted config
             BodyType type,
             String assetId,
             double size,
@@ -26,8 +28,11 @@ public class EmitterConfigDto {
             double thrust,
             boolean randomAngle,
             boolean randomSize,
+
+            // Emitter config
             boolean addEmitterSpeed,
             double emisionRate,
+            boolean unlimitedBodies,
             int maxBodiesEmitted,
             double burstEmissionRate,
             int burstSize,
@@ -54,10 +59,10 @@ public class EmitterConfigDto {
                 addEmitterSpeed);
 
         this.emisionRate = emisionRate;
+        this.unlimitedBodies = unlimitedBodies;
         this.maxBodiesEmitted = maxBodiesEmitted;
         this.burstEmissionRate = burstEmissionRate;
         this.burstSize = burstSize;
         this.reloadTime = reloadTime;
-
     }
 }

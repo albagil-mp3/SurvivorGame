@@ -4,6 +4,8 @@ import static java.lang.System.nanoTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
+import java.util.List;
 
 import engine.actions.Action;
 import engine.actions.ActionDTO;
@@ -20,7 +22,6 @@ import engine.events.domain.ports.payloads.EmitPayloadDTO;
 import engine.model.bodies.core.AbstractBody;
 import engine.model.bodies.impl.DynamicBody;
 import engine.model.bodies.impl.PlayerBody;
-import engine.model.bodies.impl.ProjectileBody;
 import engine.model.bodies.ports.BodyDTO;
 import engine.model.bodies.ports.BodyEventProcessor;
 import engine.model.bodies.ports.BodyFactory;
@@ -28,21 +29,13 @@ import engine.model.bodies.ports.BodyState;
 import engine.model.bodies.ports.BodyType;
 import engine.model.bodies.ports.PlayerDTO;
 import engine.model.emitter.impl.BasicEmitter;
-import engine.model.emitter.ports.Emitter;
 import engine.model.emitter.ports.EmitterConfigDto;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.model.ports.DomainEventProcessor;
 import engine.model.ports.ModelState;
-import engine.model.weapons.ports.Weapon;
-import engine.model.weapons.ports.WeaponDto;
-import engine.model.weapons.ports.WeaponFactory;
 import engine.utils.helpers.DoubleVector;
 import engine.utils.spatial.core.SpatialGrid;
 import engine.utils.spatial.ports.SpatialGridStatisticsDTO;
-
-import java.awt.Dimension;
-import java.util.HashSet;
-import java.util.List;
 
 /**
  * Model
@@ -166,7 +159,7 @@ public class Model implements BodyEventProcessor {
 
     // region Constants
     private static final int MAX_BODIES = 1000;
-    private static final int SPATIAL_GRID_CELL_SIZE = 196;
+    private static final int SPATIAL_GRID_CELL_SIZE = 256;
     private static final int MAX_CELLS_PER_BODY = 256;
     // endregion
 
@@ -467,16 +460,15 @@ public class Model implements BodyEventProcessor {
     // endregion
 
     // region Player equipment (playerEquip***)
-    public void playerEquipWeapon(String playerId, WeaponDto weaponConfig) {
-
+    public void playerEquipWeapon(String playerId, EmitterConfigDto emitterConfig) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody == null) {
             throw new IllegalArgumentException("Equip weapon: Player not found");
         }
 
-        Weapon weapon = WeaponFactory.create(weaponConfig);
+        String emitterId = this.bodyEquipEmitter(playerId, emitterConfig);
 
-        pBody.addWeapon(weapon);
+        pBody.addWeapon(emitterId);
     }
     // endregion
 
@@ -644,6 +636,7 @@ public class Model implements BodyEventProcessor {
     // region Check methods (check***)
     private void checkCollisions(AbstractBody checkBody, PhysicsValuesDTO newPhyValues,
             List<DomainEvent> domainEvents) {
+
         if (checkBody == null)
             throw new IllegalArgumentException("checkCollisions() -> checkBody is null");
         if (newPhyValues == null)
@@ -654,34 +647,24 @@ public class Model implements BodyEventProcessor {
         if (!this.isCollidable(checkBody))
             return; // =========== Non-collidable body ============>
 
-        final String checkBodyId = checkBody.getBodyId();
-        ArrayList<String> candidates = checkBody.getScratchClearCandidateIds();
-        this.spatialGridForDynamics.queryCollisionCandidates(checkBodyId, candidates);
-        if (candidates.isEmpty())
-            return; // =========== No candidates -> no collisions ============>
+        ArrayList<String> candidates;
+        if (!this.checkCollisionCandidates(checkBody, candidates = new ArrayList<>()))
+            return; // =========== No candidates -> No collision ============>
 
         HashSet<String> seen = checkBody.getScratchClearSeenCandidateIds();
         for (String bodyId : candidates) {
+            AbstractBody otherBody = this.loadBody(bodyId);
 
-            if (bodyId == null || bodyId.isEmpty())
-                continue;
-
-            // Load other body. Pay attention to gravity bodies
-            AbstractBody otherBody = this.dynamicBodies.get(bodyId);
-            if (otherBody == null)
-                otherBody = this.gravityBodies.get(bodyId);
-
-            if (otherBody == null)
-                continue;
-
-            // Dedupe by multiple references y differents cells
+            // Dedupe multiple references in differents cells
             if (!seen.add(bodyId))
                 continue;
 
             // Dedupe by symetry only if otherBody type is not GRAVITY!!!
+            // Gravity bodies do not move, so they not do check collisions
+            // So symetric dedupe in gravity bodies is NEVER necessary
             if (otherBody.getBodyType() != BodyType.GRAVITY)
-                if (checkBodyId.compareTo(bodyId) >= 0)
-                    continue;
+                if (checkBody.getBodyId().compareTo(bodyId) >= 0)
+                    continue; // ======== Symetric dedupe ON =========>
 
             if (!this.isCollidable(otherBody)) {
                 System.out.println("Non-collidable body in collision check");
@@ -690,36 +673,66 @@ public class Model implements BodyEventProcessor {
             }
 
             final PhysicsValuesDTO otherPhyValues = otherBody.getPhysicsValues();
-            if (otherPhyValues == null)
-                continue;
-
             if (!intersectCircles(newPhyValues, otherPhyValues))
                 continue;
 
             // Immunity check for projectiles
-            boolean haveInmunity = false;
+            boolean haveInmunity = this.checkCollisionImmunity(checkBody, otherBody);
 
-            // Primary body have inmunity
-            if (otherBody.getBodyType() == BodyType.PROJECTILE) {
-                ProjectileBody projectile = (ProjectileBody) otherBody;
-                if (projectile.getShooterId().equals(checkBody.getBodyId())) {
-                    haveInmunity = projectile.isImmune();
-                }
-            }
-
-            // Secondary body have inmunity
-            if (checkBody.getBodyType() == BodyType.PROJECTILE) {
-                ProjectileBody projectile = (ProjectileBody) checkBody;
-                if (projectile.getShooterId().equals(otherBody.getBodyId())) {
-                    haveInmunity = projectile.isImmune();
-                }
-            }
-
+            // Create collision event ALSO when inmunity is active!!!!
             CollisionPayload payload = new CollisionPayload(haveInmunity);
             CollisionEvent collisionEvent = new CollisionEvent(
                     checkBody.getBodyRef(), otherBody.getBodyRef(), payload);
             domainEvents.add(collisionEvent);
         }
+    }
+
+    private boolean checkCollisionCandidates(AbstractBody checkBody, ArrayList<String> candidates) {
+        final String checkBodyId = checkBody.getBodyId();
+        candidates = checkBody.getScratchClearCandidateIds();
+        this.spatialGridForDynamics.queryCollisionCandidates(checkBodyId, candidates);
+
+        if (candidates.isEmpty())
+            return false; // ------ No collision candidates ------>
+
+        return true;
+    }
+
+    private boolean checkCollisionImmunity(AbstractBody checkBody, AbstractBody otherBody) {
+        AbstractBody projectile = null;
+        AbstractBody nonProjectile = null;
+
+        projectile = otherBody.getBodyType() == BodyType.PROJECTILE ? otherBody
+                : checkBody.getBodyType() == BodyType.PROJECTILE ? checkBody
+                        : null;
+
+        nonProjectile = projectile == otherBody ? checkBody : otherBody;
+
+        if (projectile == null) {
+            return false; // No projectile involved =======>
+        }
+
+        // Primary body have inmunity
+        if (otherBody.getBodyType() == BodyType.PROJECTILE) {
+            System.out.println("Checking projectile immunity...");
+            if (projectile.getBodyEmitterId().equals(nonProjectile.getBodyId())) {
+                return projectile.isEmitterImmune();
+            }
+        }
+
+        return false;
+    }
+
+    private AbstractBody loadBody(String bodyId) {
+        if (bodyId == null || bodyId.isEmpty())
+            throw new IllegalArgumentException("loadBody() -> bodyId is null or empty");
+
+        // Pay attention to gravity bodies
+        AbstractBody body = this.dynamicBodies.get(bodyId);
+        if (body == null)
+            body = this.gravityBodies.get(bodyId);
+
+        return body;
     }
 
     private void checkEmissionEvents(AbstractBody checkBody, PhysicsValuesDTO newPhyValues,
@@ -733,7 +746,7 @@ public class Model implements BodyEventProcessor {
         double dtSeconds = ((double) (newPhyValues.timeStamp - checkBody.getPhysicsValues().timeStamp))
                 / 1_000_000_000.0;
 
-        for (Emitter emitter : checkBody.emittersList()) {
+        for (BasicEmitter emitter : checkBody.emittersList()) {
             if (emitter.mustEmitNow(dtSeconds)) {
                 EmitPayloadDTO payload = new EmitPayloadDTO(primaryBodyRef,
                         emitter.getBodyToEmitConfig());
@@ -807,7 +820,6 @@ public class Model implements BodyEventProcessor {
 
         switch (action.action) {
             case MOVE:
-
 
                 body.doMovement(newPhyValues);
                 spatialGridUpsert((AbstractBody) body);
@@ -1002,7 +1014,7 @@ public class Model implements BodyEventProcessor {
         return (dx * dx + dy * dy) <= (r * r);
     }
 
-    // region boolean checks private (is***)
+    // region boolean checks (is***)
     private boolean isCollidable(AbstractBody body) {
         return body != null
                 && body.getBodyState() != BodyState.DEAD

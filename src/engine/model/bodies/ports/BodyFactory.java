@@ -3,7 +3,6 @@ package engine.model.bodies.ports;
 import engine.model.bodies.core.AbstractBody;
 import engine.model.bodies.impl.DynamicBody;
 import engine.model.bodies.impl.PlayerBody;
-import engine.model.bodies.impl.ProjectileBody;
 import engine.model.bodies.impl.StaticBody;
 import engine.model.physics.implementations.BasicPhysicsEngine;
 import engine.model.physics.ports.PhysicsEngine;
@@ -18,7 +17,7 @@ public class BodyFactory {
             PhysicsValuesDTO phyVals,
             BodyType bodyType,
             double maxLifeTime,
-            String shooterId) {
+            String emitterId) {
 
         AbstractBody body = null;
         PhysicsEngine phyEngine = null;
@@ -29,36 +28,40 @@ public class BodyFactory {
                 body = new DynamicBody(
                         bodyEventProcessor, spatialGrid, phyEngine,
                         BodyType.DYNAMIC,
-                        maxLifeTime);
+                        maxLifeTime, null);
                 break;
 
             case PLAYER:
                 phyEngine = new BasicPhysicsEngine(phyVals);
                 body = new PlayerBody(
                         bodyEventProcessor, spatialGrid, phyEngine,
-                        maxLifeTime);
+                        maxLifeTime, null);
                 break;
 
             case PROJECTILE:
+                System.out.println("Creating projectile body...");
                 phyEngine = new BasicPhysicsEngine(phyVals);
-                body = new ProjectileBody(
-                        bodyEventProcessor, spatialGrid, phyEngine,
+                body = new DynamicBody(
+                        bodyEventProcessor, 
+                        spatialGrid, 
+                        phyEngine,
+                        BodyType.PROJECTILE,
                         maxLifeTime,
-                        shooterId);
+                        emitterId);
                 break;
 
             case DECORATOR:
                 body = new StaticBody(
                         bodyEventProcessor, null, bodyType,
                         phyVals.size, phyVals.posX, phyVals.posY, phyVals.angle,
-                        maxLifeTime);
+                        maxLifeTime, null);
                 break;
 
             case GRAVITY:
                 body = new StaticBody(
                         bodyEventProcessor, spatialGrid, bodyType,
                         phyVals.size, phyVals.posX, phyVals.posY, phyVals.angle,
-                        maxLifeTime);
+                        maxLifeTime, null);
 
                 break;
 

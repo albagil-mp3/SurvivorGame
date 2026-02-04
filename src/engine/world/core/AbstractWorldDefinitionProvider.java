@@ -12,7 +12,6 @@ import engine.world.ports.DefEmitterDTO;
 import engine.world.ports.DefItem;
 import engine.world.ports.DefItemDTO;
 import engine.world.ports.DefItemPrototypeDTO;
-import engine.world.ports.DefWeaponDTO;
 import engine.world.ports.WorldDefinition;
 import engine.world.ports.WorldDefinitionProvider;
 import gameworld.ProjectAssets;
@@ -26,20 +25,19 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
     private static final double ANY_HEADING_MAX_DEG = 359.999;
     private static final double DEFAULT_DENSITY = 100;
 
-    private final double ZERO_ANGULAR_ACCEL = 0.0;
-    private final double ZERO_ANGULAR_SPEED = 0.0;
-    private final double ZERO_THRUST = 0.0;
-    private final double ZERO_THRUST_DURATION = 0.0;
-    private final double DEFAULT_COSMETIC_MASS = 10.0;
-    private final double LIFETIME = 1.5;
-    private final double ZERO_INITIAL_SPEED = 0.0;
-
-    private final boolean ADD_EMITTER_SPEED_ON_HEADING = true; // typical: particles inherit emitter direction
-
-    private final double ZERO_BURST_RATE = 0.0;
-    private final int ZERO_BURST_SIZE = 0;
-    private final double DEFAULT_RELOAD_TIME = 0.0;
-    private final int ZERO_MAX_BODIES = 0;
+    private static final double NO_ANGULAR_ACCEL = 0.0;
+    private static final double NO_ANGULAR_SPEED = 0.0;
+    private static final double NO_THRUST = 0.0;
+    private static final double NO_THRUST_DURATION = 0.0;
+    private static final double DEFAULT_TRAIL_MASS = 10.0;
+    private static final double TRAIL_LIFETIME = 1.5;
+    private static final double NO_SPEED = 0.0;
+    private static final boolean NOT_ADD_EMITTER_SPEED = true; 
+    private static final double NO_BURST_RATE = 0.0;
+    private static final int ZERO_BURST_SIZE = 0;
+    private static final double NO_RELOAD_TIME = 0.0;
+    private static final boolean UNLIMITED_BODIES = true;
+    private static final int ZERO_MAX_BODIES = 0;
     // endregion
 
     // region Fields
@@ -57,7 +55,7 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
     public final ArrayList<DefItem> asteroids = new ArrayList<>();
     public final ArrayList<DefItem> spaceships = new ArrayList<>();
     public final ArrayList<DefEmitterDTO> trailEmitters = new ArrayList<>();
-    public final ArrayList<DefWeaponDTO> weapons = new ArrayList<>();
+    public final ArrayList<DefEmitterDTO> weapons = new ArrayList<>();
     // endregion
 
     // *** CONSTRUCTORS ***
@@ -368,9 +366,9 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
     // endregion
 
     // region Weapon adders (addWeapon ***)
-    protected final void addWeapon(DefWeaponDTO weapon) {
+    protected final void addWeapon(DefEmitterDTO weapon) {
         // Add every weapon type into its respective list
-        this.assetsRegister.registerAssetId(weapon.assetId);
+        this.assetsRegister.registerAssetId(weapon.bodyAssetId);
         this.weapons.add(weapon);
     }
 
@@ -505,13 +503,27 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
             boolean randomizeSize) {
 
         return new DefEmitterDTO(
-                assetId, ZERO_ANGULAR_ACCEL, ZERO_ANGULAR_SPEED,
-                ADD_EMITTER_SPEED_ON_HEADING, ZERO_THRUST,
-                ZERO_THRUST_DURATION, DEFAULT_COSMETIC_MASS,
-                LIFETIME, spriteSize, ZERO_INITIAL_SPEED, bodyType,
-                ZERO_BURST_RATE, ZERO_BURST_SIZE, emissionRate,
-                offsetHorizontal, offsetVertical, DEFAULT_RELOAD_TIME,
-                ZERO_MAX_BODIES, randomizeInitialAngle, randomizeSize);
+                assetId, 
+                NO_ANGULAR_ACCEL, 
+                NO_ANGULAR_SPEED,
+                NOT_ADD_EMITTER_SPEED, 
+                NO_THRUST,
+                NO_THRUST_DURATION, 
+                DEFAULT_TRAIL_MASS,
+                TRAIL_LIFETIME, 
+                spriteSize, 
+                NO_SPEED, 
+                bodyType,
+                NO_BURST_RATE, 
+                ZERO_BURST_SIZE, 
+                emissionRate,
+                offsetHorizontal, 
+                offsetVertical, 
+                NO_RELOAD_TIME,
+                UNLIMITED_BODIES,
+                ZERO_MAX_BODIES, 
+                randomizeInitialAngle, 
+                randomizeSize);
     }
 
     private final void reset() {

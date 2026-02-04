@@ -10,7 +10,6 @@ import engine.controller.mappers.EmitterMapper;
 import engine.controller.mappers.PlayerRenderableMapper;
 import engine.controller.mappers.RenderableMapper;
 import engine.controller.mappers.SpatialGridStatisticsMapper;
-import engine.controller.mappers.WeaponMapper;
 import engine.controller.ports.ActionsGenerator;
 import engine.controller.ports.EngineState;
 import engine.controller.ports.WorldManager;
@@ -19,7 +18,6 @@ import engine.model.bodies.ports.BodyDTO;
 import engine.model.emitter.ports.EmitterConfigDto;
 import engine.model.impl.Model;
 import engine.model.ports.DomainEventProcessor;
-import engine.model.weapons.ports.WeaponDto;
 import engine.utils.helpers.DoubleVector;
 import engine.view.core.View;
 import engine.view.renderables.ports.DynamicRenderDTO;
@@ -27,7 +25,6 @@ import engine.view.renderables.ports.PlayerRenderDTO;
 import engine.view.renderables.ports.RenderDTO;
 import engine.view.renderables.ports.SpatialGridStatisticsRenderDTO;
 import engine.world.ports.DefEmitterDTO;
-import engine.world.ports.DefWeaponDTO;
 
 /**
  * Controller
@@ -464,10 +461,10 @@ public class Controller implements WorldManager, DomainEventProcessor {
     }
 
     @Override
-    public void equipWeapon(String playerId, DefWeaponDTO weaponDef, int shootingOffset) {
+    public void equipWeapon(String playerId, DefEmitterDTO bodyEmitterDef, int shootingOffset) {
 
-        WeaponDto weapon = WeaponMapper.fromWorldDef(weaponDef, shootingOffset);      
-        this.model.playerEquipWeapon(playerId, weapon);
+        EmitterConfigDto bodyEmitter = EmitterMapper.fromWorldDef(bodyEmitterDef);
+        this.model.playerEquipWeapon(playerId, bodyEmitter);
     }
 
     @Override

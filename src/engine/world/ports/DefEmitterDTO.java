@@ -20,6 +20,7 @@ public class DefEmitterDTO {
     public final double burstEmissionRate;
     public final int burstSize;
     public final double emissionRate;
+    public final boolean unlimitedBodies;
     public final int maxBodiesEmitted;
     public final double emitterOffsetHorizontal;
     public final double emitterOffsetVertical;
@@ -49,6 +50,7 @@ public class DefEmitterDTO {
             double emitterOffsetHorizontal,
             double emitterOffsetVertical,
             double emitterReloadTime,
+            boolean unlimitedBodies,
             int maxBodiesEmitted,
             boolean randomizeInitialAngle,
             boolean randomizeSize) {
@@ -65,9 +67,6 @@ public class DefEmitterDTO {
 
         if (bodyMaxLifetime < -1 && bodyMaxLifetime == 0)
             throw new IllegalArgumentException("bodyMaxLifetime must be >= -1 and != 0");
-
-        if (bodyInitialSpeed < 0.0)
-            throw new IllegalArgumentException("bodyInitialSpeed must be >= 0");
 
         if (bodyThrust < 0.0)
             throw new IllegalArgumentException("bodyThrust must be >= 0");
@@ -110,12 +109,14 @@ public class DefEmitterDTO {
         this.bodyThrust = bodyThrust;
         this.bodyThrustDuration = bodyThrustDuration;
         this.bodyType = bodyType; // Body type to emit
+        
         this.burstEmissionRate = burstEmissionRate;
         this.burstSize = burstSize;
         this.emissionRate = emissionRate;
         this.emitterOffsetHorizontal = emitterOffsetHorizontal;
         this.emitterOffsetVertical = emitterOffsetVertical;
         this.emitterReloadTime = emitterReloadTime;
+        this.unlimitedBodies = unlimitedBodies;
         this.maxBodiesEmitted = maxBodiesEmitted;
         this.randomizeInitialAngle = randomizeInitialAngle;
         this.randomizeSize = randomizeSize;

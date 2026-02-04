@@ -3,7 +3,6 @@ package engine.controller.ports;
 import engine.assets.core.AssetCatalog;
 import engine.utils.helpers.DoubleVector;
 import engine.world.ports.DefEmitterDTO;
-import engine.world.ports.DefWeaponDTO;
 
 public interface WorldManager {
 
@@ -19,10 +18,10 @@ public interface WorldManager {
 
         public void addStaticBody(String assetId, double size, double posX, double posY, double angle);
 
-        public void equipWeapon(String playerId, DefWeaponDTO weaponDef, int shootingOffset);
-
         public void equipTrail(
                         String playerId, DefEmitterDTO bodyEmitterDef);
+
+        public void equipWeapon(String playerId, DefEmitterDTO bodyEmitterDef, int shootingOffset);
 
         public DoubleVector getWorldDimension();
 
