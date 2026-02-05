@@ -11,20 +11,16 @@ public interface PhysicsEngine {
         public boolean isThrusting();
 
         public void reboundInEast(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public void reboundInWest(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public void reboundInNorth(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public void reboundInSouth(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public void resetAcceleration();
 

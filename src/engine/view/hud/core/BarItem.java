@@ -5,9 +5,13 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 
 public class BarItem extends Item {
+
+    // region Fields
     final int barWidth;
     final boolean showPercentage;
+    // endregion
 
+    // region Constructors
     BarItem(String label, Color labelColor, Color dataColor, int barWidth, boolean showPercentage) {
         super(label, labelColor, dataColor, true);
         this.barWidth = barWidth;
@@ -17,7 +21,11 @@ public class BarItem extends Item {
     BarItem(String label, Color labelColor, Color dataColor, int barWidth) {
         this(label, labelColor, dataColor, barWidth, true);
     }
+    // endregion
 
+    // *** INTERFACE IMPLEMENTATIONS ***
+
+    // region Item
     @Override
     public void draw(Graphics2D g, FontMetrics fm, int posX, int posY, Object value) {
         if (!(value instanceof Double)) {
@@ -63,5 +71,5 @@ public class BarItem extends Item {
             g.drawString(percentText, textX, posY);
         }
     }
-
+    // endregion
 }

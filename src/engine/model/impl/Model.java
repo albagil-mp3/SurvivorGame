@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import engine.actions.Action;
+import engine.actions.ActionType;
 import engine.actions.ActionDTO;
 import engine.events.domain.ports.BodyRefDTO;
 import engine.events.domain.ports.BodyToEmitDTO;
@@ -158,7 +158,7 @@ import engine.utils.spatial.ports.SpatialGridStatisticsDTO;
 public class Model implements BodyEventProcessor {
 
     // region Constants
-    private static final int MAX_BODIES = 1000;
+    private static final int DEFAULT_MAX_BODIES = 1000;
     private static final int SPATIAL_GRID_CELL_SIZE = 256;
     private static final int MAX_CELLS_PER_BODY = 256;
     // endregion
@@ -172,17 +172,17 @@ public class Model implements BodyEventProcessor {
     private SpatialGrid spatialGridForDynamics;
     private SpatialGrid spatialGridForGravities;
     private final Map<String, AbstractBody> decorators = new ConcurrentHashMap<>(200);
-    private final Map<String, AbstractBody> dynamicBodies = new ConcurrentHashMap<>(MAX_BODIES);
+    private final Map<String, AbstractBody> dynamicBodies = new ConcurrentHashMap<>(DEFAULT_MAX_BODIES);
     private final Map<String, AbstractBody> gravityBodies = new ConcurrentHashMap<>(200);
     // endregion
 
     // regions Scratch buffers (for zero-allocation snapshot generation)
-    private final ArrayList<BodyDTO> scratchDynamicsBuffer = new ArrayList<>(MAX_BODIES);
+    private final ArrayList<BodyDTO> scratchDynamicsBuffer = new ArrayList<>(DEFAULT_MAX_BODIES);
     // endregion
 
     // region Constructors
     public Model() {
-        this.maxBodies = MAX_BODIES;
+        this.maxBodies = DEFAULT_MAX_BODIES;
     }
 
     public Model(DoubleVector worldDimension, int maxDynamicBodies) {
@@ -191,7 +191,7 @@ public class Model implements BodyEventProcessor {
         if (worldDimension == null || worldDimension.x <= 0 || worldDimension.y <= 0) {
             throw new IllegalArgumentException("Invalid world dimension");
         }
-        if (maxDynamicBodies <= 0 || maxDynamicBodies > MAX_BODIES) {
+        if (maxDynamicBodies <= 0 || maxDynamicBodies > DEFAULT_MAX_BODIES) {
             throw new IllegalArgumentException("Invalid maxDynamicBodies");
         }
 
@@ -417,7 +417,7 @@ public class Model implements BodyEventProcessor {
         return this.scratchDynamicsBuffer;
     }
 
-    public int getMaxBodies() {
+    public int getDefaultMaxBodies() {
         return this.maxBodies;
     }
 
@@ -570,8 +570,8 @@ public class Model implements BodyEventProcessor {
         this.domainEventProcessor = domainEventProcessor;
     }
 
-    public void setMaxBodies(int maxDynamicBody) {
-        this.maxBodies = maxDynamicBody;
+    public void setMaxBodies(int maxBodies) {
+        this.maxBodies = maxBodies;
     }
 
     public void setWorldDimension(DoubleVector worldDim) {
@@ -596,36 +596,38 @@ public class Model implements BodyEventProcessor {
 
     // region BodyEventProcessor
     @Override
-    public void processBodyEvents(AbstractBody body,
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
+    public void processBodyEvents(AbstractBody checkBody,
+            PhysicsValuesDTO checkBodyNewPhyValues, PhysicsValuesDTO checkBodyOldPhyValues) {
 
-        if (!isProcessable(body)) {
+        if (!isProcessable(checkBody)) {
             return; // To avoid duplicate or unnecesary event processing ======>
         }
 
-        BodyState previousState = body.getBodyState();
-        body.setState(BodyState.HANDS_OFF);
+        BodyState previousState = checkBody.getBodyState();
+        checkBody.setState(BodyState.HANDS_OFF);
 
         try {
             // 1 => Detect events -------------------
-            List<DomainEvent> domainEvents = body.getScratchClearEvents();
-            this.detectEvents(body, newPhyValues, oldPhyValues, domainEvents);
+            List<DomainEvent> domainEvents = checkBody.getScratchClearEvents();
+            this.detectEvents(checkBody, checkBodyNewPhyValues, checkBodyOldPhyValues, domainEvents);
 
             // 2 => Decide actions ------------------
-            List<ActionDTO> actions = body.getScratchClearActions();
-            this.provideActions(body, domainEvents, actions);
+            List<ActionDTO> actions = checkBody.getActionsQueue();
+            if (actions.size() > 0) {
+            }
+            this.provideActions(checkBody, domainEvents, actions);
 
             // 3 => Execute actions -----------------
-            this.executeActionList(actions, newPhyValues, oldPhyValues);
+            this.executeActionList(checkBody.getBodyId(), actions, checkBodyNewPhyValues);
 
         } catch (Exception e) { // Fallback anti-zombi
-            if (body.getBodyState() == BodyState.HANDS_OFF) {
-                body.setState(previousState);
+            if (checkBody.getBodyState() == BodyState.HANDS_OFF) {
+                checkBody.setState(previousState);
             }
 
         } finally { // Getout: off HANDS_OFF ... if leaving
-            if (body.getBodyState() == BodyState.HANDS_OFF) {
-                body.setState(BodyState.ALIVE);
+            if (checkBody.getBodyState() == BodyState.HANDS_OFF) {
+                checkBody.setState(BodyState.ALIVE);
             }
         }
     }
@@ -647,28 +649,26 @@ public class Model implements BodyEventProcessor {
         if (!this.isCollidable(checkBody))
             return; // =========== Non-collidable body ============>
 
-        ArrayList<String> candidates;
-        if (!this.checkCollisionCandidates(checkBody, candidates = new ArrayList<>()))
+        ArrayList<String> candidates = checkBody.getScratchClearCandidateIds();
+        if (!this.checkCollisionCandidates(checkBody, candidates))
             return; // =========== No candidates -> No collision ============>
 
         HashSet<String> seen = checkBody.getScratchClearSeenCandidateIds();
-        for (String bodyId : candidates) {
-            AbstractBody otherBody = this.loadBody(bodyId);
+        for (String otherBodyId : candidates) {
+            AbstractBody otherBody = this.getBody(otherBodyId);
 
             // Dedupe multiple references in differents cells
-            if (!seen.add(bodyId))
+            if (!seen.add(otherBodyId))
                 continue;
 
             // Dedupe by symetry only if otherBody type is not GRAVITY!!!
             // Gravity bodies do not move, so they not do check collisions
             // So symetric dedupe in gravity bodies is NEVER necessary
             if (otherBody.getBodyType() != BodyType.GRAVITY)
-                if (checkBody.getBodyId().compareTo(bodyId) >= 0)
+                if (checkBody.getBodyId().compareTo(otherBodyId) >= 0)
                     continue; // ======== Symetric dedupe ON =========>
 
             if (!this.isCollidable(otherBody)) {
-                System.out.println("Non-collidable body in collision check");
-                System.out.println(" ****" + otherBody);
                 continue;
             }
 
@@ -676,7 +676,7 @@ public class Model implements BodyEventProcessor {
             if (!intersectCircles(newPhyValues, otherPhyValues))
                 continue;
 
-            // Immunity check for projectiles
+            // Immunity check inmunity for projectiles and their shooters
             boolean haveInmunity = this.checkCollisionImmunity(checkBody, otherBody);
 
             // Create collision event ALSO when inmunity is active!!!!
@@ -689,7 +689,6 @@ public class Model implements BodyEventProcessor {
 
     private boolean checkCollisionCandidates(AbstractBody checkBody, ArrayList<String> candidates) {
         final String checkBodyId = checkBody.getBodyId();
-        candidates = checkBody.getScratchClearCandidateIds();
         this.spatialGridForDynamics.queryCollisionCandidates(checkBodyId, candidates);
 
         if (candidates.isEmpty())
@@ -706,24 +705,20 @@ public class Model implements BodyEventProcessor {
                 : checkBody.getBodyType() == BodyType.PROJECTILE ? checkBody
                         : null;
 
-        nonProjectile = projectile == otherBody ? checkBody : otherBody;
-
         if (projectile == null) {
-            return false; // No projectile involved =======>
+            return false; // ===== No projectile -> No immunity =====>
         }
 
-        // Primary body have inmunity
-        if (otherBody.getBodyType() == BodyType.PROJECTILE) {
-            System.out.println("Checking projectile immunity...");
-            if (projectile.getBodyEmitterId().equals(nonProjectile.getBodyId())) {
-                return projectile.isEmitterImmune();
-            }
+        nonProjectile = projectile == otherBody ? checkBody : otherBody;
+
+        if (projectile.getBodyEmitterId().equals(nonProjectile.getBodyId())) {
+            return projectile.isEmitterImmune();
         }
 
         return false;
     }
 
-    private AbstractBody loadBody(String bodyId) {
+    private AbstractBody getBody(String bodyId) {
         if (bodyId == null || bodyId.isEmpty())
             throw new IllegalArgumentException("loadBody() -> bodyId is null or empty");
 
@@ -765,18 +760,20 @@ public class Model implements BodyEventProcessor {
         BodyType bodyType = checkBody.getBodyType();
         BodyRefDTO primaryBodyRef = checkBody.getBodyRef();
 
-        if (bodyType == BodyType.PLAYER) {
-            PlayerBody pBody = (PlayerBody) checkBody;
+        if (bodyType != BodyType.PLAYER) {
+            return; // ======= Only players can fire =======>
+        }
 
-            if (pBody.mustFireNow(newPhyValues)) {
-                EmitPayloadDTO payload = new EmitPayloadDTO(
-                        primaryBodyRef, pBody.getProjectileConfig());
+        PlayerBody pBody = (PlayerBody) checkBody;
 
-                EmitEvent fireEvent = new EmitEvent(DomainEventType.FIRE_REQUESTED,
-                        primaryBodyRef, payload);
+        if (pBody.mustFireNow(newPhyValues)) {
+            EmitPayloadDTO payload = new EmitPayloadDTO(
+                    primaryBodyRef, pBody.getProjectileConfig());
 
-                domainEvents.add(fireEvent);
-            }
+            EmitEvent fireEvent = new EmitEvent(DomainEventType.FIRE_REQUESTED,
+                    primaryBodyRef, payload);
+
+            domainEvents.add(fireEvent);
         }
     }
 
@@ -807,9 +804,31 @@ public class Model implements BodyEventProcessor {
     }
     // endregion
 
+    // region Clamp coordinates (clamp***)
+    private double clampX(double posX) {
+        if (posX < 0) {
+            return 0;
+        }
+        if (posX >= this.worldWidth) {
+            return this.worldWidth - 1;
+        }
+        return posX;
+    }
+
+    private double clampY(double posY) {
+        if (posY < 0) {
+            return 0;
+        }
+        if (posY >= this.worldHeight) {
+            return this.worldHeight - 1;
+        }
+        return posY;
+    }
+    // endregion
+
     // region Execute actions (executeAction***)
     private void executeAction(ActionDTO action, AbstractBody body,
-            PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
+            PhysicsValuesDTO newPhyValues) {
 
         if (body == null) {
             throw new IllegalArgumentException("doModelAction() -> body is null");
@@ -817,35 +836,33 @@ public class Model implements BodyEventProcessor {
         if (action == null) {
             throw new IllegalArgumentException("doModelAction() -> action is null");
         }
+        if (newPhyValues == null) {
+            throw new IllegalArgumentException("doModelAction() -> newPhyValues is null");
+        }
 
-        switch (action.action) {
+        switch (action.type) {
             case MOVE:
-
                 body.doMovement(newPhyValues);
                 spatialGridUpsert((AbstractBody) body);
                 break;
 
             case MOVE_REBOUND_IN_EAST:
-                body.reboundInEast(newPhyValues, oldPhyValues,
-                        this.worldWidth, this.worldHeight);
+                body.reboundInEast(newPhyValues, this.worldWidth, this.worldHeight);
                 spatialGridUpsert((AbstractBody) body);
                 break;
 
             case MOVE_REBOUND_IN_WEST:
-                body.reboundInWest(newPhyValues, oldPhyValues,
-                        this.worldWidth, this.worldHeight);
+                body.reboundInWest(newPhyValues, this.worldWidth, this.worldHeight);
                 spatialGridUpsert((AbstractBody) body);
                 break;
 
             case MOVE_REBOUND_IN_NORTH:
-                body.reboundInNorth(newPhyValues, oldPhyValues,
-                        this.worldWidth, this.worldHeight);
+                body.reboundInNorth(newPhyValues, this.worldWidth, this.worldHeight);
                 spatialGridUpsert((AbstractBody) body);
                 break;
 
             case MOVE_REBOUND_IN_SOUTH:
-                body.reboundInSouth(newPhyValues, oldPhyValues,
-                        this.worldWidth, this.worldHeight);
+                body.reboundInSouth(newPhyValues, this.worldWidth, this.worldHeight);
                 spatialGridUpsert((AbstractBody) body);
                 break;
 
@@ -866,21 +883,24 @@ public class Model implements BodyEventProcessor {
                 break;
 
             case NO_MOVE:
+                PhysicsValuesDTO oldPhyValues = body.getPhysicsValues();
                 PhysicsValuesDTO frozen = new PhysicsValuesDTO(
                         newPhyValues.timeStamp,
-                        oldPhyValues.posX, oldPhyValues.posY, oldPhyValues.angle,
-                        oldPhyValues.size,
+                        this.clampX(oldPhyValues.posX), this.clampY(oldPhyValues.posY), newPhyValues.angle,
+                        newPhyValues.size,
                         0D, 0D,
                         0D, 0D,
-                        oldPhyValues.angularSpeed,
-                        oldPhyValues.angularAcc,
+                        newPhyValues.angularSpeed,
+                        newPhyValues.angularAcc,
                         0D);
                 body.doMovement(frozen);
                 spatialGridUpsert((AbstractBody) body);
+                break;
 
             case GO_INSIDE:
                 // To-Do: lógica futura
                 break;
+
             case SPAWN_BODY:
             case SPAWN_PROJECTILE:
                 if (!(action.relatedEvent instanceof EmitEvent emitEvent))
@@ -901,45 +921,43 @@ public class Model implements BodyEventProcessor {
                 break;
 
             default:
+                break;
         }
     }
 
     private void executeActionList(
-            List<ActionDTO> actions, PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues) {
+            String primaryBodyId, List<ActionDTO> actions, PhysicsValuesDTO primaryBodyNewPhyValues) {
 
         if (actions == null || actions.isEmpty()) {
-            return;
+            return; // ===== No actions to execute ======>
         }
 
+        boolean isPrimaryBody = false;
         for (ActionDTO action : actions) {
-            if (action == null || action.action == null) {
-                continue;
+            if (action == null || action.type == null) {
+                throw new IllegalArgumentException("executeActionList() -> action is null");
             }
 
-            AbstractBody targetBody = this.getBody(action.entityId, action.bodyType);
+            isPrimaryBody = (primaryBodyId.compareTo(action.bodyId) == 0);
+
+            AbstractBody targetBody = this.getBody(action.bodyId, action.bodyType);
             if (targetBody == null) {
                 continue; // Body already removed, skip this action
             }
 
-            this.executeAction(action, targetBody, newPhyValues, oldPhyValues);
-
+            if (isPrimaryBody) {
+                this.executeAction(action, targetBody, primaryBodyNewPhyValues);
+            } else {
+                // If not primary body, relay action to body itself
+                // Every body action will be processed in their body thread
+                targetBody.enqueueExternalAction(action);
+            }
         }
+
+        actions.clear(); // All actions executed -> clear the list
+
     }
     // endregion
-
-    private void provideActions(AbstractBody body, List<DomainEvent> domainEvents, List<ActionDTO> actions) {
-        if (!domainEvents.isEmpty())
-            this.domainEventProcessor.provideActions(domainEvents, actions);
-
-        boolean actionWithMovementImplicit = actions.stream()
-                .anyMatch(a -> a.action != null && a.action.name().contains("MOVE"));
-
-        if (!actionWithMovementImplicit)
-            // Always add MOVE action except if body rebounded
-            actions.add(new ActionDTO(
-                    body.getBodyId(), body.getBodyType(), Action.MOVE, null));
-
-    }
 
     private void detectEvents(AbstractBody checkBody,
             PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues, List<DomainEvent> domainEvents) {
@@ -1017,6 +1035,7 @@ public class Model implements BodyEventProcessor {
     // region boolean checks (is***)
     private boolean isCollidable(AbstractBody body) {
         return body != null
+                && body.getBodyType() != BodyType.DECORATOR
                 && body.getBodyState() != BodyState.DEAD
                 && (body.getSpatialGrid() != null);
     }
@@ -1027,6 +1046,19 @@ public class Model implements BodyEventProcessor {
                 && entity.getBodyState() == BodyState.ALIVE;
     }
     // endregion
+
+    private void provideActions(AbstractBody body, List<DomainEvent> domainEvents, List<ActionDTO> actions) {
+        if (!domainEvents.isEmpty())
+            this.domainEventProcessor.provideActions(domainEvents, actions);
+
+        boolean actionWithMovementImplicit = actions.stream()
+                .anyMatch(a -> a.type != null && a.type.name().contains("MOVE"));
+
+        if (!actionWithMovementImplicit)
+            // Always add MOVE action except if body rebounded
+            actions.add(new ActionDTO(
+                    body.getBodyId(), body.getBodyType(), ActionType.MOVE, null));
+    }
 
     private void spawnBody(AbstractBody body, BodyToEmitDTO bodyConfig, PhysicsValuesDTO newPhyValues) {
         if (body == null) {

@@ -203,7 +203,7 @@ import engine.utils.spatial.core.SpatialGrid;
 public abstract class AbstractBody {
 
     // region Constants
-    private static final double EMITTER_IMMUNITY_TIME = 1; // seconds
+    private static final double EMITTER_IMMUNITY_TIME = 0.5; // seconds
     // endregion
 
     // region Static Fields
@@ -213,6 +213,7 @@ public abstract class AbstractBody {
     // endregion
 
     // region Fields
+    private final List<ActionDTO> actionsQueue = new ArrayList<>(64);
     private final String bodyEmitterId; // ID of the body that emit this body (or null)
     private final BodyEventProcessor bodyEventProcessor;
     private final String bodyId;
@@ -232,8 +233,7 @@ public abstract class AbstractBody {
     private final ArrayList<String> scratchCandidateIds;
     private final HashSet<String> scratchSeenCandidateIds = new HashSet<>(64);
 
-    private final ArrayList<DomainEvent> scratchEvents = new ArrayList<>(32);
-    private final List<ActionDTO> scratchActions = new ArrayList<>(32);
+    private final ArrayList<DomainEvent> scratchEvents = new ArrayList<>(64);
     // endregion
 
     // region Constructors
@@ -265,7 +265,6 @@ public abstract class AbstractBody {
     // endregion
 
     // *** PUBLICS ***
-
     public synchronized void activate() {
         if (this.state != BodyState.STARTING) {
             throw new IllegalArgumentException("Entity activation error due is not starting!");
@@ -273,6 +272,14 @@ public abstract class AbstractBody {
 
         AbstractBody.aliveQuantity++;
         this.state = BodyState.ALIVE;
+    }
+
+    public void enqueueExternalAction(ActionDTO action) {
+        if (action == null) {
+            throw new IllegalArgumentException("Action cannot be null");
+        }
+
+        this.actionsQueue.add(action);
     }
 
     public synchronized void die() {
@@ -407,9 +414,10 @@ public abstract class AbstractBody {
     // endregion
 
     // region Scratch getters (getScratch***())
-    public List<ActionDTO> getScratchClearActions() {
-        this.scratchActions.clear();
-        return this.scratchActions;
+    public List<ActionDTO> getActionsQueue() {
+        // Do NOT clear here - external actions may have been enqueued
+        // The queue will be cleared after actions are executed in Model.executeActionList()
+        return this.actionsQueue;
     }
 
     public ArrayList<String> getScratchClearCandidateIds() {
@@ -466,31 +474,27 @@ public abstract class AbstractBody {
     }
 
     // region Rebound methods
-    public void reboundInEast(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight) {
+    public void reboundInEast(PhysicsValuesDTO phyValues, double worldWidth, double worldHeight) {
 
         PhysicsEngine engine = this.getPhysicsEngine();
-        engine.reboundInEast(newVals, oldVals, worldWidth, worldHeight);
+        engine.reboundInEast(phyValues, worldWidth, worldHeight);
     }
 
-    public void reboundInNorth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight) {
+    public void reboundInNorth(PhysicsValuesDTO phyValues, double worldWidth, double worldHeight) {
 
         PhysicsEngine engine = this.getPhysicsEngine();
-        engine.reboundInNorth(newVals, oldVals, worldWidth, worldHeight);
+        engine.reboundInNorth(phyValues, worldWidth, worldHeight);
     }
 
-    public void reboundInWest(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight) {
-
+    public void reboundInWest(PhysicsValuesDTO phyValues, double worldWidth, double worldHeight) {
         PhysicsEngine engine = this.getPhysicsEngine();
-        engine.reboundInWest(newVals, oldVals, worldWidth, worldHeight);
+        engine.reboundInWest(phyValues, worldWidth, worldHeight);
     }
 
-    public void reboundInSouth(PhysicsValuesDTO newVals, PhysicsValuesDTO oldVals,
-            double worldWidth, double worldHeight) {
+    public void reboundInSouth(PhysicsValuesDTO phyValues, double worldWidth, double worldHeight) {
+
         PhysicsEngine engine = this.getPhysicsEngine();
-        engine.reboundInSouth(newVals, oldVals, worldWidth, worldHeight);
+        engine.reboundInSouth(phyValues, worldWidth, worldHeight);
     }
     // endregion
 

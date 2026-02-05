@@ -202,6 +202,7 @@ public class Controller implements WorldManager, DomainEventProcessor {
         this.engineState = EngineState.STARTING;
         this.gameRulesEngine = gameRulesEngine;
         this.maxBodies = maxBodies;
+        model.setMaxBodies(maxBodies);
 
         this.setModel(model);
         this.setView(view);

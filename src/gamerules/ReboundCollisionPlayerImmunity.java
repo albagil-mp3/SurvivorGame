@@ -2,7 +2,7 @@ package gamerules;
 
 import java.util.List;
 
-import engine.actions.Action;
+import engine.actions.ActionType;
 import engine.actions.ActionDTO;
 import engine.controller.ports.ActionsGenerator;
 import engine.events.domain.ports.DomainEventType;
@@ -31,23 +31,23 @@ public class ReboundCollisionPlayerImmunity implements ActionsGenerator {
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
             case LimitEvent limitEvent -> {
-                Action action;
+                ActionType action;
 
                 switch (limitEvent.type) {
                     case REACHED_EAST_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_EAST;
+                        action = ActionType.MOVE_REBOUND_IN_EAST;
                         break;
                     case REACHED_WEST_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_WEST;
+                        action = ActionType.MOVE_REBOUND_IN_WEST;
                         break;
                     case REACHED_NORTH_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_NORTH;
+                        action = ActionType.MOVE_REBOUND_IN_NORTH;
                         break;
                     case REACHED_SOUTH_LIMIT:
-                        action = Action.MOVE_REBOUND_IN_SOUTH;
+                        action = ActionType.MOVE_REBOUND_IN_SOUTH;
                         break;
                     default:
-                        action = Action.NO_MOVE;
+                        action = ActionType.NO_MOVE;
                         break;
                 }
 
@@ -60,7 +60,7 @@ public class ReboundCollisionPlayerImmunity implements ActionsGenerator {
             case LifeOver e ->
                 actions.add(new ActionDTO(
                         e.primaryBodyRef.id(), e.primaryBodyRef.type(),
-                        Action.DIE, event));
+                        ActionType.DIE, event));
 
             case EmitEvent e -> {
 
@@ -68,14 +68,14 @@ public class ReboundCollisionPlayerImmunity implements ActionsGenerator {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            Action.SPAWN_BODY,
+                            ActionType.SPAWN_BODY,
                             event));
 
                 } else {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            Action.SPAWN_PROJECTILE,
+                            ActionType.SPAWN_PROJECTILE,
                             event));
                 }
 
@@ -115,10 +115,10 @@ public class ReboundCollisionPlayerImmunity implements ActionsGenerator {
 
         // Default: Both die
         actions.add(new ActionDTO(
-                event.primaryBodyRef.id(), event.primaryBodyRef.type(), Action.DIE, event));
+                event.primaryBodyRef.id(), event.primaryBodyRef.type(), ActionType.DIE, event));
 
         actions.add(new ActionDTO(
-                event.secondaryBodyRef.id(), event.secondaryBodyRef.type(), Action.DIE, event));
+                event.secondaryBodyRef.id(), event.secondaryBodyRef.type(), ActionType.DIE, event));
     }
 
 }

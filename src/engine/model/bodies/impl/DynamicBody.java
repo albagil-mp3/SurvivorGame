@@ -45,6 +45,10 @@ import engine.utils.spatial.core.SpatialGrid;
  */
 public class DynamicBody extends AbstractBody implements Runnable {
 
+    // region Constants
+    private static final int SLEEP_TIME_MS = 15;
+    // endregion
+
     // region Fields
     private double maxThrustForce; //
     private double maxAngularAcc; // degrees*s^-2
@@ -179,7 +183,7 @@ public class DynamicBody extends AbstractBody implements Runnable {
             }
 
             try {
-                Thread.sleep(5);
+                Thread.sleep(SLEEP_TIME_MS);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }

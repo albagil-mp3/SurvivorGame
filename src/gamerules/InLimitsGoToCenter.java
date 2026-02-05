@@ -2,7 +2,7 @@ package gamerules;
 
 import java.util.List;
 
-import engine.actions.Action;
+import engine.actions.ActionType;
 import engine.actions.ActionDTO;
 import engine.controller.ports.ActionsGenerator;
 import engine.events.domain.ports.DomainEventType;
@@ -31,7 +31,7 @@ public class InLimitsGoToCenter implements ActionsGenerator {
         switch (event) {
             case LimitEvent limitEvent -> {
 
-                Action action = Action.MOVE_TO_CENTER;
+                ActionType action = ActionType.MOVE_TO_CENTER;
 
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
@@ -43,7 +43,7 @@ public class InLimitsGoToCenter implements ActionsGenerator {
             case LifeOver e ->
                 actions.add(new ActionDTO(
                         e.primaryBodyRef.id(), e.primaryBodyRef.type(),
-                        Action.DIE, event));
+                        ActionType.DIE, event));
 
             case EmitEvent e -> {
 
@@ -51,14 +51,14 @@ public class InLimitsGoToCenter implements ActionsGenerator {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            Action.SPAWN_BODY,
+                            ActionType.SPAWN_BODY,
                             event));
 
                 } else {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            Action.SPAWN_PROJECTILE,
+                            ActionType.SPAWN_PROJECTILE,
                             event));
                 }
 

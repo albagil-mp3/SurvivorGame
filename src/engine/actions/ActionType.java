@@ -1,7 +1,7 @@
 package engine.actions;
 
 
-public enum Action {
+public enum ActionType {
     DIE,
     EXPLODE_IN_FRAGMENTS,
     GO_INSIDE,

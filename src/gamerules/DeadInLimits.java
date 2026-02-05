@@ -2,7 +2,7 @@ package gamerules;
 
 import java.util.List;
 
-import engine.actions.Action;
+import engine.actions.ActionType;
 import engine.actions.ActionDTO;
 import engine.controller.ports.ActionsGenerator;
 import engine.events.domain.ports.DomainEventType;
@@ -30,8 +30,8 @@ public class DeadInLimits implements ActionsGenerator {
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
             case LimitEvent limitEvent -> {
-                Action action;
-                action = Action.DIE;
+                ActionType action;
+                action = ActionType.DIE;
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
                         action, event));
@@ -41,7 +41,7 @@ public class DeadInLimits implements ActionsGenerator {
             case LifeOver e ->
                 actions.add(new ActionDTO(
                         e.primaryBodyRef.id(), e.primaryBodyRef.type(),
-                        Action.DIE, event));
+                        ActionType.DIE, event));
 
             case EmitEvent e -> {
 
@@ -49,14 +49,14 @@ public class DeadInLimits implements ActionsGenerator {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            Action.SPAWN_BODY,
+                            ActionType.SPAWN_BODY,
                             event));
 
                 } else {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
-                            Action.SPAWN_PROJECTILE,
+                            ActionType.SPAWN_PROJECTILE,
                             event));
                 }
 

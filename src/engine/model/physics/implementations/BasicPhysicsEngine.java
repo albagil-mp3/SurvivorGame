@@ -34,7 +34,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         PhysicsValuesDTO phyVals = this.getPhysicsValues();
         long now = nanoTime();
         long elapsedNanos = now - phyVals.timeStamp;
-        double dt = ((double)elapsedNanos) / 1_000_000_000.0d; // Nanos to seconds
+        double dt = ((double) elapsedNanos) / 1_000_000_000.0d; // Nanos to seconds
 
         // ✅ Protección contra valores anómalos
         if (dt <= 0.0) {
@@ -54,117 +54,115 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
 
     // region Rebounds
     @Override
-    public void reboundInEast(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
+    public void reboundInEast(PhysicsValuesDTO phyValues,
             double worldDim_x, double worldDim_y) {
 
         // New speed: horizontal component flipped, vertical preserved
-        double speedX = -newPhyVals.speedX;
-        double speedY = newPhyVals.speedY;
+        double speedX = -phyValues.speedX;
+        double speedY = phyValues.speedY;
 
         // New position: snapped to the east boundary (slightly inside)
         double posX = 0.0001d;
-        double posY = newPhyVals.posY;
-        double angle = newPhyVals.angle;
+        double posY = phyValues.posY;
+        double angle = phyValues.angle;
 
         // Acceleration is preserved
-        double accX = newPhyVals.accX;
-        double accY = newPhyVals.accY;
+        double accX = phyValues.accX;
+        double accY = phyValues.accY;
 
         PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
-                newPhyVals.timeStamp,
+                phyValues.timeStamp,
                 posX, posY, angle,
-                newPhyVals.size,
+                phyValues.size,
                 speedX, speedY,
                 accX, accY,
-                oldPhyVals.angularSpeed, oldPhyVals.angularSpeed,
-                oldPhyVals.thrust);
+                phyValues.angularSpeed, phyValues.angularSpeed,
+                phyValues.thrust);
 
         this.setPhysicsValues(reboundPhyVals);
     }
 
     @Override
-    public void reboundInWest(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
+    public void reboundInWest(PhysicsValuesDTO phyValues,
             double worldDim_x, double worldDim_y) {
 
         // New speed: horizontal component flipped, vertical preserved
-        double speedX = -newPhyVals.speedX;
-        double speedY = newPhyVals.speedY;
+        double speedX = -phyValues.speedX;
+        double speedY = phyValues.speedY;
 
         // New position: snapped to the east boundary (slightly inside)
         double posX = worldDim_x - 0.0001;
-        double posY = newPhyVals.posY;
-        double angle = newPhyVals.angle;
+        double posY = phyValues.posY;
+        double angle = phyValues.angle;
 
         // Acceleration is preserved
-        double accX = newPhyVals.accX;
-        double accY = newPhyVals.accY;
+        double accX = phyValues.accX;
+        double accY = phyValues.accY;
 
         PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
-                newPhyVals.timeStamp,
+                phyValues.timeStamp,
                 posX, posY, angle,
-                newPhyVals.size,
+                phyValues.size,
                 speedX, speedY,
                 accX, accY,
-                oldPhyVals.angularSpeed, oldPhyVals.angularSpeed,
-                oldPhyVals.thrust);
+                phyValues.angularSpeed, phyValues.angularSpeed,
+                phyValues.thrust);
 
         this.setPhysicsValues(reboundPhyVals);
     }
 
     @Override
-    public void reboundInNorth(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
-            double worldDim_x, double worldDim_y) {
+    public void reboundInNorth(PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y) {
 
         // New speed: horizontal component flipped, vertical preserved
-        double speedX = newPhyVals.speedX;
-        double speedY = -newPhyVals.speedY;
+        double speedX = phyValues.speedX;
+        double speedY = -phyValues.speedY;
 
         // New position: snapped to the east boundary (slightly inside)
-        double posX = newPhyVals.posX;
+        double posX = phyValues.posX;
         double posY = 0.0001;
-        double angle = newPhyVals.angle;
+        double angle = phyValues.angle;
 
         // Acceleration is preserved
-        double accX = newPhyVals.accX;
-        double accY = newPhyVals.accY;
+        double accX = phyValues.accX;
+        double accY = phyValues.accY;
 
         PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
-                newPhyVals.timeStamp,
+                phyValues.timeStamp,
                 posX, posY, angle,
-                newPhyVals.size,
+                phyValues.size,
                 speedX, speedY,
                 accX, accY,
-                oldPhyVals.angularSpeed, oldPhyVals.angularSpeed,
-                oldPhyVals.thrust);
+                phyValues.angularSpeed, phyValues.angularSpeed,
+                phyValues.thrust);
 
         this.setPhysicsValues(reboundPhyVals);
     }
 
     @Override
-    public void reboundInSouth(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
-            double worldDim_x, double worldDim_y) {
+    public void reboundInSouth(PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y) {
 
         // New speed: horizontal component flipped, vertical preserved
-        double speedX = newPhyVals.speedX;
-        double speedY = -newPhyVals.speedY;
+        double speedX = phyValues.speedX;
+        double speedY = -phyValues.speedY;
 
         // New position: snapped to the east boundary (slightly inside)
-        double posX = newPhyVals.posX;
+        double posX = phyValues.posX;
         double posY = worldDim_y - 0.0001;
-        double angle = newPhyVals.angle;
+        double angle = phyValues.angle;
 
         // Acceleration is preserved
-        double accX = newPhyVals.accX;
-        double accY = newPhyVals.accY;
+        double accX = phyValues.accX;
+        double accY = phyValues.accY;
 
         PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
-                newPhyVals.timeStamp,
+                phyValues.timeStamp,
                 posX, posY, angle,
-                newPhyVals.size,
+                phyValues.size,
                 speedX, speedY,
                 accX, accY,
-                oldPhyVals.angularSpeed, oldPhyVals.angularSpeed,
-                oldPhyVals.thrust);
+                phyValues.angularSpeed, phyValues.angularSpeed,
+                phyValues.thrust);
 
         this.setPhysicsValues(reboundPhyVals);
     }
@@ -184,7 +182,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 old.thrust));
     }
 
-     // *** PRIVATES ***
+    // *** PRIVATES ***
 
     private PhysicsValuesDTO integrateMRUA(PhysicsValuesDTO phyVals, double dt) {
         // Applying thrust according actual angle

@@ -5,6 +5,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -105,7 +107,7 @@ import engine.view.renderables.ports.SpatialGridStatisticsRenderDTO;
  * - Keep rendering independent and real-time (active rendering).
  * - Translate user input into controller commands cleanly and predictably.
  */
-public class View extends JFrame implements KeyListener {
+public class View extends JFrame implements KeyListener, WindowFocusListener {
 
     // region Fields
     private BufferedImage background;
@@ -284,7 +286,7 @@ public class View extends JFrame implements KeyListener {
 
     // *** PRIVATE ***
 
-    private void addRendererCanva(Container container) {
+    private void addRenderer(Container container) {
         GridBagConstraints c = new GridBagConstraints();
 
         c.anchor = GridBagConstraints.NORTHWEST;
@@ -305,100 +307,143 @@ public class View extends JFrame implements KeyListener {
         this.setLayout(new GridBagLayout());
 
         panel = this.getContentPane();
-        this.addRendererCanva(panel);
-        this.renderer.setFocusable(true);
-        this.renderer.addKeyListener(this);
+        this.addRenderer(panel);
+
+        this.setFocusable(true);
+        this.addKeyListener(this);
+        this.addWindowFocusListener(this);
+
+        this.renderer.setFocusable(false); // El Renderer NO necesita foco
+        this.renderer.setIgnoreRepaint(true); // Mejor performance
 
         this.pack();
         this.setVisible(true);
-        SwingUtilities.invokeLater(() -> this.renderer.requestFocusInWindow());
 
+        SwingUtilities.invokeLater(() -> this.requestFocusInWindow());
+    }
+
+    private void resetAllKeyStates() {
+        if (this.localPlayerId == null || this.controller == null) {
+            return;
+        }
+
+        try {
+            // Resetear TODOS los controles activos
+            this.controller.playerThrustOff(this.localPlayerId);
+            this.controller.playerRotateOff(this.localPlayerId);
+            this.fireKeyDown.set(false);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error resetting key states: " + ex.getMessage(), ex);
+        }
     }
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
+    // region WindowFocusListener
+    @Override
+    public void windowLostFocus(WindowEvent e) {
+        resetAllKeyStates();
+        System.out.println("View: Frame lost focus - All key states reset");
+    }
+
+    @Override
+    public void windowGainedFocus(WindowEvent e) {
+        System.out.println("View: Frame gained focus :-)");
+
+        // Optional: could notify user or log recovery
+    }
+    // endregion
+
     // region KeyListener
     @Override
     public void keyPressed(KeyEvent e) {
-        if (this.localPlayerId == null) {
-            return;
-        }
+        try {
+            if (this.localPlayerId == null) {
+                return;
+            }
 
-        if (this.controller == null) {
-            System.out.println("Controller not set yet");
-            return;
-        }
+            if (this.controller == null) {
+                System.out.println("Controller not set yet");
+                return;
+            }
 
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_W:
-                this.controller.playerThrustOn(this.localPlayerId);
-                break;
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_W:
+                    this.controller.playerThrustOn(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_X:
-                this.controller.playerReverseThrust(this.localPlayerId);
-                break;
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_X:
+                    this.controller.playerReverseThrust(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_A:
-                this.controller.playerRotateLeftOn(this.localPlayerId);
-                break;
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_A:
+                    this.controller.playerRotateLeftOn(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_D:
-                this.controller.playerRotateRightOn(this.localPlayerId);
-                break;
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_D:
+                    this.controller.playerRotateRightOn(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_SPACE:
-                if (!this.fireKeyDown.get()) { // Discard autoreptition PRESS
-                    this.fireKeyDown.set(true);
-                    this.controller.playerFire(this.localPlayerId);
-                }
-                break;
+                case KeyEvent.VK_SPACE:
+                    if (!this.fireKeyDown.get()) { // Discard autoreptition PRESS
+                        this.fireKeyDown.set(true);
+                        this.controller.playerFire(this.localPlayerId);
+                    }
+                    break;
 
-            case KeyEvent.VK_1:
-                this.controller.playerSelectNextWeapon(this.localPlayerId);
-                break;
+                case KeyEvent.VK_1:
+                    this.controller.playerSelectNextWeapon(this.localPlayerId);
+                    break;
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Error in keyPressed: " + ex.getMessage(), ex);
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (this.localPlayerId == null) {
-            System.out.println("Local player not setted!");
-            return;
-        }
+        try {
+            if (this.localPlayerId == null) {
+                System.out.println("Local player not setted!");
+                return;
+            }
 
-        if (this.controller == null) {
-            System.out.println("Controller not set yet");
-            return;
-        }
+            if (this.controller == null) {
+                System.out.println("Controller not set yet");
+                return;
+            }
 
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_W:
-                this.controller.playerThrustOff(this.localPlayerId);
-                break;
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_W:
+                    this.controller.playerThrustOff(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_X:
-                this.controller.playerThrustOff(this.localPlayerId);
-                break;
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_X:
+                    this.controller.playerThrustOff(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_A:
-                this.controller.playerRotateOff(this.localPlayerId);
-                break;
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_A:
+                    this.controller.playerRotateOff(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_D:
-                this.controller.playerRotateOff(this.localPlayerId);
-                break;
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_D:
+                    this.controller.playerRotateOff(this.localPlayerId);
+                    break;
 
-            case KeyEvent.VK_SPACE:
-                this.fireKeyDown.set(false); // << permite el siguiente disparo
-                break;
+                case KeyEvent.VK_SPACE:
+                    this.fireKeyDown.set(false); // << permite el siguiente disparo
+                    break;
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Error in keyReleased: " + ex.getMessage(), ex);
         }
     }
 

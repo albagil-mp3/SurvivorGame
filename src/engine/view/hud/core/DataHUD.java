@@ -24,8 +24,7 @@ public class DataHUD {
     public int valuesExpected = 0;
     // endregion
 
-    // *** CONSTRUCTORS ***
-
+    // region Constructors
     public DataHUD(Color titleColor, Color highLightColor, Color labelColor, Color dataColor, int initRow, int initCol,
             int interline) {
         this.initRow = initRow;
@@ -36,6 +35,7 @@ public class DataHUD {
         this.labelColor = labelColor;
         this.dataColor = dataColor;
     }
+    // endregion
 
     // *** PUBLICS ***
 

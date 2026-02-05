@@ -39,7 +39,6 @@ public class BodyFactory {
                 break;
 
             case PROJECTILE:
-                System.out.println("Creating projectile body...");
                 phyEngine = new BasicPhysicsEngine(phyVals);
                 body = new DynamicBody(
                         bodyEventProcessor, 

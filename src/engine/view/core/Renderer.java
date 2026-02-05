@@ -122,7 +122,7 @@ import java.awt.Toolkit;
 public class Renderer extends Canvas implements Runnable {
 
     // region Constants
-    private static final int DELAY_IN_MILLIS = 5; // 
+    private static final int REFRESH_DELAY_IN_MILLIS = 3; //
     private static final long MONITORING_PERIOD_NS = 500_000_000L;
     // endregion
 
@@ -167,8 +167,8 @@ public class Renderer extends Canvas implements Runnable {
     private double maxCameraClampY;
     private double maxCameraClampX;
 
-    private double backgroundScrollSpeedX = 1.0;
-    private double backgroundScrollSpeedY = 1.0;
+    private double backgroundScrollSpeedX = 0.4;
+    private double backgroundScrollSpeedY = 0.4;
 
     private final Map<String, DynamicRenderable> dynamicRenderables = new ConcurrentHashMap<>(2500);
     private volatile Map<String, Renderable> staticRenderables = new ConcurrentHashMap<>(100);
@@ -299,11 +299,6 @@ public class Renderer extends Canvas implements Runnable {
 
     // region drawers (draw***)
     private void drawDynamicRenderable(Graphics2D g) {
-        // ArrayList<DynamicRenderDTO> renderablesData =
-        // this.view.getDynamicRenderablesData(); // *+
-
-        // this.updateDynamicRenderables(renderablesData);
-
         Map<String, DynamicRenderable> renderables = this.dynamicRenderables;
         for (DynamicRenderable renderable : renderables.values()) {
             renderable.paint(g, this.currentFrame);
@@ -342,7 +337,6 @@ public class Renderer extends Canvas implements Runnable {
 
     private void drawScene(BufferStrategy bs) {
         Graphics2D gg;
-
         this.drawStartNs = System.nanoTime();
 
         do {
@@ -403,8 +397,6 @@ public class Renderer extends Canvas implements Runnable {
     }
 
     private void drawWorldRenderables(Graphics2D g) {
-        // ** */
-
         AffineTransform defaultTransform = g.getTransform();
         g.translate(-this.cameraX, -this.cameraY);
 
@@ -464,7 +456,6 @@ public class Renderer extends Canvas implements Runnable {
 
     // Metrics updated per period
     private void monitoringPerPeriod() {
-
         this.framesPerPeriod++;
         long now = System.nanoTime();
         long elapsed = now - this.monitoringPeriodStartNs;
@@ -512,8 +503,36 @@ public class Renderer extends Canvas implements Runnable {
         }
 
         RenderDTO playerData = localPlayerRenderable.getRenderableValues();
-        double desiredX = playerData.posX - (this.viewDimension.x / 2.0d);
-        double desiredY = playerData.posY - (this.viewDimension.y / 2.0d);
+
+        double playerX = playerData.posX - this.cameraX;
+        double playerY = playerData.posY - this.cameraY;
+
+        double desiredX; 
+        double desiredY; 
+
+        double minX = this.viewDimension.x * 0.3;
+        double maxX = this.viewDimension.x * 0.7;
+        double minY = this.viewDimension.y * 0.3;
+        double maxY = this.viewDimension.y * 0.7;
+
+        if (playerX < minX) {
+            desiredX = playerData.posX - minX;
+        } else if (playerX > maxX) {
+            desiredX = playerData.posX - maxX;
+        } else {
+             desiredX = playerData.posX - (playerX);
+        }
+
+        if (playerY < minY) {
+            desiredY = playerData.posY - minY;
+        } else if (playerY > maxY) {
+            desiredY = playerData.posY - maxY;
+        } else {
+            desiredY = playerData.posY - (playerY);
+        }
+
+        // double desiredX = playerData.posX - (this.viewDimension.x / 2.0d);
+        // double desiredY = playerData.posY - (this.viewDimension.y / 2.0d);
 
         this.cameraX += (desiredX - this.cameraX);
         this.cameraY += (desiredY - this.cameraY);
@@ -560,8 +579,6 @@ public class Renderer extends Canvas implements Runnable {
         return value;
     }
 
-    // *** PRIVATE STATIC ***
-
     // *** INTERFACE IMPLEMENTATIONS ***
 
     // region Runnable
@@ -600,7 +617,7 @@ public class Renderer extends Canvas implements Runnable {
             }
 
             try {
-                Thread.sleep(DELAY_IN_MILLIS);
+                Thread.sleep(REFRESH_DELAY_IN_MILLIS);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }

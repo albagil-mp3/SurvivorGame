@@ -58,7 +58,7 @@ public final class WeaponDefFactory {
                 projectileMaxLifetime,
                 projectileSize,
                 projectileSpeed,
-                BodyType.DYNAMIC,
+                BodyType.PROJECTILE,
 
                 burstFireRate,
                 burstSize,

@@ -5,13 +5,17 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 
 abstract class Item {
+
+    // region Fields
     private final String label;
     private final boolean valueExpected;
     private Color labelColor;
     private Color dataColor;
     private String paddedLabel;
     private boolean highlighted = false;
+    // endregion
 
+    // region Constructors
     Item(String label, Color labelColor, Color dataColor, boolean valueExpected, boolean highlighted) {
         if (label == null)
             label = "";
@@ -26,7 +30,11 @@ abstract class Item {
     Item(String label, Color labelColor, Color dataColor, boolean valueExpected) {
         this(label, labelColor, dataColor, valueExpected, false);
     }
+    // endregion
 
+    // *** PUBLICS ***
+
+    // region Getters (get***)
     public String getLabel() {
         return label;
     }
@@ -42,7 +50,9 @@ abstract class Item {
     public String getPaddedLabel() {
         return paddedLabel;
     }
+    // endregion
 
+    // region boolean checkers (is***)
     public boolean isValueExpected() {
         return valueExpected;
     }
@@ -50,6 +60,8 @@ abstract class Item {
     public boolean isHighlighted() {
         return highlighted;
     }
+    // endregion
+
 
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
@@ -67,5 +79,4 @@ abstract class Item {
     }
 
     abstract void draw(Graphics2D g, FontMetrics fm, int posX, int posY, Object value);
-
 }

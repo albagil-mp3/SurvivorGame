@@ -38,20 +38,16 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
 
         // region Rebound (reboundIn***)
         public abstract void reboundInEast(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public abstract void reboundInWest(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public abstract void reboundInNorth(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
 
         public abstract void reboundInSouth(
-                        PhysicsValuesDTO newPhyValues, PhysicsValuesDTO oldPhyValues,
-                        double worldDim_x, double worldDim_y);
+                        PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y);
         // endregion
 
         public void resetAcceleration() {

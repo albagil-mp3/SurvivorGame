@@ -20,7 +20,7 @@ public final class RandomWorldDefinitionProvider extends AbstractWorldDefinition
 		double density = 100d;
 
 		// region Background
-		this.setBackgroundStatic("back_24");
+		this.setBackgroundStatic("back_12");
 		// endregion
 
 		// region Decoration
@@ -56,7 +56,7 @@ public final class RandomWorldDefinitionProvider extends AbstractWorldDefinition
 		// endregion
 
 		// region Players
-		this.addSpaceshipRandomAsset(1, AssetType.SPACESHIP, density, 50, 55, 19000, 19000);
+		this.addSpaceshipRandomAsset(1, AssetType.SPACESHIP, density, 50, 55, 19000, 19500);
 		this.addTrailEmitterCosmetic("stars_06", 150, BodyType.DECORATOR, 25);
 		// endregion
 

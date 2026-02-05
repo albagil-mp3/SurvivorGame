@@ -14,8 +14,7 @@ public class IconItem extends Item {
     private final int textPadding;
     // endregion
 
-    // *** CONSTRUCTORS ***
-
+    // region Constructors
     IconItem(BufferedImage icon, int iconWidth, int iconHeight, int textPadding, Color dataColor) {
         super("", null, dataColor, true);
         if (icon == null) {
@@ -33,8 +32,9 @@ public class IconItem extends Item {
         this.iconHeight = iconHeight;
         this.textPadding = textPadding;
     }
+    // endregion
 
-    // *** PUBLICS ***
+    // *** INTERFACE IMPLEMENTATIONS ***
 
     @Override // Item
     public void draw(Graphics2D g, FontMetrics fm, int posX, int posY, Object value) {

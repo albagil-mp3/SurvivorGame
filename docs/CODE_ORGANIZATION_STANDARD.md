@@ -25,17 +25,20 @@ This document defines the **hybrid organization standard** used in the MVCGameEn
 
 ---
 
-## The Four Structural Sections
+## The Five Structural Sections
 
-Every class is organized into **exactly four sections**, always in this order:
+Every class is organized into **Five sections** . A section is required if there is at least one method whose visibility matches that section.
+
+Always in this order:
 
 ### Section Order
 
 ```java
-1. // *** CONSTRUCTORS ***
-2. // *** PUBLICS ***
+2. // *** PUBLIC ***
+3. // *** PUBLIC STATIC *** 
 3. // *** INTERFACE IMPLEMENTATIONS ***
 4. // *** PRIVATE ***
+4. // *** PRIVATE STATIC ***
 ```
 
 ### Section Header Format
@@ -53,6 +56,9 @@ Every class is organized into **exactly four sections**, always in this order:
 ---
 
 ## Subsections: Organizing Within Sections
+
+### Three special subsection: Constants, Fields and Constructors
+These subsections are required if the class contains any constants, fields, or constructors.
 
 ### The Hybrid Approach: Alphabetical Order + Subsections
 

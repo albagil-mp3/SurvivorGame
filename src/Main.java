@@ -1,5 +1,4 @@
 
-
 import engine.controller.impl.Controller;
 import engine.controller.ports.ActionsGenerator;
 import engine.model.impl.Model;
@@ -17,11 +16,16 @@ public class Main {
 
 		DoubleVector worldDimension = new DoubleVector(40000, 40000);
 		DoubleVector viewDimension = new DoubleVector(2400, 1500);
-		int maxBodies = 800;
-		int maxAsteroidCreationDelay = 100;
+		int maxBodies = 1500;
+		int maxAsteroidCreationDelay = 5;
 
 		ProjectAssets projectAssets = new ProjectAssets();
+
+		// ActionsGenerator gameRules = new gamerules.LimitRebound();
+		// ActionsGenerator gameRules = new gamerules.ReboundAndCollision();
 		ActionsGenerator gameRules = new gamerules.DeadInLimitsPlayerImmunity();
+
+		// *** WORLD DEFINITION PROVIDER ***
 		WorldDefinitionProvider worldProv = new gameworld.RandomWorldDefinitionProvider(
 				worldDimension, projectAssets);
 

@@ -5,10 +5,7 @@ import engine.model.physics.ports.PhysicsValuesDTO;
 
 public class NullPhysicsEngine extends AbstractPhysicsEngine {
 
-    //
-    // CONSTRUCTORS
-    //
-
+    // region Constructors
     public NullPhysicsEngine(PhysicsValuesDTO phyVals) {
         super(phyVals);
     }
@@ -16,10 +13,9 @@ public class NullPhysicsEngine extends AbstractPhysicsEngine {
     public NullPhysicsEngine(double size, double posX, double posY, double angle) {
         super(size, posX, posY, angle);
     }
+    // endregion
 
-    //
-    // PUBLICS
-    //
+    // *** PUBLIC ***
 
     @Override
     public void angularAccelerationInc(double angularAcc) {
@@ -36,23 +32,19 @@ public class NullPhysicsEngine extends AbstractPhysicsEngine {
     }
 
     @Override
-    public void reboundInEast(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
-            double worldDim_x, double worldDim_y) {
+    public void reboundInEast(PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y) {
     }
 
     @Override
-    public void reboundInWest(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
-            double worldDim_x, double worldDim_y) {
+    public void reboundInWest(PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y) {
     }
 
     @Override
-    public void reboundInNorth(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
-            double worldDim_x, double worldDim_y) {
+    public void reboundInNorth(PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y) {
     }
 
     @Override
-    public void reboundInSouth(PhysicsValuesDTO newPhyVals, PhysicsValuesDTO oldPhyVals,
-            double worldDim_x, double worldDim_y) {
+    public void reboundInSouth(PhysicsValuesDTO phyValues, double worldDim_x, double worldDim_y) {
     }
 
     @Override
