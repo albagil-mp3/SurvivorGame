@@ -156,6 +156,42 @@ public final class SpatialGrid {
         // Compute overlapping cells for the query region
         final int newCount = computeCellIdxsClamped(minX, maxX, minY, maxY, newCellIdxs);
 
+        if (this.sameCells(oldEntityCells, newCount, newCellIdxs))
+            return;
+
+        if (newCount < 3) {
+            this.upsertSmall(entityId, newCount, oldEntityCells, newCellIdxs);
+        } else {
+            this.upsertLarge(entityId, newCount, oldEntityCells, scratchIdxs);
+        }
+    }
+
+    private boolean sameCells(Cells oldEntityCells, int newCount, int[] newCellIdxs) {
+        if (oldEntityCells.count != newCount)
+            return false;
+
+        for (int i = 0; i < oldEntityCells.count; i++) {
+            if (oldEntityCells.idxs[i] != newCellIdxs[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    private void upsertSmall(String entityId, int newCount, Cells oldEntityCells, int[] newCellIdxs) {
+        // Remove
+        for (int i = 0; i < oldEntityCells.count; i++)
+            grid[oldEntityCells.idxs[i]].remove(entityId);
+
+        // Insert
+        for (int i = 0; i < newCount; i++)
+            grid[newCellIdxs[i]].put(entityId, Boolean.TRUE);
+
+        // New are now old
+        oldEntityCells.updateFrom(newCellIdxs, newCount);
+    }
+
+    private void upsertLarge(String entityId, int newCount, Cells oldEntityCells, int[] newCellIdxs) {
         // olds not in news ---> body not in those cells anymore
         for (int i = 0; i < oldEntityCells.count; i++)
             if (!contains(newCellIdxs, newCount, oldEntityCells.idxs[i]))
