@@ -283,6 +283,18 @@ public abstract class AbstractBody {
         this.state = BodyState.ALIVE;
     }
 
+    /**
+     * Execute one physics/logic tick for this body.
+     * 
+     * This method contains the core logic that should be executed once per frame.
+     * It is called either:
+     * - From the body's own run() loop (when using individual threads)
+     * - From MultiBodyRunner.executeBodyStep() (when using batched execution)
+     * 
+     * Subclasses must implement this to define their per-tick behavior.
+     */
+    public abstract void onTick();
+
     public void enqueueExternalAction(ActionDTO action) {
         if (action == null) {
             throw new IllegalArgumentException("Action cannot be null");

@@ -451,30 +451,6 @@ public class Model implements BodyEventProcessor {
         return new ProfilingStatisticsDTO(this.bodyProfiler.getAllMetrics());
     }
 
-    /**
-     * Get threading statistics from ThreadPoolManager.
-     * Useful for monitoring batching efficiency and thread usage.
-     * 
-     * @return String with threading stats (threads, runners, tasks, etc.)
-     */
-    public String getThreadingStatistics() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Threading Statistics:\n");
-        sb.append("  Threads: ").append(this.threadPoolManager.getCurrentThreadCount()).append("\n");
-        sb.append("  Active: ").append(this.threadPoolManager.getActiveThreadCount()).append("\n");
-        sb.append("  Runners: ").append(this.threadPoolManager.getActiveRunnersCount()).append("\n");
-        sb.append("  Queue: ").append(this.threadPoolManager.getQueueSize()).append("\n");
-        return sb.toString();
-    }
-
-    /**
-     * Print detailed threading statistics to console.
-     * Use this for debugging thread pool configuration.
-     */
-    public void printThreadingStatistics() {
-        this.threadPoolManager.printStatistics();
-    }
-
     public PlayerDTO getPlayerData(String playerId) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody == null) {
@@ -651,8 +627,6 @@ public class Model implements BodyEventProcessor {
         if (this.maxBodies != maxBodies) {
             this.maxBodies = maxBodies;
 
-            this.scratchDynamicsBuffer = new ArrayList<>(this.maxBodies);
-
             this.physicsPool = new PoolMDTO<>(() -> new PhysicsValuesDTO(0L, 0, 0, 0, 0));
             this.physicsPool.preallocate(Math.max(5000, 5 * this.maxBodies));
         }
@@ -825,7 +799,11 @@ public class Model implements BodyEventProcessor {
             return; // ======= No emitters =======>
         }
         double dtSeconds = ((double) (newPhyValues.timeStamp - checkBody.getPhysicsValues().timeStamp))
-                / 1_000_000_000.0;
+            / 1_000_000_000.0;
+        if (dtSeconds <= 0.0) {
+            // Guard against negative/zero dt to prevent emitter cooldown from growing
+            dtSeconds = 0.001;
+        }
 
         for (BasicEmitter emitter : checkBody.emittersList()) {
             if (emitter.mustEmitNow(dtSeconds)) {

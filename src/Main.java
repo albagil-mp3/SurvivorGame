@@ -15,7 +15,7 @@ public class Main {
 		// region Graphics configuration
 		System.setProperty("sun.java2d.uiScale", "1.0");
 		System.setProperty("sun.java2d.opengl", "true");
-		System.setProperty("sun.java2d.d3d", "false"); //  OpenGL
+		System.setProperty("sun.java2d.d3d", "false"); // OpenGL
 		// endregion
 
 		DoubleVector worldDimension = new DoubleVector(40000, 40000);

@@ -282,23 +282,6 @@ public class Controller implements WorldManager, DomainEventProcessor {
 
                 this.model.getSpatialGridStatistics());
     }
-
-    /**
-     * Get threading statistics (thread count, runners, queue, etc.)
-     * 
-     * @return threading statistics string
-     */
-    public String getThreadingStatistics() {
-        return this.model.getThreadingStatistics();
-    }
-
-    /**
-     * Print detailed threading statistics to console.
-     * Useful for debugging and monitoring thread pool efficiency.
-     */
-    public void printThreadingStatistics() {
-        this.model.printThreadingStatistics();
-    }
     // endregion Getters
 
     // region Player commands

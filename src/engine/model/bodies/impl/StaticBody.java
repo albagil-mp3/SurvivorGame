@@ -5,6 +5,7 @@ import engine.model.bodies.ports.BodyEventProcessor;
 import engine.model.bodies.ports.BodyState;
 import engine.model.bodies.ports.BodyType;
 import engine.model.physics.ports.PhysicsEngine;
+import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.spatial.core.SpatialGrid;
 import engine.utils.threading.ThreadPoolManager;
 
@@ -70,21 +71,28 @@ public class StaticBody extends AbstractBody implements Runnable {
 
         this.setState(BodyState.ALIVE);
         
-        // Use batched execution for static bodies too
+        // Use batched execution for static bodies
         // Static bodies have minimal overhead (mostly lifetime checks)
-        // so they can be batched efficiently
-        this.getThreadPoolManager().submitBatched(this);
+        this.getThreadPoolManager().submitBatched(this);    
     }
 
+    // region AbstractBody
+    @Override
+    public void onTick() {
+        if (this.isLifeOver()) {
+            PhysicsValuesDTO phyValues = this.getPhysicsValues();
+            this.processBodyEvents(this, phyValues, phyValues);
+        }
+    }
+    // endregionexit
+    
+
+    // region Runnable
     @Override
     public void run() {
         while (this.getBodyState() != BodyState.DEAD) {
-
             if (this.getBodyState() == BodyState.ALIVE) {
-
-                if (this.isLifeOver()) {
-                    this.processBodyEvents(this, getPhysicsValues(), getPhysicsValues());
-                }
+                onTick();
             }
 
             try {
@@ -94,4 +102,5 @@ public class StaticBody extends AbstractBody implements Runnable {
             }
         }
     }
+    // endregion
 }
