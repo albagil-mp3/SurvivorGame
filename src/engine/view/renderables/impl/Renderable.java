@@ -1,7 +1,6 @@
 package engine.view.renderables.impl;
 
 import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import engine.utils.images.ImageCache;
@@ -16,6 +15,9 @@ public class Renderable {
     private long lastFrameSeen;
     private RenderDTO renderData = null;
     private BufferedImage image = null;
+    private String lastImageAssetId = null;
+    private int lastImageAngle = Integer.MIN_VALUE;
+    private int lastImageSize = -1;
 
     public Renderable(RenderDTO renderData, String assetId, ImageCache cache, long currentFrame) {
         if (assetId == null || assetId.isEmpty()) {
@@ -87,12 +89,8 @@ public class Renderable {
             return;
         }
 
-        // Save the original (NOT rotated) transform
-        AffineTransform old = g.getTransform();
-
         final double posX = this.renderData.posX;
         final double posY = this.renderData.posY;
-        final double angleDeg = this.renderData.angle;
 
         // Using the REAL size of the sprite for the offset
         final double halfW = this.image.getWidth(null) * 0.5;
@@ -101,12 +99,7 @@ public class Renderable {
         final int drawX = (int) (posX - halfW);
         final int drawY = (int) (posY - halfH);
 
-        g.rotate(Math.toRadians(angleDeg), posX, posY);
-
         g.drawImage(this.image, drawX, drawY, null);
-
-        // Restore original (NOT rotated) transform
-        g.setTransform(old);
     }
 
     public void updateImageFromCache(RenderDTO entityInfo) {
@@ -114,15 +107,18 @@ public class Renderable {
     }
 
     private boolean updateImageFromCache(String assetId, int size, double angle) {
+        int normalizedAngle = ((int) angle % 360 + 360) % 360;
         boolean imageNeedsUpdate = this.image == null
-                || this.renderData == null
-                || !this.assetId.equals(assetId)
-                || this.renderData.size != size
-                || (int) this.renderData.angle != (int) angle;
+            || this.lastImageAssetId == null
+            || !this.lastImageAssetId.equals(assetId)
+            || this.lastImageSize != size
+            || this.lastImageAngle != normalizedAngle;
 
         if (imageNeedsUpdate) {
-            int normalizedAngle = ((int) angle % 360 + 360) % 360;
             this.image = this.cache.getImage(normalizedAngle, assetId, size);
+            this.lastImageAssetId = assetId;
+            this.lastImageAngle = normalizedAngle;
+            this.lastImageSize = size;
 
             return true; // ====
         }

@@ -10,7 +10,10 @@ import engine.model.emitter.impl.BasicEmitter;
 import engine.model.emitter.ports.EmitterConfigDto;
 import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
+import engine.utils.profiling.impl.BodyProfiler;
 import engine.utils.spatial.core.SpatialGrid;
+import engine.utils.threading.ThreadPoolManager;
+import engine.utils.threading.ThreadingConfig;
 
 public class PlayerBody extends DynamicBody {
 
@@ -28,18 +31,39 @@ public class PlayerBody extends DynamicBody {
             SpatialGrid spatialGrid,
             PhysicsEngine physicsEngine,
             double maxLifeInSeconds,
-            String emitterId) {
+            String emitterId,
+            BodyProfiler profiler,
+            ThreadPoolManager threadPoolManager) {
 
         super(bodyEventProcessor,
                 spatialGrid,
                 physicsEngine,
                 BodyType.PLAYER,
                 maxLifeInSeconds,
-                emitterId);
+                emitterId,
+                profiler,
+                threadPoolManager);
 
         this.setMaxThrustForce(800);
         this.setMaxAngularAcceleration(1000);
         this.setAngularSpeed(30);
+    }
+
+    @Override
+    public synchronized void activate() {
+        super.activate(); // Calls AbstractBody.activate() (not DynamicBody.activate())
+
+        this.setState(engine.model.bodies.ports.BodyState.ALIVE);
+        
+        // Players get exclusive threads if configured
+        // This ensures responsive input handling without latency from other bodies
+        if (ThreadingConfig.PLAYERS_EXCLUSIVE) {
+            // Batch size = 1 means exclusive thread
+            this.getThreadPoolManager().submitBatched(this, 1);
+        } else {
+            // Use default batching
+            this.getThreadPoolManager().submitBatched(this);
+        }
     }
 
     public void addWeapon(String emitterId) {
@@ -76,33 +100,43 @@ public class PlayerBody extends DynamicBody {
         return (emitter != null) ? emitter.getConfig() : null;
     }
 
-    public int getAmmoStatusPrimary() {
+    public double getAmmoStatusPrimary() {
         return getAmmoStatus(0);
     }
 
-    public int getAmmoStatusSecondary() {
+    public double getAmmoStatusSecondary() {
         return getAmmoStatus(1);
     }
 
-    public int getAmmoStatusMines() {
+    public double getAmmoStatusMines() {
         return getAmmoStatus(2);
     }
 
-    public int getAmmoStatusMissiles() {
+    public double getAmmoStatusMissiles() {
         return getAmmoStatus(3);
     }
 
-    private int getAmmoStatus(int weaponIndex) {
+    private double getAmmoStatus(int weaponIndex) {
         if (weaponIndex < 0 || weaponIndex >= this.weaponIds.size()) {
-            return 0;
+            return 0.0d;
         }
 
         BasicEmitter emitter = this.getEmitter(this.weaponIds.get(weaponIndex));
         if (emitter == null) {
-            return 0;
+            return 0.0d;
         }
 
-        return emitter.getBodiesRemaining();
+        if (emitter.getConfig().unlimitedBodies) {
+            return 1.0d;
+        }
+
+        int maxBodies = emitter.getConfig().maxBodiesEmitted;
+        if (maxBodies <= 0) {
+            return 0.0d;
+        }
+
+        double ratio = emitter.getBodiesRemaining() / (double) maxBodies;
+        return Math.max(0.0d, Math.min(1.0d, ratio));
     }
 
     public double getDamage() {

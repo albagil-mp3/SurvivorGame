@@ -10,7 +10,7 @@ import engine.view.renderables.ports.DynamicRenderDTO;
 
 public class DynamicRenderable extends Renderable {
 
-    private final boolean debugMode = false;
+    private boolean debugMode = false;
 
     // region Constructors
     public DynamicRenderable(DynamicRenderDTO renderInfo, String assetId, ImageCache cache, long currentFrame) {
@@ -21,6 +21,17 @@ public class DynamicRenderable extends Renderable {
         super(entityId, assetId, cache, currentFrame);
     }
     // endregion
+
+    public void update(DynamicRenderDTO renderInfo, long currentFrame) {
+        DynamicRenderDTO current = (DynamicRenderDTO) this.getRenderData();
+        if (current != null && renderInfo != null) {
+            current.updateFrom(renderInfo);
+            super.update(current, currentFrame);
+            return;
+        }
+
+        super.update(renderInfo, currentFrame);
+    }
 
     @Override
     public void paint(Graphics2D g, long currentFrame) {

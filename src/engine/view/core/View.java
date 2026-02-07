@@ -19,6 +19,7 @@ import javax.swing.SwingUtilities;
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetType;
 import engine.controller.impl.Controller;
+import engine.controller.mappers.DynamicRenderableMapper;
 import engine.controller.ports.EngineState;
 import engine.utils.helpers.DoubleVector;
 import engine.utils.images.Images;
@@ -26,6 +27,7 @@ import engine.utils.spatial.core.SpatialGrid;
 import engine.view.renderables.ports.DynamicRenderDTO;
 import engine.view.renderables.ports.PlayerRenderDTO;
 import engine.view.renderables.ports.RenderDTO;
+import engine.view.renderables.ports.RenderMetricsDTO;
 import engine.view.renderables.ports.SpatialGridStatisticsRenderDTO;
 
 /**
@@ -262,6 +264,14 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
         return this.controller.snapshotRenderData();
     }
 
+    protected ArrayList<DynamicRenderDTO> snapshotRenderData(DynamicRenderableMapper mapper) {
+        if (this.controller == null) {
+            throw new IllegalArgumentException("Controller not setted");
+        }
+
+        return this.controller.snapshotRenderData(mapper);
+    }
+
     protected EngineState getEngineState() {
         return this.controller.getEngineState();
     }
@@ -290,8 +300,16 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
         return this.localPlayerId;
     }
 
+    protected Object[] getProfilingHUDValues(long fps) {
+        return this.controller.getProfilingHUDValues(fps);
+    }
+
     protected SpatialGridStatisticsRenderDTO getSpatialGridStatistics() {
         return this.controller.getSpatialGridStatistics();
+    }
+    
+    protected RenderMetricsDTO getRenderMetrics() {
+        return this.renderer.getRenderMetrics();
     }
     // endregion
 

@@ -4,7 +4,7 @@ import engine.model.bodies.core.AbstractBody;
 import engine.model.bodies.ports.BodyEventProcessor;
 import engine.model.bodies.ports.BodyState;
 import engine.model.bodies.ports.BodyType;
-import engine.model.physics.implementations.NullPhysicsEngine;
+import engine.model.physics.ports.PhysicsEngine;
 import engine.utils.spatial.core.SpatialGrid;
 import engine.utils.threading.ThreadPoolManager;
 
@@ -50,15 +50,14 @@ public class StaticBody extends AbstractBody implements Runnable {
 
     public StaticBody(
             BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
-            BodyType bodyType,
-            double size, double x, double y, double angle,
-            double maxLifeInSeconds, String emitterId) {
+            PhysicsEngine phyEngine, BodyType bodyType,
+            double maxLifeInSeconds, String emitterId, ThreadPoolManager threadPoolManager) {
 
         super(
                 bodyEventProcessor, spatialGrid,
-                new NullPhysicsEngine(size, x, y, angle),
+                phyEngine,
                 bodyType,
-                maxLifeInSeconds, emitterId);
+                maxLifeInSeconds, emitterId, threadPoolManager);
     }
 
     //
@@ -70,7 +69,11 @@ public class StaticBody extends AbstractBody implements Runnable {
         super.activate();
 
         this.setState(BodyState.ALIVE);
-        ThreadPoolManager.submit(this);
+        
+        // Use batched execution for static bodies too
+        // Static bodies have minimal overhead (mostly lifetime checks)
+        // so they can be batched efficiently
+        this.getThreadPoolManager().submitBatched(this);
     }
 
     @Override

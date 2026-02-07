@@ -9,20 +9,26 @@ import engine.model.physics.ports.PhysicsValuesDTO;
 
 public abstract class AbstractPhysicsEngine implements PhysicsEngine {
 
-        private final AtomicReference<PhysicsValuesDTO> phyValues; // *+
+        private final AtomicReference<PhysicsValuesDTO> phyValues; // Current values (DTO#1)
+        protected PhysicsValuesDTO nextPhyValues; // Next frame values (DTO#2)
+        protected PhysicsValuesDTO snapshotDTO; // Snapshot for rendering (DTO#3)
 
         // region Constructors
-        public AbstractPhysicsEngine(PhysicsValuesDTO phyValues) {
-                if (phyValues == null) {
+        public AbstractPhysicsEngine(PhysicsValuesDTO dto1, PhysicsValuesDTO dto2, PhysicsValuesDTO dto3) {
+                if (dto1 == null || dto2 == null || dto3 == null) {
                         throw new IllegalArgumentException("PhysicsValuesDTO cannot be null");
                 }
 
-                this.phyValues = new AtomicReference<>(phyValues);
+                this.phyValues = new AtomicReference<>(dto1);
+                this.nextPhyValues = dto2;
+                this.snapshotDTO = dto3;
         }
 
         public AbstractPhysicsEngine(double size, double posX, double posY, double angle) {
                 this.phyValues = new AtomicReference<>(
                                 new PhysicsValuesDTO(nanoTime(), size, posX, posY, angle));
+                this.nextPhyValues = new PhysicsValuesDTO(nanoTime(), size, posX, posY, angle);
+                this.snapshotDTO = new PhysicsValuesDTO(nanoTime(), size, posX, posY, angle);
         }
         // endregion
 
@@ -52,7 +58,9 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
 
         public void resetAcceleration() {
                 PhysicsValuesDTO old = this.getPhysicsValues();
-                this.setPhysicsValues(new PhysicsValuesDTO(
+                
+                // Update nextPhyValues instead of creating new DTO
+                nextPhyValues.updateFrom(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -60,14 +68,17 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                                 0, 0,
                                 old.angularSpeed,
                                 old.angularAcc,
-                                old.thrust));
-
+                                old.thrust);
+                
+                this.setPhysicsValues(nextPhyValues);
         }
 
         // region Setters (set***)
         public final void setAngularAcceleration(double angularAcc) {
                 PhysicsValuesDTO old = this.getPhysicsValues();
-                this.setPhysicsValues(new PhysicsValuesDTO(
+                
+                // Update nextPhyValues instead of creating new DTO
+                nextPhyValues.updateFrom(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -75,7 +86,9 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                                 old.accX, old.accY,
                                 old.angularSpeed,
                                 angularAcc,
-                                old.thrust));
+                                old.thrust);
+                
+                this.setPhysicsValues(nextPhyValues);
         }
 
         public abstract void setAngularSpeed(double angularSpeed);
@@ -85,12 +98,23 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                         throw new IllegalArgumentException("PhysicsValuesDTO cannot be null");
                 }
 
-                this.phyValues.set(phyValues);
+                // Doble buffer swap: phyValues becomes nextPhyValues
+                this.nextPhyValues = this.phyValues.getAndSet(phyValues);
+        }
+        
+        public final PhysicsValuesDTO getNextPhyValues() {
+                return this.nextPhyValues;
+        }
+        
+        public final PhysicsValuesDTO getSnapshotDTO() {
+                return this.snapshotDTO;
         }
 
         public final void setThrust(double thrust) {
                 PhysicsValuesDTO old = this.getPhysicsValues();
-                this.setPhysicsValues(new PhysicsValuesDTO(
+                
+                // Update nextPhyValues instead of creating new DTO
+                nextPhyValues.updateFrom(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -98,14 +122,18 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                                 old.accX, old.accY,
                                 old.angularSpeed,
                                 old.angularAcc,
-                                thrust));
+                                thrust);
+                
+                this.setPhysicsValues(nextPhyValues);
         }
         // endregion
 
         @Override
         public void stopPushing() {
                 PhysicsValuesDTO old = this.getPhysicsValues();
-                this.setPhysicsValues(new PhysicsValuesDTO(
+                
+                // Update nextPhyValues instead of creating new DTO
+                nextPhyValues.updateFrom(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -113,7 +141,8 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                                 0, 0, // Reset accelerations
                                 old.angularSpeed,
                                 old.angularAcc,
-                                0.0d)); // Reset thrust
-
+                                0.0d); // Reset thrust
+                
+                this.setPhysicsValues(nextPhyValues);
         }
 }
