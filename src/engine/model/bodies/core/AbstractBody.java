@@ -16,9 +16,13 @@ import engine.model.bodies.ports.BodyEventProcessor;
 import engine.model.bodies.ports.BodyState;
 import engine.model.bodies.ports.BodyType;
 import engine.model.emitter.impl.BasicEmitter;
+import engine.model.impl.Model;
+import engine.model.physics.core.AbstractPhysicsEngine;
 import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
+import engine.utils.pooling.PoolMDTO;
 import engine.utils.spatial.core.SpatialGrid;
+import engine.utils.threading.ThreadPoolManager;
 
 /**
  * AbstractBody
@@ -225,6 +229,7 @@ public abstract class AbstractBody {
     private volatile BodyState state;
     private Thread thread;
     private final BodyType type;
+    private final ThreadPoolManager threadPoolManager;
     // endregion
     
     // region Scratch buffers
@@ -241,10 +246,11 @@ public abstract class AbstractBody {
     // region Constructors
     public AbstractBody(BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType type,
-            double maxLifeInSeconds, String emitterId) {
+            double maxLifeInSeconds, String emitterId, ThreadPoolManager threadPoolManager) {
 
         this.bodyEventProcessor = bodyEventProcessor;
         this.phyEngine = phyEngine;
+        this.threadPoolManager = threadPoolManager;
         this.type = type;
         this.maxLifeInSeconds = maxLifeInSeconds;
         this.bodyEmitterId = emitterId;
@@ -295,6 +301,18 @@ public abstract class AbstractBody {
 
         if (AbstractBody.aliveQuantity > 0) {
             AbstractBody.aliveQuantity--;
+        }
+        
+        // Release 3 DTOs to pool from physics engine
+        if (this.bodyEventProcessor instanceof Model && this.phyEngine instanceof AbstractPhysicsEngine) {
+            Model model = (Model) this.bodyEventProcessor;
+            AbstractPhysicsEngine engine = (AbstractPhysicsEngine) this.phyEngine;
+            PoolMDTO<PhysicsValuesDTO> pool = model.getPhysicsPool();
+            
+            // Release all 3 DTOs: current, next, and snapshot
+            pool.release(engine.getPhysicsValues());
+            pool.release(engine.getNextPhyValues());
+            pool.release(engine.getSnapshotDTO());
         }
     }
 
@@ -452,6 +470,10 @@ public abstract class AbstractBody {
     // region SpatialGrid getter
     public SpatialGrid getSpatialGrid() {
         return this.spatialGrid;
+    }
+
+    protected ThreadPoolManager getThreadPoolManager() {
+        return this.threadPoolManager;
     }
     // endregion
 

@@ -8,6 +8,7 @@ import engine.assets.core.AssetCatalog;
 import engine.controller.mappers.DynamicRenderableMapper;
 import engine.controller.mappers.EmitterMapper;
 import engine.controller.mappers.PlayerRenderableMapper;
+import engine.controller.mappers.ProfilingStatisticsMapper;
 import engine.controller.mappers.RenderableMapper;
 import engine.controller.mappers.SpatialGridStatisticsMapper;
 import engine.controller.ports.ActionsGenerator;
@@ -271,10 +272,32 @@ public class Controller implements WorldManager, DomainEventProcessor {
         return PlayerRenderableMapper.fromPlayerDTO(this.model.getPlayerData(playerId));
     }
 
+    public Object[] getProfilingHUDValues(long fps) {
+        return ProfilingStatisticsMapper.fromProfilingStatistics(
+                this.model.getProfilingStatistics(), fps);
+    }
+
     public SpatialGridStatisticsRenderDTO getSpatialGridStatistics() {
         return SpatialGridStatisticsMapper.fromSpatialGridStatisticsDTO(
 
                 this.model.getSpatialGridStatistics());
+    }
+
+    /**
+     * Get threading statistics (thread count, runners, queue, etc.)
+     * 
+     * @return threading statistics string
+     */
+    public String getThreadingStatistics() {
+        return this.model.getThreadingStatistics();
+    }
+
+    /**
+     * Print detailed threading statistics to console.
+     * Useful for debugging and monitoring thread pool efficiency.
+     */
+    public void printThreadingStatistics() {
+        this.model.printThreadingStatistics();
     }
     // endregion Getters
 
@@ -374,6 +397,11 @@ public class Controller implements WorldManager, DomainEventProcessor {
         }
 
         return renderables;
+    }
+
+    public ArrayList<DynamicRenderDTO> snapshotRenderData(DynamicRenderableMapper mapper) {
+        ArrayList<BodyData> snapshot = this.model.snapshotRenderData();
+        return mapper.fromBodyDTOPooled(snapshot);
     }
 
     // *** INTERFACE IMPLEMENTATIONS (one region per interface) ***

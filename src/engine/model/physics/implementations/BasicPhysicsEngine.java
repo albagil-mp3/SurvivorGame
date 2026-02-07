@@ -4,12 +4,18 @@ import static java.lang.System.nanoTime;
 
 import engine.model.physics.core.AbstractPhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
+import engine.utils.profiling.impl.BodyProfiler;
 
 public class BasicPhysicsEngine extends AbstractPhysicsEngine {
 
+    // region Fields
+    private final BodyProfiler profiler;
+    // endregion
+
     // region Constructors
-    public BasicPhysicsEngine(PhysicsValuesDTO phyVals) {
-        super(phyVals);
+    public BasicPhysicsEngine(PhysicsValuesDTO dto1, PhysicsValuesDTO dto2, PhysicsValuesDTO dto3, BodyProfiler profiler) {
+        super(dto1, dto2, dto3);
+        this.profiler = profiler;
     }
     // endregion
 
@@ -18,7 +24,9 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
     @Override
     public void angularAccelerationInc(double angularAcc) {
         PhysicsValuesDTO old = this.getPhysicsValues();
-        this.setPhysicsValues(new PhysicsValuesDTO(
+        
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 old.timeStamp,
                 old.posX, old.posY, old.angle,
                 old.size,
@@ -26,11 +34,14 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 old.accX, old.accY,
                 old.angularSpeed,
                 old.angularAcc + angularAcc,
-                old.thrust));
+                old.thrust);
+        
+        this.setPhysicsValues(nextPhyValues);
     }
 
     @Override
     public PhysicsValuesDTO calcNewPhysicsValues() {
+        long dtStart = this.profiler.startInterval();
         PhysicsValuesDTO phyVals = this.getPhysicsValues();
         long now = nanoTime();
         long elapsedNanos = now - phyVals.timeStamp;
@@ -42,6 +53,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         } else if (dt > 0.5) {
             System.err.println("WARNING: Large dt detected: " + dt + "s. Clamping to 0.5s");
         }
+        this.profiler.stopInterval("PHYSICS_DT", dtStart);
 
         return integrateMRUA(phyVals, dt);
     }
@@ -70,7 +82,8 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accX = phyValues.accX;
         double accY = phyValues.accY;
 
-        PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -79,7 +92,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 phyValues.angularSpeed, phyValues.angularSpeed,
                 phyValues.thrust);
 
-        this.setPhysicsValues(reboundPhyVals);
+        this.setPhysicsValues(nextPhyValues);
     }
 
     @Override
@@ -99,7 +112,8 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accX = phyValues.accX;
         double accY = phyValues.accY;
 
-        PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -108,7 +122,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 phyValues.angularSpeed, phyValues.angularSpeed,
                 phyValues.thrust);
 
-        this.setPhysicsValues(reboundPhyVals);
+        this.setPhysicsValues(nextPhyValues);
     }
 
     @Override
@@ -127,7 +141,8 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accX = phyValues.accX;
         double accY = phyValues.accY;
 
-        PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -136,7 +151,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 phyValues.angularSpeed, phyValues.angularSpeed,
                 phyValues.thrust);
 
-        this.setPhysicsValues(reboundPhyVals);
+        this.setPhysicsValues(nextPhyValues);
     }
 
     @Override
@@ -155,7 +170,8 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accX = phyValues.accX;
         double accY = phyValues.accY;
 
-        PhysicsValuesDTO reboundPhyVals = new PhysicsValuesDTO(
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -164,14 +180,16 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 phyValues.angularSpeed, phyValues.angularSpeed,
                 phyValues.thrust);
 
-        this.setPhysicsValues(reboundPhyVals);
+        this.setPhysicsValues(nextPhyValues);
     }
     // endregion
 
     @Override
     public void setAngularSpeed(double angularSpeed) {
         PhysicsValuesDTO old = this.getPhysicsValues();
-        this.setPhysicsValues(new PhysicsValuesDTO(
+        
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 old.timeStamp,
                 old.posX, old.posY, old.angle,
                 old.size,
@@ -179,13 +197,16 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 old.accX, old.accY,
                 angularSpeed,
                 old.angularAcc,
-                old.thrust));
+                old.thrust);
+        
+        this.setPhysicsValues(nextPhyValues);
     }
 
     // *** PRIVATES ***
 
     private PhysicsValuesDTO integrateMRUA(PhysicsValuesDTO phyVals, double dt) {
         // Applying thrust according actual angle
+        long thrustStart = this.profiler.startInterval();
         double accX = 0d;
         double accY = 0d;
         double angleRad = Math.toRadians(phyVals.angle);
@@ -193,7 +214,9 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
             accX = Math.cos(angleRad) * phyVals.thrust;
             accY = Math.sin(angleRad) * phyVals.thrust;
         }
+        this.profiler.stopInterval("PHYSICS_THRUST", thrustStart);
 
+        long linearStart = this.profiler.startInterval();
         // v1 = v0 + a*dt
         double oldSpeedX = phyVals.speedX;
         double oldSpeedY = phyVals.speedY;
@@ -207,7 +230,9 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         // x1 = x0 + v_avg * dt
         double newPosX = phyVals.posX + avgSpeedX * dt;
         double newPosY = phyVals.posY + avgSpeedY * dt;
+        this.profiler.stopInterval("PHYSICS_LINEAR", linearStart);
 
+        long angularStart = this.profiler.startInterval();
         // w1 = w0 + α*dt
         double newAngularSpeed = phyVals.angularSpeed + phyVals.angularAcc * dt;
 
@@ -215,10 +240,13 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double newAngle = (phyVals.angle
                 + phyVals.angularSpeed * dt
                 + 0.5d * newAngularSpeed * dt * dt) % 360;
+        this.profiler.stopInterval("PHYSICS_ANGULAR", angularStart);
 
+        long dtoStart = this.profiler.startInterval();
         long newTimeStamp = phyVals.timeStamp + (long) (dt * 1_000_000_000.0d);
 
-        return new PhysicsValuesDTO(
+        // Update nextPhyValues instead of creating new DTO
+        nextPhyValues.updateFrom(
                 newTimeStamp,
                 newPosX, newPosY, newAngle,
                 phyVals.size,
@@ -228,5 +256,8 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
                 phyVals.angularAcc, // keep same angular acc
                 phyVals.thrust // keep same thrust
         );
+        this.profiler.stopInterval("PHYSICS_DTO", dtoStart);
+
+        return nextPhyValues;
     }
 }

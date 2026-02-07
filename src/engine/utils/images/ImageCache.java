@@ -4,6 +4,7 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
+import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
@@ -98,8 +99,13 @@ public class ImageCache {
 
         try {
             if (imageDto != null) {
-                // g2.setComposite(AlphaComposite.getInstance(
-                //         AlphaComposite.SRC_OVER, 0.4f));
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+
+                if (angle != 0) {
+                    double center = size * 0.5d;
+                    g2.rotate(Math.toRadians(angle), center, center);
+                }
 
                 g2.drawImage(imageDto.image, 0, 0, size, size, null);
             } else {
