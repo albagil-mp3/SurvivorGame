@@ -56,10 +56,9 @@ public class PlayerBody extends DynamicBody {
 
         this.setState(engine.model.bodies.ports.BodyState.ALIVE);
         
-        // Players get exclusive threads if configured
-        // This ensures responsive input handling without latency from other bodies
+        // Players get exclusive batches if configured
         if (PLAYERS_EXCLUSIVE) {
-            // Batch size = 1 means exclusive thread
+            // Batch size = 1 means exclusive runner
             this.getThreadPoolManager().submitBatched(this, 1);
         } else {
             // Use default batching

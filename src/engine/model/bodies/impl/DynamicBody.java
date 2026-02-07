@@ -12,44 +12,10 @@ import engine.utils.spatial.core.SpatialGrid;
 import engine.utils.threading.ThreadPoolManager;
 
 /**
- * DynamicBody
- * -----------
- *
- * Represents a single dynamic entity in the simulation model.
- *
- * Each DynamicBody maintains:
- * - A unique identifier and visual attributes (assetId, size)
- * - Its own PhysicsEngine instance, which stores and updates the immutable
- * PhysicsValues snapshot (position, speed, acceleration, angle, etc.)
- * - A dedicated thread responsible for advancing its physics state over time
- *
- * Dynamic bodies interact exclusively with the Model, reporting physics updates
- * and requesting event processing (collisions, rebounds, etc.). The view layer
- * never reads mutable state directly; instead, DynamicBody produces a
- * DBodyInfoDTO snapshot encapsulating all visual and physical data required
- * for rendering.
- *
- * Lifecycle control (STARTING → ALIVE → DEAD) is managed internally, and static
- * counters (inherited from AbstractEntity) track global quantities of created,
- * active and dead entities.
- *
- * Threading model
- * ---------------
- * Each DynamicBody runs on its own thread (implements Runnable). The physics
- * engine is updated continuously in the run() loop, with the entity checking
- * for events and processing actions based on game rules determined by the
- * Controller.
- *
- * The goal of this class is to isolate per-object behavior and physics
- * evolution
- * while keeping the simulation thread-safe through immutable snapshots and a
- * clearly separated rendering pipeline.
+ * Dynamic body with its own physics engine.
+ * Processed by MultiBodyRunner instances from the shared thread pool.
  */
-public class DynamicBody extends AbstractBody implements Runnable {
-
-    // region Constants
-    private static final int SLEEP_TIME_MS = 15;
-    // endregion
+public class DynamicBody extends AbstractBody {
 
     // region Fields
     private double maxThrustForce; //
@@ -186,23 +152,6 @@ public class DynamicBody extends AbstractBody implements Runnable {
 
         // Event processing (already profiled in Model.processBodyEvents)
         this.processBodyEvents(this, newPhyValues, this.getPhysicsEngine().getPhysicsValues());
-    }
-    // endregion
-
-    // region Runnable
-    @Override
-    public void run() {
-        while (this.getBodyState() != BodyState.DEAD) {
-            if (this.getBodyState() == BodyState.ALIVE) {
-                onTick();
-            }
-
-            try {
-                Thread.sleep(SLEEP_TIME_MS);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
     }
     // endregion
 
