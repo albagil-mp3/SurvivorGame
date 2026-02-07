@@ -20,7 +20,7 @@ public class Main {
 
 		DoubleVector worldDimension = new DoubleVector(40000, 40000);
 		DoubleVector viewDimension = new DoubleVector(2400, 1500);
-		int maxBodies = 5000;
+		int maxBodies = 2000;
 		int maxAsteroidCreationDelay = 3;
 
 		ProjectAssets projectAssets = new ProjectAssets();

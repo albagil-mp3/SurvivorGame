@@ -162,7 +162,7 @@ import engine.utils.threading.ThreadPoolManager;
 public class Model implements BodyEventProcessor {
 
     // region Constants
-    private static final int DEFAULT_MAX_BODIES = 1000;
+    private static final int DEFAULT_MAX_BODIES = 5000;
     private static final int SPATIAL_GRID_CELL_SIZE = 256;
     private static final int MAX_CELLS_PER_BODY = 1512;
     // endregion
@@ -192,19 +192,18 @@ public class Model implements BodyEventProcessor {
         scratchDynamicsBuffer = new ArrayList<>(DEFAULT_MAX_BODIES);
         this.physicsPool = new PoolMDTO<>(() -> new PhysicsValuesDTO(0L, 0, 0, 0, 0));
         this.bodyProfiler = new BodyProfiler();
-        this.threadPoolManager = new ThreadPoolManager(800);
+        this.threadPoolManager = new ThreadPoolManager(this.maxBodies);
         this.physicsPool.preallocate(3 * this.maxBodies);
     }
 
     public Model(DoubleVector worldDimension, int maxDynamicBodies) {
         this();
 
-        if (worldDimension == null || worldDimension.x <= 0 || worldDimension.y <= 0) {
+        if (worldDimension == null || worldDimension.x <= 0 || worldDimension.y <= 0)
             throw new IllegalArgumentException("Invalid world dimension");
-        }
-        if (maxDynamicBodies <= 0) {
+
+        if (maxDynamicBodies <= 0)
             throw new IllegalArgumentException("Invalid maxDynamicBodies: must be > 0");
-        }
 
         this.maxBodies = maxDynamicBodies;
         this.worldWidth = worldDimension.x;
@@ -799,7 +798,7 @@ public class Model implements BodyEventProcessor {
             return; // ======= No emitters =======>
         }
         double dtSeconds = ((double) (newPhyValues.timeStamp - checkBody.getPhysicsValues().timeStamp))
-            / 1_000_000_000.0;
+                / 1_000_000_000.0;
         if (dtSeconds <= 0.0) {
             // Guard against negative/zero dt to prevent emitter cooldown from growing
             dtSeconds = 0.001;

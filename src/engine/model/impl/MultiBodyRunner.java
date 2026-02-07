@@ -89,7 +89,8 @@ public class MultiBodyRunner implements Runnable {
 
                 if (body.getBodyState() == BodyState.ALIVE) {
                     try {
-                        executeBodyStep(body);
+                        body.onTick();
+
                     } catch (Exception ex) {
                         System.err.println("ERROR in MultiBodyRunner processing body "
                                 + body.getBodyId() + ": " + ex.getMessage());
@@ -116,10 +117,4 @@ public class MultiBodyRunner implements Runnable {
         }
     }
     // endregion
-
-    // *** PRIVATE ***
-
-    private void executeBodyStep(AbstractBody body) {
-        body.onTick();
-    }
 }
