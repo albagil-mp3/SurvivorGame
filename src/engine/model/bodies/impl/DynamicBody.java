@@ -86,7 +86,6 @@ public class DynamicBody extends AbstractBody implements Runnable {
         this.setState(BodyState.ALIVE);
         
         // Use batched execution to reduce thread pressure
-        // Groups N bodies per thread (configurable via ThreadingConfig.BODIES_PER_THREAD)
         this.getThreadPoolManager().submitBatched(this);
     }
 
@@ -162,36 +161,40 @@ public class DynamicBody extends AbstractBody implements Runnable {
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
-    // regions Runnable
+    // region AbstractBody
+    @Override
+    public void onTick() {
+        // Physics calculation (already profiled in BasicPhysicsEngine)
+        PhysicsValuesDTO newPhyValues = this.getPhysicsEngine().calcNewPhysicsValues();
+
+        // Spatial grid update
+        long spatialStart = this.profiler.startInterval();
+        double r = newPhyValues.size * 0.5;
+        this.getSpatialGrid().upsert(
+                this.getBodyId(), 
+                newPhyValues.posX - r, newPhyValues.posX + r,
+                newPhyValues.posY - r, newPhyValues.posY + r,
+                this.getScratchIdxs());
+        this.profiler.stopInterval("SPATIAL_GRID", spatialStart);
+
+        // Trail emitter
+        if (this.isThrusting() && this.trailId != null) {
+            long emitterStart = this.profiler.startInterval();
+            this.emitterRequest(this.trailId);
+            this.profiler.stopInterval("EMITTERS", emitterStart);
+        }
+
+        // Event processing (already profiled in Model.processBodyEvents)
+        this.processBodyEvents(this, newPhyValues, this.getPhysicsEngine().getPhysicsValues());
+    }
+    // endregion
+
+    // region Runnable
     @Override
     public void run() {
-        PhysicsValuesDTO newPhyValues;
-
         while (this.getBodyState() != BodyState.DEAD) {
-
             if (this.getBodyState() == BodyState.ALIVE) {
-                // Physics calculation (already profiled in BasicPhysicsEngine)
-                newPhyValues = this.getPhysicsEngine().calcNewPhysicsValues();
-
-                // Spatial grid update
-                long spatialStart = this.profiler.startInterval();
-                double r = newPhyValues.size * 0.5;
-                this.getSpatialGrid().upsert(
-                        this.getBodyId(), 
-                        newPhyValues.posX - r, newPhyValues.posX + r,
-                        newPhyValues.posY - r, newPhyValues.posY + r,
-                        this.getScratchIdxs());
-                this.profiler.stopInterval("SPATIAL_GRID", spatialStart);
-
-                // Trail emitter
-                if (this.isThrusting() && this.trailId != null) {
-                    long emitterStart = this.profiler.startInterval();
-                    this.emitterRequest(this.trailId);
-                    this.profiler.stopInterval("EMITTERS", emitterStart);
-                }
-
-                // Event processing (already profiled in Model.processBodyEvents)
-                this.processBodyEvents(this, newPhyValues, this.getPhysicsEngine().getPhysicsValues());
+                onTick();
             }
 
             try {

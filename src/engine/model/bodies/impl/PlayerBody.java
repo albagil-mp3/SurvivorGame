@@ -13,9 +13,10 @@ import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.profiling.impl.BodyProfiler;
 import engine.utils.spatial.core.SpatialGrid;
 import engine.utils.threading.ThreadPoolManager;
-import engine.utils.threading.ThreadingConfig;
 
 public class PlayerBody extends DynamicBody {
+
+    private static final boolean PLAYERS_EXCLUSIVE = true;
 
     // region Fields
     private final List<String> weaponIds = new java.util.ArrayList<>(4);
@@ -57,7 +58,7 @@ public class PlayerBody extends DynamicBody {
         
         // Players get exclusive threads if configured
         // This ensures responsive input handling without latency from other bodies
-        if (ThreadingConfig.PLAYERS_EXCLUSIVE) {
+        if (PLAYERS_EXCLUSIVE) {
             // Batch size = 1 means exclusive thread
             this.getThreadPoolManager().submitBatched(this, 1);
         } else {
