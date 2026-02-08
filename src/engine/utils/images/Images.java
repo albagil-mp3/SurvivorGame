@@ -40,10 +40,8 @@ public class Images {
      * PUBLIC
      */
     public void add(String assetId, String fileName) {
-        // fileName without a path
-        if (fileName == null || fileName == "" || assetId == null || assetId == "") {
-            System.out.println("Image id or file name is not setted · Images");
-            return;
+        if (fileName == null || fileName.isEmpty() || assetId == null || assetId.isEmpty()) {
+            throw new IllegalArgumentException("Images: Image ID or filename cannot be null or empty");
         }
 
         this.images.put(assetId, this.loadImage(assetId, assetsPath + fileName));
@@ -92,13 +90,12 @@ public class Images {
         try {
             image = ImageIO.read(new File(uri));
             if (image == null) {
-                throw new IOException("Unsupported or empty image [" + uri + "] · <Images>");
+                throw new IOException("Images: Unsupported or empty image: " + uri);
             }
             imageDto = new ImageDTO(assetId, uri, image);
 
         } catch (IOException e) {
-            System.err.println("> LOAD IMAGE ERROR· <Images> · [" + uri + "] · " + e.getMessage());
-            imageDto = null;
+            throw new RuntimeException("Images: Failed to load image: " + uri, e);
         }
 
         return imageDto;
@@ -114,15 +111,13 @@ public class Images {
             BufferedImage image = ImageIO.read(uri);
 
             if (image == null) {
-                System.err.println("> LOAD IMAGE ERROR · Unsupported/empty image · [" + uri + "]");
-                return null;
+                throw new IOException("Images: Unsupported or empty image: " + uri);
             }
 
             return image;
 
         } catch (IOException e) {
-            System.err.println("> LOAD IMAGE ERROR · [" + uri + "] · " + e.getMessage());
-            return null;
+            throw new RuntimeException("Images: Failed to load image: " + uri, e);
         }
     }
 

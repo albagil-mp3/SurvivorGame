@@ -12,7 +12,6 @@ import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.profiling.impl.BodyProfiler;
 import engine.utils.spatial.core.SpatialGrid;
-import engine.utils.threading.ThreadPoolManager;
 
 public class PlayerBody extends DynamicBody {
 
@@ -33,8 +32,7 @@ public class PlayerBody extends DynamicBody {
             PhysicsEngine physicsEngine,
             double maxLifeInSeconds,
             String emitterId,
-            BodyProfiler profiler,
-            ThreadPoolManager threadPoolManager) {
+            BodyProfiler profiler) {
 
         super(bodyEventProcessor,
                 spatialGrid,
@@ -42,8 +40,7 @@ public class PlayerBody extends DynamicBody {
                 BodyType.PLAYER,
                 maxLifeInSeconds,
                 emitterId,
-                profiler,
-                threadPoolManager);
+                profiler);
 
         this.setMaxThrustForce(800);
         this.setMaxAngularAcceleration(1000);
@@ -52,19 +49,11 @@ public class PlayerBody extends DynamicBody {
 
     @Override
     public synchronized void activate() {
-        super.activate(); // Calls AbstractBody.activate() (not DynamicBody.activate())
+        super.activate(); // Calls AbstractBody.activate()
 
         this.setState(engine.model.bodies.ports.BodyState.ALIVE);
-        
-        // Players get exclusive threads if configured
-        // This ensures responsive input handling without latency from other bodies
-        if (PLAYERS_EXCLUSIVE) {
-            // Batch size = 1 means exclusive thread
-            this.getThreadPoolManager().submitBatched(this, 1);
-        } else {
-            // Use default batching
-            this.getThreadPoolManager().submitBatched(this);
-        }
+        // Threading is now handled by Model/BodyBatchManager
+        // Players will be assigned to batch size 1 (exclusive) by Model
     }
 
     public void addWeapon(String emitterId) {

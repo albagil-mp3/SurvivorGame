@@ -87,14 +87,12 @@ public class ImageCache {
      */
     private BufferedImage putInCache(int angle, String assetId, int size) {
         if (this.gc == null) {
-            System.err.println("Graphics configuration is null · ImageCache");
-            return null; // =================================================>
+            throw new IllegalStateException("ImageCache: GraphicsConfiguration is null");
         }
 
         BufferedImage image = gc.createCompatibleImage(size, size, Transparency.TRANSLUCENT);
         Graphics2D g2 = image.createGraphics();
 
-        // Poner aquí la imagen que toca
         ImageDTO imageDto = this.baseImages.getImage(assetId);
 
         try {

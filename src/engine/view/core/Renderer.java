@@ -2,6 +2,7 @@ package engine.view.core;
 
 import java.awt.AlphaComposite;
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -128,7 +129,7 @@ public class Renderer extends Canvas implements Runnable {
 
     // region Constants
     private static final int REFRESH_DELAY_IN_MILLIS = 1; //
-    private static final long MONITORING_PERIOD_NS = 500_000_000L;
+    private static final long MONITORING_PERIOD_NS = 750_000_000L;
     // endregion
 
     // region Fields
@@ -186,6 +187,15 @@ public class Renderer extends Canvas implements Runnable {
                     + this.viewDimension.x + "," + this.viewDimension.y + ")");
         }
 
+        // BufferStrategy fails silently when canvas > screen
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        if (this.viewDimension.x > screenSize.width || this.viewDimension.y > screenSize.height) {
+            throw new IllegalStateException(
+                    "Renderer: Canvas size (" + (int) this.viewDimension.x + "x" + (int) this.viewDimension.y + ") "
+                            + "exceeds screen size (" + screenSize.width + "x" + screenSize.height + "). "
+                            + "Reduce viewDimension in Main.java or disable UI scaling (sun.java2d.uiScale).");
+        }
+
         while (!this.isDisplayable()) {
             try {
                 Thread.sleep(this.delayInMillis);
@@ -196,13 +206,12 @@ public class Renderer extends Canvas implements Runnable {
 
         this.setPreferredSize(
                 new Dimension((int) this.viewDimension.x, (int) this.viewDimension.y));
-        
+
         // Initialize DTO pooling
         this.dynamicRenderDtoPool = new PoolMDTO<>(
-            () -> new DynamicRenderDTO(null, 0, 0, 0, 0, 0L, 0, 0, 0, 0, 0L)
-        );
+                () -> new DynamicRenderDTO(null, 0, 0, 0, 0, 0L, 0, 0, 0, 0, 0L));
         this.dynamicRenderMapper = new DynamicRenderableMapper(this.dynamicRenderDtoPool);
-        
+
         this.thread = new Thread(this);
         this.thread.setName("Renderer");
         this.thread.setPriority(Thread.NORM_PRIORITY + 2);
@@ -234,22 +243,21 @@ public class Renderer extends Canvas implements Runnable {
         Renderable renderableLocalPlayer = this.dynamicRenderables.get(this.view.getLocalPlayerId());
         return renderableLocalPlayer;
     }
-    
+
     /**
      * Get render metrics for HUD display
      */
     public RenderMetricsDTO getRenderMetrics() {
         return new RenderMetricsDTO(
-            this.rendererProfiler.getAvgDrawBackgroundMs(),
-            this.rendererProfiler.getAvgDrawStaticMs(),
-            this.rendererProfiler.getAvgDrawDynamicMs(),
-            this.rendererProfiler.getAvgQueryDynamicMs(),
-            this.rendererProfiler.getAvgPaintDynamicMs(),
-            this.rendererProfiler.getAvgDrawHudsMs(),
-            this.rendererProfiler.getAvgDrawMs(),
-            this.rendererProfiler.getAvgUpdateMs(),
-            this.rendererProfiler.getAvgFrameMs()
-        );
+                this.rendererProfiler.getAvgDrawBackgroundMs(),
+                this.rendererProfiler.getAvgDrawStaticMs(),
+                this.rendererProfiler.getAvgDrawDynamicMs(),
+                this.rendererProfiler.getAvgQueryDynamicMs(),
+                this.rendererProfiler.getAvgPaintDynamicMs(),
+                this.rendererProfiler.getAvgDrawHudsMs(),
+                this.rendererProfiler.getAvgDrawMs(),
+                this.rendererProfiler.getAvgUpdateMs(),
+                this.rendererProfiler.getAvgFrameMs());
     }
     // endregion
 
@@ -299,10 +307,9 @@ public class Renderer extends Canvas implements Runnable {
 
             Renderable renderable = newRenderables.get(entityId);
             if (renderable == null) {
-                System.err.println("Renderer: Static renderable objet not found " + entityId);
-            } else {
-                renderable.update(renderableData, cFrame);
+                throw new IllegalStateException("Renderer: Static renderable not found: " + entityId);
             }
+            renderable.update(renderableData, cFrame);
         }
 
         newRenderables.entrySet().removeIf(e -> e.getValue().getLastFrameSeen() != cFrame);
@@ -339,8 +346,8 @@ public class Renderer extends Canvas implements Runnable {
         double avgDrawMs = this.rendererProfiler.getAvgDrawMs();
 
         this.systemHUD.draw(g,
-            fps,
-            String.format("%.0f", avgDrawMs) + " ms",
+                fps,
+                String.format("%.0f", avgDrawMs) + " ms",
                 this.imagesCache == null ? 0 : this.imagesCache.size(),
                 String.format("%.0f", this.imagesCache == null ? 0 : this.imagesCache.getHitsPercentage()) + "%",
                 this.view.getEntityAliveQuantity(),
@@ -429,7 +436,7 @@ public class Renderer extends Canvas implements Runnable {
                 long staticStart = this.rendererProfiler.startInterval();
                 this.drawStaticRenderables(gg);
                 this.rendererProfiler.stopInterval(RendererProfiler.METRIC_DRAW_STATIC, staticStart);
-                
+
                 // Draw dynamic renderables
                 long dynamicStart = this.rendererProfiler.startInterval();
                 this.drawDynamicRenderable(gg);
@@ -469,11 +476,11 @@ public class Renderer extends Canvas implements Runnable {
         final double scrollX = this.cameraX * this.backgroundScrollSpeedX;
         final double scrollY = this.cameraY * this.backgroundScrollSpeedY;
 
-        // Offset del tile en [-(tile-1)..0], estable con negativos
+        // Tile offset in [-(tile-1)..0], stable with negatives
         final int offX = -Math.floorMod((int) Math.floor(scrollX), tileW);
         final int offY = -Math.floorMod((int) Math.floor(scrollY), tileH);
 
-        // Empieza 1 tile antes para asegurar cobertura completa
+        // Start 1 tile before to ensure full coverage
         final int startX = offX - tileW;
         final int startY = offY - tileH;
         for (int x = startX; x < viewW + tileW; x += tileW) {
@@ -662,6 +669,88 @@ public class Renderer extends Canvas implements Runnable {
         return value;
     }
 
+    private void renderFrame(Graphics2D g) {
+        CanvasMetrics metrics = this.getCanvasMetrics();
+        ViewportTransform transform = this.calculateViewportTransform(metrics);
+
+        this.clearCanvas(g, metrics);
+
+        Graphics2D worldG = (Graphics2D) g.create();
+        try {
+            this.applyWorldTransform(worldG, transform);
+            this.drawWorld(worldG);
+        } finally {
+            worldG.dispose();
+        }
+    }
+
+    private void applyWorldTransform(Graphics2D g, ViewportTransform transform) {
+        g.translate(transform.offsetX, transform.offsetY);
+        g.scale(transform.scale, transform.scale);
+    }
+
+    private void clearCanvas(Graphics2D g, CanvasMetrics metrics) {
+        g.setComposite(AlphaComposite.Src); // Opaque
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, metrics.width, metrics.height);
+    }
+
+    private ViewportTransform calculateViewportTransform(CanvasMetrics metrics) {
+        double scaleX = metrics.width / this.viewDimension.x;
+        double scaleY = metrics.height / this.viewDimension.y;
+        double scale = Math.min(scaleX, scaleY);
+
+        double scaledWidth = this.viewDimension.x * scale;
+        double scaledHeight = this.viewDimension.y * scale;
+        double offsetX = (metrics.width - scaledWidth) * 0.5d;
+        double offsetY = (metrics.height - scaledHeight) * 0.5d;
+
+        return new ViewportTransform(scale, offsetX, offsetY);
+    }
+
+    private CanvasMetrics getCanvasMetrics() {
+        int canvasWidth = this.getWidth();
+        int canvasHeight = this.getHeight();
+        if (canvasWidth <= 0 || canvasHeight <= 0) {
+            canvasWidth = (int) this.viewDimension.x;
+            canvasHeight = (int) this.viewDimension.y;
+        }
+
+        return new CanvasMetrics(canvasWidth, canvasHeight);
+    }
+
+    private void drawWorld(Graphics2D g) {
+        g.setComposite(AlphaComposite.Src); // Opaque
+        g.drawImage(this.getVIBackground(), 0, 0, null);
+
+        g.setComposite(AlphaComposite.SrcOver); // With transparency
+        this.drawStaticRenderables(g);
+        this.drawDynamicRenderable(g);
+        this.drawHUDs(g);
+    }
+
+    private static final class CanvasMetrics {
+        private final int width;
+        private final int height;
+
+        private CanvasMetrics(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    private static final class ViewportTransform {
+        private final double scale;
+        private final double offsetX;
+        private final double offsetY;
+
+        private ViewportTransform(double scale, double offsetX, double offsetY) {
+            this.scale = scale;
+            this.offsetX = offsetX;
+            this.offsetY = offsetY;
+        }
+    }
+
     // *** INTERFACE IMPLEMENTATIONS ***
 
     // region Runnable
@@ -669,6 +758,12 @@ public class Renderer extends Canvas implements Runnable {
     public void run() {
         this.createBufferStrategy(3);
         BufferStrategy bs = getBufferStrategy();
+
+        if (bs == null) {
+            throw new IllegalStateException(
+                    "Renderer: BufferStrategy creation failed (canvas too large): "
+                            + (int) this.viewDimension.x + "x" + (int) this.viewDimension.y);
+        }
 
         while (true) {
             EngineState engineState = this.view.getEngineState();

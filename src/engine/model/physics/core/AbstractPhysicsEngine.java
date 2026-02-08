@@ -60,7 +60,7 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                 PhysicsValuesDTO old = this.getPhysicsValues();
                 
                 // Update nextPhyValues instead of creating new DTO
-                nextPhyValues.updateFrom(
+                nextPhyValues.update(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -78,7 +78,7 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                 PhysicsValuesDTO old = this.getPhysicsValues();
                 
                 // Update nextPhyValues instead of creating new DTO
-                nextPhyValues.updateFrom(
+                nextPhyValues.update(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -114,7 +114,7 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                 PhysicsValuesDTO old = this.getPhysicsValues();
                 
                 // Update nextPhyValues instead of creating new DTO
-                nextPhyValues.updateFrom(
+                nextPhyValues.update(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,
@@ -133,7 +133,7 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                 PhysicsValuesDTO old = this.getPhysicsValues();
                 
                 // Update nextPhyValues instead of creating new DTO
-                nextPhyValues.updateFrom(
+                nextPhyValues.update(
                                 old.timeStamp,
                                 old.posX, old.posY, old.angle,
                                 old.size,

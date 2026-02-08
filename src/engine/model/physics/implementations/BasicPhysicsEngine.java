@@ -26,7 +26,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         PhysicsValuesDTO old = this.getPhysicsValues();
         
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 old.timeStamp,
                 old.posX, old.posY, old.angle,
                 old.size,
@@ -83,7 +83,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accY = phyValues.accY;
 
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -113,7 +113,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accY = phyValues.accY;
 
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -142,7 +142,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accY = phyValues.accY;
 
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -171,7 +171,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         double accY = phyValues.accY;
 
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 phyValues.timeStamp,
                 posX, posY, angle,
                 phyValues.size,
@@ -189,7 +189,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         PhysicsValuesDTO old = this.getPhysicsValues();
         
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 old.timeStamp,
                 old.posX, old.posY, old.angle,
                 old.size,
@@ -246,7 +246,7 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         long newTimeStamp = phyVals.timeStamp + (long) (dt * 1_000_000_000.0d);
 
         // Update nextPhyValues instead of creating new DTO
-        nextPhyValues.updateFrom(
+        nextPhyValues.update(
                 newTimeStamp,
                 newPosX, newPosY, newAngle,
                 phyVals.size,

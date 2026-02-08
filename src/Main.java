@@ -17,11 +17,22 @@ public class Main {
 		System.setProperty("sun.java2d.opengl", "true");
 		System.setProperty("sun.java2d.d3d", "false"); // OpenGL
 		// endregion
-
-		DoubleVector worldDimension = new DoubleVector(40000, 40000);
+		
+		// region Dimensions and limits
+		// Due a recognized issue with BufferStrategy when
+		// Canvas size > screen size causes BufferStrategy to fail (blank window)
+		// in that case engine whill throw an error and exit.
+		//
+		// => **********************************************************
+		// => *** Keep viewDimension smaller than actual screen size ***
+		// => *** or... no set viewDimension                         ***
+		// => **********************************************************
 		DoubleVector viewDimension = new DoubleVector(2400, 1500);
-		int maxBodies = 1500;
-		int maxAsteroidCreationDelay = 3;
+		DoubleVector worldDimension = new DoubleVector(40000, 40000);
+		// endregion
+
+		int maxBodies = 1000;
+		int maxAsteroidCreationDelay = 3; // Used by AIBasicSpawner
 
 		ProjectAssets projectAssets = new ProjectAssets();
 

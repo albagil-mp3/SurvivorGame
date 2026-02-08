@@ -22,7 +22,6 @@ import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.pooling.PoolMDTO;
 import engine.utils.spatial.core.SpatialGrid;
-import engine.utils.threading.ThreadPoolManager;
 
 /**
  * AbstractBody
@@ -229,7 +228,6 @@ public abstract class AbstractBody {
     private volatile BodyState state;
     private Thread thread;
     private final BodyType type;
-    private final ThreadPoolManager threadPoolManager;
     // endregion
     
     // region Scratch buffers
@@ -246,11 +244,10 @@ public abstract class AbstractBody {
     // region Constructors
     public AbstractBody(BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType type,
-            double maxLifeInSeconds, String emitterId, ThreadPoolManager threadPoolManager) {
+            double maxLifeInSeconds, String emitterId) {
 
         this.bodyEventProcessor = bodyEventProcessor;
         this.phyEngine = phyEngine;
-        this.threadPoolManager = threadPoolManager;
         this.type = type;
         this.maxLifeInSeconds = maxLifeInSeconds;
         this.bodyEmitterId = emitterId;
@@ -319,7 +316,7 @@ public abstract class AbstractBody {
         if (this.bodyEventProcessor instanceof Model && this.phyEngine instanceof AbstractPhysicsEngine) {
             Model model = (Model) this.bodyEventProcessor;
             AbstractPhysicsEngine engine = (AbstractPhysicsEngine) this.phyEngine;
-            PoolMDTO<PhysicsValuesDTO> pool = model.getPhysicsPool();
+            PoolMDTO<PhysicsValuesDTO> pool = model.getPhysicsValuesPool();
             
             // Release all 3 DTOs: current, next, and snapshot
             pool.release(engine.getPhysicsValues());
@@ -482,10 +479,6 @@ public abstract class AbstractBody {
     // region SpatialGrid getter
     public SpatialGrid getSpatialGrid() {
         return this.spatialGrid;
-    }
-
-    protected ThreadPoolManager getThreadPoolManager() {
-        return this.threadPoolManager;
     }
     // endregion
 
