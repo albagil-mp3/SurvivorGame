@@ -10,8 +10,13 @@ import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.profiling.impl.BodyProfiler;
 import engine.utils.spatial.core.SpatialGrid;
-import engine.utils.threading.ThreadPoolManager;
 
+/**
+ * Factory for creating bodies without threading concerns.
+ * 
+ * Responsible ONLY for body instantiation and physics engine setup.
+ * Threading assignment is handled by BodyBatchManager and Model.
+ */
 public class BodyFactory {
 
     public static AbstractBody create(
@@ -23,8 +28,7 @@ public class BodyFactory {
             BodyType bodyType,
             double maxLifeTime,
             String emitterId,
-            BodyProfiler profiler,
-            ThreadPoolManager threadPoolManager) {
+            BodyProfiler profiler) {
 
         AbstractBody body = null;
         PhysicsEngine phyEngine = null;
@@ -35,14 +39,14 @@ public class BodyFactory {
                 body = new DynamicBody(
                         bodyEventProcessor, spatialGrid, phyEngine,
                         BodyType.DYNAMIC,
-                        maxLifeTime, null, profiler, threadPoolManager);
+                        maxLifeTime, null, profiler);
                 break;
 
             case PLAYER:
                 phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, profiler);
                 body = new PlayerBody(
                         bodyEventProcessor, spatialGrid, phyEngine,
-                        maxLifeTime, null, profiler, threadPoolManager);
+                        maxLifeTime, null, profiler);
                 break;
 
             case PROJECTILE:
@@ -54,22 +58,21 @@ public class BodyFactory {
                         BodyType.PROJECTILE,
                         maxLifeTime,
                         emitterId,
-                        profiler,
-                        threadPoolManager);
+                        profiler);
                 break;
 
             case DECORATOR:
                 phyEngine = new NullPhysicsEngine(dto1, dto2, dto3);
                 body = new StaticBody(
                         bodyEventProcessor, null, phyEngine, bodyType,
-                        maxLifeTime, null, threadPoolManager);
+                        maxLifeTime, null);
                 break;
 
             case GRAVITY:
                 phyEngine = new NullPhysicsEngine(dto1, dto2, dto3);
                 body = new StaticBody(
                         bodyEventProcessor, spatialGrid, phyEngine, bodyType,
-                        maxLifeTime, null, threadPoolManager);
+                        maxLifeTime, null);
 
                 break;
 

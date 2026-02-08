@@ -9,7 +9,6 @@ import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.profiling.impl.BodyProfiler;
 import engine.utils.spatial.core.SpatialGrid;
-import engine.utils.threading.ThreadPoolManager;
 
 /**
  * Dynamic body with its own physics engine.
@@ -31,14 +30,13 @@ public class DynamicBody extends AbstractBody {
     // region Constructors
     public DynamicBody(BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType bodyType, double maxLifeInSeconds, String emitterId, 
-            BodyProfiler profiler, ThreadPoolManager threadPoolManager) {
+            BodyProfiler profiler) {
 
         super(bodyEventProcessor, spatialGrid,
                 phyEngine,
                 bodyType,
                 maxLifeInSeconds, 
-                emitterId,
-                threadPoolManager);
+                emitterId);
         this.profiler = profiler;
     }
     // endregion
@@ -50,9 +48,7 @@ public class DynamicBody extends AbstractBody {
         super.activate();
 
         this.setState(BodyState.ALIVE);
-        
-        // Use batched execution to reduce thread pressure
-        this.getThreadPoolManager().submitBatched(this);
+        // Threading is now handled by Model/BodyBatchManager
     }
 
     // region Acceleration control (acceleration***)

@@ -67,7 +67,7 @@ public class PhysicsValuesDTO implements Serializable, PoolableMDTO {
     /**
      * Update all fields from another DTO instance (bulk copy for snapshots)
      */
-    public void updateFrom(
+    public void update(
             long timeStamp,
             double posX, double posY, double angle,
             double size,

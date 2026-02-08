@@ -7,7 +7,6 @@ import engine.model.bodies.ports.BodyType;
 import engine.model.physics.ports.PhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.spatial.core.SpatialGrid;
-import engine.utils.threading.ThreadPoolManager;
 
 /**
  * StaticBody 
@@ -52,13 +51,13 @@ public class StaticBody extends AbstractBody implements Runnable {
     public StaticBody(
             BodyEventProcessor bodyEventProcessor, SpatialGrid spatialGrid,
             PhysicsEngine phyEngine, BodyType bodyType,
-            double maxLifeInSeconds, String emitterId, ThreadPoolManager threadPoolManager) {
+            double maxLifeInSeconds, String emitterId) {
 
         super(
                 bodyEventProcessor, spatialGrid,
                 phyEngine,
                 bodyType,
-                maxLifeInSeconds, emitterId, threadPoolManager);
+                maxLifeInSeconds, emitterId);
     }
 
     //
@@ -70,10 +69,7 @@ public class StaticBody extends AbstractBody implements Runnable {
         super.activate();
 
         this.setState(BodyState.ALIVE);
-        
-        // Use batched execution for static bodies
-        // Static bodies have minimal overhead (mostly lifetime checks)
-        this.getThreadPoolManager().submitBatched(this);    
+        // Threading is now handled by Model/BodyBatchManager
     }
 
     // region AbstractBody

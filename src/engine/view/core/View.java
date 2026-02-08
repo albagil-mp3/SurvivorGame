@@ -23,7 +23,6 @@ import engine.controller.mappers.DynamicRenderableMapper;
 import engine.controller.ports.EngineState;
 import engine.utils.helpers.DoubleVector;
 import engine.utils.images.Images;
-import engine.utils.spatial.core.SpatialGrid;
 import engine.view.renderables.ports.DynamicRenderDTO;
 import engine.view.renderables.ports.PlayerRenderDTO;
 import engine.view.renderables.ports.RenderDTO;
@@ -166,7 +165,13 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
             throw new IllegalArgumentException("World dimensions not setted");
         }
 
-        this.renderer.setViewDimension(this.viewDimension);
+        // new
+        DoubleVector renderDimension = this.viewportDimension == null
+                ? this.viewDimension
+                : this.viewportDimension;
+        this.renderer.setViewDimension(renderDimension);
+
+        // this.renderer.setViewDimension(this.viewDimension);
         this.renderer.activate();
         this.pack();
         System.out.println("View: Activated");
