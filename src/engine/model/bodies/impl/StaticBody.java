@@ -98,7 +98,8 @@ public class StaticBody extends AbstractBody implements Runnable {
             try {
                 Thread.sleep(30);
             } catch (InterruptedException ex) {
-                System.err.println("ERROR Sleeping in StaticBody thread! (StaticBody) · " + ex.getMessage());
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("StaticBody: Thread interrupted", ex);
             }
         }
     }

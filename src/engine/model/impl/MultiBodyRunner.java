@@ -92,9 +92,7 @@ public class MultiBodyRunner implements Runnable {
                         body.onTick();
 
                     } catch (Exception ex) {
-                        System.err.println("ERROR in MultiBodyRunner processing body "
-                                + body.getBodyId() + ": " + ex.getMessage());
-                        ex.printStackTrace();
+                        throw new RuntimeException("MultiBodyRunner: Error processing body " + body.getBodyId(), ex);
                     }
                 }
             }

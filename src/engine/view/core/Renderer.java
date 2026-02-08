@@ -186,6 +186,15 @@ public class Renderer extends Canvas implements Runnable {
                     + this.viewDimension.x + "," + this.viewDimension.y + ")");
         }
 
+        // BufferStrategy fails silently when canvas > screen
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        if (this.viewDimension.x > screenSize.width || this.viewDimension.y > screenSize.height) {
+            throw new IllegalStateException(
+                "Renderer: Canvas size (" + (int)this.viewDimension.x + "x" + (int)this.viewDimension.y + ") "
+                + "exceeds screen size (" + screenSize.width + "x" + screenSize.height + "). "
+                + "Reduce viewDimension in Main.java or disable UI scaling (sun.java2d.uiScale).");
+        }
+
         while (!this.isDisplayable()) {
             try {
                 Thread.sleep(this.delayInMillis);
@@ -299,10 +308,9 @@ public class Renderer extends Canvas implements Runnable {
 
             Renderable renderable = newRenderables.get(entityId);
             if (renderable == null) {
-                System.err.println("Renderer: Static renderable objet not found " + entityId);
-            } else {
-                renderable.update(renderableData, cFrame);
+                throw new IllegalStateException("Renderer: Static renderable not found: " + entityId);
             }
+            renderable.update(renderableData, cFrame);
         }
 
         newRenderables.entrySet().removeIf(e -> e.getValue().getLastFrameSeen() != cFrame);
@@ -469,11 +477,11 @@ public class Renderer extends Canvas implements Runnable {
         final double scrollX = this.cameraX * this.backgroundScrollSpeedX;
         final double scrollY = this.cameraY * this.backgroundScrollSpeedY;
 
-        // Offset del tile en [-(tile-1)..0], estable con negativos
+        // Tile offset in [-(tile-1)..0], stable with negatives
         final int offX = -Math.floorMod((int) Math.floor(scrollX), tileW);
         final int offY = -Math.floorMod((int) Math.floor(scrollY), tileH);
 
-        // Empieza 1 tile antes para asegurar cobertura completa
+        // Start 1 tile before to ensure full coverage
         final int startX = offX - tileW;
         final int startY = offY - tileH;
         for (int x = startX; x < viewW + tileW; x += tileW) {
@@ -669,6 +677,12 @@ public class Renderer extends Canvas implements Runnable {
     public void run() {
         this.createBufferStrategy(3);
         BufferStrategy bs = getBufferStrategy();
+        
+        if (bs == null) {
+            throw new IllegalStateException(
+                "Renderer: BufferStrategy creation failed (canvas too large): " 
+                + (int)this.viewDimension.x + "x" + (int)this.viewDimension.y);
+        }
 
         while (true) {
             EngineState engineState = this.view.getEngineState();

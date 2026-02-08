@@ -122,14 +122,11 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
     private String localPlayerId;
     private final Renderer renderer;
     private DoubleVector viewDimension;
+    private DoubleVector viewportDimension;
     private DoubleVector worldDimension;
     private AtomicBoolean fireKeyDown = new AtomicBoolean(false);
 
-    // Key state tracking (FIX: Para no confiar en keyReleased() del OS)
-    // PROBLEMA: El OS puede consumir ciertos eventos de teclado
-    // (Alt+Tab, Win+X, etc) sin generar keyReleased().
-    // SOLUCIÓN: Mantener tracking del estado real de teclas presionadas
-    // y sincronizar periódicamente con el modelo.
+    // Key state tracking (OS may consume key events without firing keyReleased)
     private final Set<Integer> pressedKeys = new HashSet<>();
     private boolean wasWindowFocused = true;
     // endregion Fields
@@ -211,6 +208,10 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
 
     public void setViewDimension(DoubleVector viewDim) {
         this.viewDimension = viewDim;
+    }
+
+    public void setViewportDimension(DoubleVector viewportDim) {
+        this.viewportDimension = viewportDim;
     }
 
     public void setWorldDimension(DoubleVector worldDim) {
@@ -307,7 +308,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
     protected SpatialGridStatisticsRenderDTO getSpatialGridStatistics() {
         return this.controller.getSpatialGridStatistics();
     }
-    
+
     protected RenderMetricsDTO getRenderMetrics() {
         return this.renderer.getRenderMetrics();
     }
@@ -390,28 +391,17 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
     }
 
     /**
-     * Sincroniza el estado de entrada cada frame.
-     * 
-     * PROBLEMA CRÍTICO:
-     * El OS puede consumir ciertos eventos de teclado (Alt+Tab, Win+X, etc)
-     * sin generar keyReleased(). Esto causa que el tracking de teclas quede
-     * inconsistente.
-     * 
-     * SOLUCIÓN:
-     * Este método es llamado periódicamente desde el Renderer (cada frame).
-     * Verifica que las teclas que se supone están presionadas realmente lo estén.
-     * Si una tecla en el tracking no debería estar (el usuario la liberó pero
-     * no hubo keyReleased), la liberamos aquí.
-     * 
-     * Uso: Desde Renderer.render() o similar, llamar a view.syncInputState()
-     * cada frame después de actualizar física.
+     * Sync input state each frame.
+     * OS may consume keyboard events (Alt+Tab, Win+X, etc) without firing
+     * keyReleased(),
+     * causing tracking to become inconsistent. Called from Renderer each frame.
      */
     public void syncInputState() {
         if (this.localPlayerId == null || this.controller == null || this.pressedKeys.isEmpty()) {
             return;
         }
 
-        // Si la ventana no tiene foco, todas las teclas deben estar liberadas
+        // When window lacks focus, all keys should be released
         if (!this.wasWindowFocused) {
             if (!this.pressedKeys.isEmpty()) {
                 System.out.println("View.syncInputState: Window not focused but keys tracked: "
@@ -424,23 +414,12 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
                     try {
                         this.processKeyRelease(keyCode);
                     } catch (Exception ex) {
-                        System.err.println("Error releasing key " + keyCode + ": " + ex.getMessage());
+                        throw new RuntimeException("View: Key release failed during focus loss: " + keyCode, ex);
                     }
                 }
             }
             return;
         }
-
-        // Verificar que las teclas que el SO reporta presionadas coincidan
-        // con nuestro tracking. Esto detiene leaks de teclas.
-        //
-        // NOTA: No podemos usar KeyboardFocusManager para verificar estado,
-        // pero podemos usar timing: si una tecla lleva demasiado tiempo presionada
-        // sin que se libere, asumimos que el keyReleased se perdió.
-        //
-        // Por ahora, confiamos en que keyReleased se genera NORMALMENTE
-        // (excepto al perder foco, que ya se trata arriba).
-        // El resto de fallos serán raros y se diagnosticarán con logs.
     }
 
     // *** INTERFACE IMPLEMENTATIONS ***
@@ -455,17 +434,15 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
     public void windowLostFocus(WindowEvent e) {
         this.wasWindowFocused = false;
 
-        // Limpiar tracking de teclas presionadas
-        // (ya que no recibiremos keyReleased para ellas)
+        // Clear pressed keys (won't receive keyReleased for them)
         Set<Integer> keysToRelease = new HashSet<>(this.pressedKeys);
         this.pressedKeys.clear();
 
-        // Resetear todas las acciones asociadas
         for (int keyCode : keysToRelease) {
             try {
                 this.processKeyRelease(keyCode);
             } catch (Exception ex) {
-                System.err.println("Error releasing key " + keyCode + ": " + ex.getMessage());
+                throw new RuntimeException("View: Key release failed on focus lost: " + keyCode, ex);
             }
         }
 
@@ -493,14 +470,12 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
             if (!this.pressedKeys.contains(keyCode)) {
                 this.pressedKeys.add(keyCode);
 
-                // Procesar acción SOLO en el primer press
-                // (no en repeat del SO)
+                // Process only first press (not OS key repeat)
                 this.processKeyPress(keyCode);
             }
         } catch (Exception ex) {
-            System.err.println("Error in keyPressed: " + ex.getMessage());
-            ex.printStackTrace();
             resetAllKeyStates();
+            throw new RuntimeException("View: keyPressed event failed", ex);
         }
     }
 
@@ -513,14 +488,11 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
 
             int keyCode = e.getKeyCode();
 
-            // Remover de tracking
             this.pressedKeys.remove(keyCode);
 
-            // Procesar acción de release
             this.processKeyRelease(keyCode);
         } catch (Exception ex) {
-            System.err.println("Error in keyReleased: " + ex.getMessage());
-            ex.printStackTrace();
+            throw new RuntimeException("View: keyReleased event failed", ex);
         }
     }
 
