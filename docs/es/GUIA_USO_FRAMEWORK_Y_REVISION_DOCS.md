@@ -151,6 +151,66 @@ Esta revisión está orientada a uso práctico (qué leer, para qué sirve y en 
 
 ## 3) Guía práctica: cómo crear tu propio videojuego con este engine
 
+## 3.1 Regla principal: crear juego nuevo **sin tocar `engine/`**
+
+Sí, te explicas perfecto: este framework está pensado para que puedas construir un juego nuevo **agregando clases en tu capa de juego** y manteniendo el engine como una caja estable.
+
+### Contrato de extensión (modo “no tocar motor”)
+
+#### ✅ Lo que SÍ debes crear
+
+- Nuevos paquetes de juego (por ejemplo):
+  - `src/mygame/world`
+  - `src/mygame/level`
+  - `src/mygame/ai`
+  - `src/mygame/rules`
+  - `src/mygame/assets`
+- Un `Main` de tu juego que solo haga wiring.
+- Implementaciones de:
+  - `WorldDefinitionProvider`
+  - `LevelGenerator` (o clase equivalente de nivel)
+  - `IAGenerator` (spawns y ritmo)
+  - `ActionsGenerator` (reglas de gameplay)
+
+#### ❌ Lo que NO debes tocar
+
+- `src/engine/**` (controller/model/view/utils/world core del motor)
+- Clases base del framework salvo que estés evolucionando el engine en sí.
+
+### Plantilla mínima de estructura para un juego nuevo
+
+```text
+src/
+ ├── engine/                  # Framework (no modificar)
+ ├── mygame/
+ │   ├── assets/
+ │   │   └── MyGameAssets.java
+ │   ├── world/
+ │   │   └── MyWorldDefinitionProvider.java
+ │   ├── level/
+ │   │   └── MyLevelGenerator.java
+ │   ├── ai/
+ │   │   └── MySpawnerAI.java
+ │   ├── rules/
+ │   │   └── MyRules.java
+ │   └── MyGameMain.java
+ └── resources/
+     └── images/...
+```
+
+### Wiring recomendado (solo composición)
+
+Tu `MyGameMain` debería limitarse a:
+
+1. Crear assets del juego.
+2. Elegir reglas (`ActionsGenerator`).
+3. Crear `WorldDefinitionProvider` propio.
+4. Instanciar `Controller + View + Model` del engine.
+5. Activar engine.
+6. Construir nivel e IA con tus clases.
+
+Si sigues este contrato, puedes iterar tu juego sin meter mano al core.
+
 ## Paso 0 — Prepara tu concepto
 
 Define primero en una hoja:
@@ -211,6 +271,8 @@ Secuencia recomendada:
 8. Crear nivel (`new LevelX(controller, worldDef)`).
 9. Activar IA (`new AIX(controller, worldDef, ...).activate()`).
 
+> Recomendación: en lugar de editar `src/Main.java`, crea `src/mygame/MyGameMain.java` y usa ese entrypoint para tu juego.
+
 ## Paso 6 — Ajusta física y control
 
 - Si quieres juego arcade simple: usa `BasicPhysicsEngine` con valores moderados.
@@ -258,6 +320,8 @@ Con ese orden puedes pasar de “entender la arquitectura” a “tener un proto
 - [ ] El HUD muestra datos útiles para depurar.
 - [ ] Corrí profiling con carga alta.
 - [ ] El juego mantiene separación MVC sin atajos.
+- [ ] No hice cambios en `src/engine/**`.
+- [ ] Todo mi gameplay nuevo vive en `src/mygame/**`.
 
 ---
 
