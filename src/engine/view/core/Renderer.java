@@ -244,8 +244,10 @@ public class Renderer extends Canvas implements Runnable {
             AnimatedRenderable renderable = new AnimatedRenderable(
                 entityId, animationInfo, this.imagesCache, this.currentFrame);
             
-            // If it's a player animation, configure weapon overlay
-            if (assetId.toLowerCase().contains("player")) {
+            // If it's a player animation, configure weapon overlay (only if player_weapon asset is available)
+            if (assetId.toLowerCase().contains("player")
+                    && this.assetCatalog != null
+                    && this.assetCatalog.exists("player_weapon")) {
                 renderable.setAsPlayerShip("player_weapon", 100);
             }
             

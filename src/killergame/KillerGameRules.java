@@ -66,12 +66,16 @@ public class KillerGameRules implements ActionsGenerator {
                         event));
             }
 
-            // Life over - entity dies when health reaches 0
-            case LifeOver e -> actions.add(new ActionDTO(
-                    e.primaryBodyRef.id(),
-                    e.primaryBodyRef.type(),
-                    ActionType.DIE,
-                    event));
+            // Life over - entity dies when health reaches 0 (players are immortal)
+            case LifeOver e -> {
+                if (e.primaryBodyRef.type() != BodyType.PLAYER) {
+                    actions.add(new ActionDTO(
+                            e.primaryBodyRef.id(),
+                            e.primaryBodyRef.type(),
+                            ActionType.DIE,
+                            event));
+                }
+            }
 
             // Collision events - handle collisions in the maze
             case CollisionEvent e -> {

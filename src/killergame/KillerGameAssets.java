@@ -30,6 +30,7 @@ public final class KillerGameAssets {
         this.catalog.register("pac-man-a-1", "pac-man-a-1.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("pac-man-a-2", "pac-man-a-2.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("pac-man-a-3", "pac-man-a-3.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("bullet_01", "bullet-01.png", AssetType.BULLET, AssetIntensity.LOW);
 
         // Register player spaceship animation (using spaceship frames 2-15)
         this.catalog.registerAnimation(new AnimatedAssetInfoDTO(

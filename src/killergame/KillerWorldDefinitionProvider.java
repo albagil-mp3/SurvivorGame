@@ -53,5 +53,9 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
 
         // Player - spawns in the center of the maze
         this.addSpaceship("player_ship_animated", this.worldWidth / 2.0, this.worldHeight / 2.0, 35);
+        this.registerAsset("player_weapon");
+        this.addWeaponPresetBullet("bullet_01");
+        
+        
     }
 }
