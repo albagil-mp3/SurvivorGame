@@ -316,6 +316,44 @@ public class Controller implements WorldManager, DomainEventProcessor {
     public void playerSelectNextWeapon(String playerId) {
         this.model.playerSelectNextWeapon(playerId);
     }
+
+    // region Directional Movement (playerMove***)
+    public void playerMoveUpOn(String playerId) {
+        this.model.playerMoveUpOn(playerId);
+    }
+    
+    public void playerMoveUpOff(String playerId) {
+        this.model.playerMoveUpOff(playerId);
+    }
+
+    public void playerMoveDownOn(String playerId) {
+        this.model.playerMoveDownOn(playerId);
+    }
+    
+    public void playerMoveDownOff(String playerId) {
+        this.model.playerMoveDownOff(playerId);
+    }
+
+    public void playerMoveLeftOn(String playerId) {
+        this.model.playerMoveLeftOn(playerId);
+    }
+    
+    public void playerMoveLeftOff(String playerId) {
+        this.model.playerMoveLeftOff(playerId);
+    }
+
+    public void playerMoveRightOn(String playerId) {
+        this.model.playerMoveRightOn(playerId);
+    }
+    
+    public void playerMoveRightOff(String playerId) {
+        this.model.playerMoveRightOff(playerId);
+    }
+
+    public void playerMoveOff(String playerId) {
+        this.model.playerMoveOff(playerId);
+    }
+    // endregion
     // endregion
 
     // region Queries

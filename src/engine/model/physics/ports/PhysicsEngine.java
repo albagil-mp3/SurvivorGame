@@ -32,5 +32,7 @@ public interface PhysicsEngine {
 
         public void setThrust(double thrust);
 
+        public void setDirectAcceleration(double accX, double accY);
+
         public void stopPushing();
 }

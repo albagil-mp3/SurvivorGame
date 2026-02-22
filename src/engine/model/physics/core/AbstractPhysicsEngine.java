@@ -126,6 +126,23 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                 
                 this.setPhysicsValues(nextPhyValues);
         }
+
+        public final void setDirectAcceleration(double accX, double accY) {
+                PhysicsValuesDTO old = this.getPhysicsValues();
+                
+                // Update nextPhyValues with direct acceleration and no thrust
+                nextPhyValues.update(
+                                old.timeStamp,
+                                old.posX, old.posY, old.angle,
+                                old.size,
+                                old.speedX, old.speedY,
+                                accX, accY, // Direct acceleration
+                                old.angularSpeed,
+                                old.angularAcc,
+                                0.0d); // No thrust when using direct acceleration
+                
+                this.setPhysicsValues(nextPhyValues);
+        }
         // endregion
 
         @Override

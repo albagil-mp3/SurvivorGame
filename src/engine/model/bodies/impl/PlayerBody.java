@@ -25,6 +25,12 @@ public class PlayerBody extends DynamicBody {
     private int temperature = 1;
     private double shield = 1D;
     private int score = 0;
+    
+    // Directional movement state
+    private boolean movingUp = false;
+    private boolean movingDown = false;
+    private boolean movingLeft = false;
+    private boolean movingRight = false;
     // endregion
 
     public PlayerBody(BodyEventProcessor bodyEventProcessor,
@@ -42,7 +48,7 @@ public class PlayerBody extends DynamicBody {
                 emitterId,
                 profiler);
 
-        this.setMaxThrustForce(800);
+        this.setMaxThrustForce(1000); // Increased for more responsive movement
         this.setMaxAngularAcceleration(1000);
         this.setAngularSpeed(30);
     }
@@ -218,6 +224,129 @@ public class PlayerBody extends DynamicBody {
         this.setAngularAcceleration(0.0d);
         this.setAngularSpeed(0.0d);
     }
+
+    // endregion
+
+    // region Directional Movement (directional***)
+    /**
+     * Move directly upward (North) regardless of ship rotation.
+     * For fluid directional movement.
+     */
+    public void moveUpOn() {
+        this.movingUp = true;
+        this.updateDirectionalMovement();
+    }
+
+    /**
+     * Move directly downward (South) regardless of ship rotation.
+     */
+    public void moveDownOn() {
+        this.movingDown = true;
+        this.updateDirectionalMovement();
+    }
+
+    /**
+     * Move directly leftward (West) regardless of ship rotation.
+     */
+    public void moveLeftOn() {
+        this.movingLeft = true;
+        this.updateDirectionalMovement();
+    }
+
+    /**
+     * Move directly rightward (East) regardless of ship rotation.
+     */
+    public void moveRightOn() {
+        this.movingRight = true;
+        this.updateDirectionalMovement();
+    }
+    
+    /**
+     * Stop moving upward.
+     */
+    public void moveUpOff() {
+        this.movingUp = false;
+        this.updateDirectionalMovement();
+    }
+    
+    /**
+     * Stop moving downward.
+     */
+    public void moveDownOff() {
+        this.movingDown = false;
+        this.updateDirectionalMovement();
+    }
+    
+    /**
+     * Stop moving leftward.
+     */
+    public void moveLeftOff() {
+        this.movingLeft = false;
+        this.updateDirectionalMovement();
+    }
+    
+    /**
+     * Stop moving rightward.
+     */
+    public void moveRightOff() {
+        this.movingRight = false;
+        this.updateDirectionalMovement();
+    }
+
+    /**
+     * Stop all directional movement.
+     */
+    public void moveOff() {
+        this.movingUp = false;
+        this.movingDown = false;
+        this.movingLeft = false;
+        this.movingRight = false;
+        this.updateDirectionalMovement();
+    }
+    
+    /**
+     * Update directional movement based on active direction flags.
+     * Supports diagonal movement by combining multiple directions.
+     */
+    private void updateDirectionalMovement() {
+        double accX = 0;
+        double accY = 0;
+        double force = this.getMaxThrustForce();
+        
+        // Calculate net acceleration from all active directions
+        if (this.movingUp) {
+            accY -= force;
+        }
+        if (this.movingDown) {
+            accY += force;
+        }
+        if (this.movingLeft) {
+            accX -= force;
+        }
+        if (this.movingRight) {
+            accX += force;
+        }
+        
+        // Normalize diagonal movement to prevent faster diagonal speed
+        if ((this.movingUp || this.movingDown) && (this.movingLeft || this.movingRight)) {
+            double magnitude = Math.sqrt(accX * accX + accY * accY);
+            if (magnitude > 0) {
+                accX = (accX / magnitude) * force;
+                accY = (accY / magnitude) * force;
+            }
+        }
+        
+        this.setDirectionalAcceleration(accX, accY);
+    }
+
+    /**
+     * Set directional acceleration for fluid movement.
+     * This bypasses the angle-based thrust system for direct movement control.
+     */
+    private void setDirectionalAcceleration(double accX, double accY) {
+        this.getPhysicsEngine().setDirectAcceleration(accX, accY);
+    }
+    // endregion
 
     public void setDamage(double damage) {
         this.damage = damage;

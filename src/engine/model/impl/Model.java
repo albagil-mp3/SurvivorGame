@@ -558,6 +558,71 @@ public class Model implements BodyEventProcessor {
         }
     }
 
+    // region Directional Movement (playerMove***)
+    public void playerMoveUpOn(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveUpOn();
+        }
+    }
+    
+    public void playerMoveUpOff(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveUpOff();
+        }
+    }
+
+    public void playerMoveDownOn(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveDownOn();
+        }
+    }
+    
+    public void playerMoveDownOff(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveDownOff();
+        }
+    }
+
+    public void playerMoveLeftOn(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveLeftOn();
+        }
+    }
+    
+    public void playerMoveLeftOff(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveLeftOff();
+        }
+    }
+
+    public void playerMoveRightOn(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveRightOn();
+        }
+    }
+    
+    public void playerMoveRightOff(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveRightOff();
+        }
+    }
+
+    public void playerMoveOff(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.moveOff();
+        }
+    }
+    // endregion
+
     public void playerSelectNextWeapon(String playerId) {
         PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
         if (pBody == null) {

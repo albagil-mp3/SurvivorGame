@@ -205,21 +205,32 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
     // *** PRIVATES ***
 
     private PhysicsValuesDTO integrateMRUA(PhysicsValuesDTO phyVals, double dt) {
-        // Applying thrust according actual angle
+        // Applying thrust according actual angle OR using direct acceleration
         long thrustStart = this.profiler.startInterval();
-        double accX = 0d;
-        double accY = 0d;
-        double angleRad = Math.toRadians(phyVals.angle);
+        double accX = phyVals.accX; // Start with direct acceleration from DTO
+        double accY = phyVals.accY;
+        
+        // If thrust is active, add angle-based acceleration
         if (phyVals.thrust != 0.0d) {
-            accX = Math.cos(angleRad) * phyVals.thrust;
-            accY = Math.sin(angleRad) * phyVals.thrust;
+            double angleRad = Math.toRadians(phyVals.angle);
+            accX += Math.cos(angleRad) * phyVals.thrust;
+            accY += Math.sin(angleRad) * phyVals.thrust;
         }
         this.profiler.stopInterval("PHYSICS_THRUST", thrustStart);
 
         long linearStart = this.profiler.startInterval();
+        
+        // Apply maximum damping/friction for rigid, minimal sliding movement
+        // Extremely high damping when no acceleration (instant stop)
+        // Very high damping even when accelerating (rigid, direct control)
+        boolean isAccelerating = (accX != 0.0d || accY != 0.0d);
+        double dampingFactor = isAccelerating ? Math.pow(0.35, dt) : Math.pow(0.0001, dt);
+        double dampedSpeedX = phyVals.speedX * dampingFactor;
+        double dampedSpeedY = phyVals.speedY * dampingFactor;
+        
         // v1 = v0 + a*dt
-        double oldSpeedX = phyVals.speedX;
-        double oldSpeedY = phyVals.speedY;
+        double oldSpeedX = dampedSpeedX;
+        double oldSpeedY = dampedSpeedY;
         double newSpeedX = oldSpeedX + accX * dt;
         double newSpeedY = oldSpeedY + accY * dt;
 

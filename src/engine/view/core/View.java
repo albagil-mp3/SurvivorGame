@@ -514,22 +514,23 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
         switch (keyCode) {
             case KeyEvent.VK_UP:
             case KeyEvent.VK_W:
-                this.controller.playerThrustOn(this.localPlayerId);
+                this.controller.playerMoveUpOn(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_DOWN:
             case KeyEvent.VK_X:
-                this.controller.playerReverseThrust(this.localPlayerId);
+            case KeyEvent.VK_S:
+                this.controller.playerMoveDownOn(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_LEFT:
             case KeyEvent.VK_A:
-                this.controller.playerRotateLeftOn(this.localPlayerId);
+                this.controller.playerMoveLeftOn(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_RIGHT:
             case KeyEvent.VK_D:
-                this.controller.playerRotateRightOn(this.localPlayerId);
+                this.controller.playerMoveRightOn(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_SPACE:
@@ -553,22 +554,23 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
         switch (keyCode) {
             case KeyEvent.VK_UP:
             case KeyEvent.VK_W:
-                this.controller.playerThrustOff(this.localPlayerId);
+                this.controller.playerMoveUpOff(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_DOWN:
             case KeyEvent.VK_X:
-                this.controller.playerThrustOff(this.localPlayerId);
+            case KeyEvent.VK_S:
+                this.controller.playerMoveDownOff(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_LEFT:
             case KeyEvent.VK_A:
-                this.controller.playerRotateOff(this.localPlayerId);
+                this.controller.playerMoveLeftOff(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_RIGHT:
             case KeyEvent.VK_D:
-                this.controller.playerRotateOff(this.localPlayerId);
+                this.controller.playerMoveRightOff(this.localPlayerId);
                 break;
 
             case KeyEvent.VK_SPACE:

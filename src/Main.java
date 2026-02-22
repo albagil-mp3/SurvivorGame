@@ -27,8 +27,8 @@ public class Main {
 		// => *** Keep viewDimension smaller than actual screen size ***
 		// => *** or... no set viewDimension                         ***
 		// => **********************************************************
-		DoubleVector viewDimension = new DoubleVector(2400, 1500);
-		DoubleVector worldDimension = new DoubleVector(40000, 40000);
+		DoubleVector viewDimension = new DoubleVector(1200, 1200);
+		DoubleVector worldDimension = new DoubleVector(1000, 1000);
 		// endregion
 
 		int maxBodies = 1000;
@@ -41,7 +41,7 @@ public class Main {
 		ActionsGenerator gameRules = new gamerules.InLimitsGoToCenter();
 
 		// *** WORLD DEFINITION PROVIDER ***
-		WorldDefinitionProvider worldProv = new gameworld.RandomWorldDefinitionProvider(
+		WorldDefinitionProvider worldProv = new gameworld.WorldDefinitionProvider(
 				worldDimension, projectAssets);
 
 		// *** CORE ENGINE ***
