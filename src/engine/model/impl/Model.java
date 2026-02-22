@@ -402,6 +402,16 @@ public class Model implements BodyEventProcessor {
         return AbstractBody.getAliveQuantity();
     }
 
+    public boolean canAddDynamicBody() {
+        return AbstractBody.getAliveQuantity() < this.maxBodies;
+    }
+
+    public int getDynamicEnemyCount() {
+        return (int) this.dynamicBodies.values().stream()
+                .filter(body -> body.getBodyType() == BodyType.DYNAMIC)
+                .count();
+    }
+
     public AbstractBody getBody(String entityId, BodyType bodyType) {
 
         switch (bodyType) {
@@ -442,7 +452,8 @@ public class Model implements BodyEventProcessor {
             this.scratchDynamicsBuffer.add(bodyInfo);
         });
 
-        return this.scratchDynamicsBuffer;
+        // Return defensive copy to avoid ConcurrentModificationException
+        return new ArrayList<>(this.scratchDynamicsBuffer);
     }
 
     public int getDefaultMaxBodies() {

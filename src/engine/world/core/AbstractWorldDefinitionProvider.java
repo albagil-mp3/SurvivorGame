@@ -79,6 +79,20 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // *** PROTECTED ***
 
+    // region Asset registration (registerAssetId ***)
+    /**
+     * Registers an asset ID from the ProjectAssets catalog into the gameAssets catalog.
+     * This is useful when you need to manually register assets that will be used later
+     * (e.g., in a LevelGenerator) without adding them as decorators or other entities.
+     * 
+     * @param assetId The asset ID to register (must exist in ProjectAssets)
+     * @throws IllegalArgumentException if assetId is null or not found in ProjectAssets
+     */
+    protected final void registerAssetId(String assetId) {
+        this.assetsRegister.registerAssetId(assetId);
+    }
+    // endregion
+
     // region Asteroid adders (addAsteroid ***)
     protected final void addAsteroidRandomAsset(
             int num, AssetType assetType,
