@@ -348,7 +348,7 @@ public abstract class AbstractBody {
     }
 
     public boolean emittersListEmpty() {
-        return !this.emitters.isEmpty();
+        return this.emitters.isEmpty();
     }
 
     public String emitterEquip(BasicEmitter emitter) {

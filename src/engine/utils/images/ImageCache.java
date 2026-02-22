@@ -90,6 +90,17 @@ public class ImageCache {
             throw new IllegalStateException("ImageCache: GraphicsConfiguration is null");
         }
 
+        // Defensive check: prevent creating images with invalid dimensions
+        if (size <= 0) {
+            String errorMsg = String.format(
+                "ImageCache: Invalid image size detected! assetId=%s, size=%d, angle=%d. "
+                + "This usually means a PhysicsValuesDTO was not properly initialized or was reset.",
+                assetId, size, angle);
+            System.err.println("ERROR: " + errorMsg);
+            // Return a minimal 1x1 transparent image to prevent crash
+            size = 1;
+        }
+
         BufferedImage image = gc.createCompatibleImage(size, size, Transparency.TRANSLUCENT);
         Graphics2D g2 = image.createGraphics();
 

@@ -34,5 +34,7 @@ public interface PhysicsEngine {
 
         public void setDirectAcceleration(double accX, double accY);
 
+        public void setAngle(double angleDegrees);
+
         public void stopPushing();
 }

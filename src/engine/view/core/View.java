@@ -5,6 +5,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.image.BufferedImage;
@@ -111,10 +113,11 @@ import engine.view.renderables.ports.SpatialGridStatisticsRenderDTO;
  * - Keep rendering independent and real-time (active rendering).
  * - Translate user input into controller commands cleanly and predictably.
  */
-public class View extends JFrame implements KeyListener, WindowFocusListener {
+public class View extends JFrame implements KeyListener, WindowFocusListener, MouseMotionListener {
 
     // region Fields
     private BufferedImage background;
+    private AssetCatalog assetCatalog;
     private Controller controller;
     private final ControlPanel controlPanel;
     private final Images images;
@@ -124,6 +127,10 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
     private DoubleVector viewportDimension;
     private DoubleVector worldDimension;
     private AtomicBoolean fireKeyDown = new AtomicBoolean(false);
+    
+    // Mouse tracking for ship rotation
+    private volatile int mouseX = 0;
+    private volatile int mouseY = 0;
 
     // Key state tracking (OS may consume key events without firing keyReleased)
     private final Set<Integer> pressedKeys = new HashSet<>();
@@ -225,6 +232,8 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
     // endregion
 
     public void loadAssets(AssetCatalog assets) {
+        this.assetCatalog = assets;
+        
         String fileName;
         String path = assets.getPath();
 
@@ -241,6 +250,9 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
         if (this.background == null) {
             throw new IllegalArgumentException("Background image could not be loaded");
         }
+        
+        // Pass asset catalog to renderer for animation support
+        this.renderer.setAssetCatalog(assets);
 
         this.renderer.setImages(this.background, this.images);
     }
@@ -373,6 +385,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
 
         this.renderer.setFocusable(false); // El Renderer NO necesita foco
         this.renderer.setIgnoreRepaint(true); // Mejor performance
+        this.renderer.addMouseMotionListener(this); // Mouse tracking on renderer canvas
 
         this.pack();
         this.setVisible(true);
@@ -402,6 +415,9 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
      * causing tracking to become inconsistent. Called from Renderer each frame.
      */
     public void syncInputState() {
+        // Update ship angle to face mouse cursor
+        this.updateShipAngleToMouse();
+        
         if (this.localPlayerId == null || this.controller == null || this.pressedKeys.isEmpty()) {
             return;
         }
@@ -579,5 +595,56 @@ public class View extends JFrame implements KeyListener, WindowFocusListener {
         }
     }
     // endregion
+
+    // region MouseMotionListener
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        this.mouseX = e.getX();
+        this.mouseY = e.getY();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        this.mouseX = e.getX();
+        this.mouseY = e.getY();
+    }
+    // endregion
+    
+    // *** PRIVATE ***
+    
+    /**
+     * Update ship angle to face the mouse cursor.
+     * Called each frame from syncInputState.
+     * The ship follows the mouse cursor continuously as it moves.
+     */
+    private void updateShipAngleToMouse() {
+        if (this.localPlayerId == null || this.controller == null) {
+            return;
+        }
+        
+        // Get player position in world coordinates
+        DoubleVector playerPos = this.controller.getPlayerPosition(this.localPlayerId);
+        if (playerPos == null) {
+            return;
+        }
+        
+        // Get camera position from renderer
+        double cameraX = this.renderer.getCameraX();
+        double cameraY = this.renderer.getCameraY();
+        
+        // Convert ship world position to screen position
+        double shipScreenX = playerPos.x - cameraX;
+        double shipScreenY = playerPos.y - cameraY;
+        
+        // Calculate angle from ship screen position to mouse cursor
+        double dx = this.mouseX - shipScreenX;
+        double dy = this.mouseY - shipScreenY;
+        
+        double angleRadians = Math.atan2(dy, dx);
+        double angleDegrees = Math.toDegrees(angleRadians);
+        
+        // Update player angle - this happens every frame so ship always points to mouse
+        this.controller.playerSetAngle(this.localPlayerId, angleDegrees);
+    }
 
 }

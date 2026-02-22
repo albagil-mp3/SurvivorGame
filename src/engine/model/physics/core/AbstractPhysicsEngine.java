@@ -143,6 +143,28 @@ public abstract class AbstractPhysicsEngine implements PhysicsEngine {
                 
                 this.setPhysicsValues(nextPhyValues);
         }
+        
+        public final void setAngle(double angleDegrees) {
+                PhysicsValuesDTO old = this.getPhysicsValues();
+                
+                // Normalize angle to 0-360 range
+                double normalizedAngle = angleDegrees % 360;
+                if (normalizedAngle < 0) {
+                        normalizedAngle += 360;
+                }
+                
+                // Update nextPhyValues with new angle
+                nextPhyValues.update(
+                                old.timeStamp,
+                                old.posX, old.posY, normalizedAngle, // Updated angle
+                                old.size,
+                                old.speedX, old.speedY,
+                                old.accX, old.accY,
+                                old.angularSpeed, old.angularAcc,
+                                old.thrust);
+                
+                this.setPhysicsValues(nextPhyValues);
+        }
         // endregion
 
         @Override

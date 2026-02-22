@@ -35,7 +35,7 @@ public class BodyFactory {
 
         switch (bodyType) {
             case DYNAMIC:
-                phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, profiler);
+                phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, BodyType.DYNAMIC, profiler);
                 body = new DynamicBody(
                         bodyEventProcessor, spatialGrid, phyEngine,
                         BodyType.DYNAMIC,
@@ -43,14 +43,14 @@ public class BodyFactory {
                 break;
 
             case PLAYER:
-                phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, profiler);
+                phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, BodyType.PLAYER, profiler);
                 body = new PlayerBody(
                         bodyEventProcessor, spatialGrid, phyEngine,
                         maxLifeTime, null, profiler);
                 break;
 
             case PROJECTILE:
-                phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, profiler);
+                phyEngine = new BasicPhysicsEngine(dto1, dto2, dto3, BodyType.PROJECTILE, profiler);
                 body = new DynamicBody(
                         bodyEventProcessor, 
                         spatialGrid, 

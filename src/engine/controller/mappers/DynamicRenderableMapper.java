@@ -76,6 +76,14 @@ public class DynamicRenderableMapper extends DTOPooledMapper<DynamicRenderDTO> {
             return false;
         }
 
+        // Defensive check: detect invalid physics values early
+        if (phyValues.size <= 0) {
+            System.err.println("WARNING: DynamicRenderableMapper detected invalid size! " +
+                "entityId=" + bodyData.entityId + ", size=" + phyValues.size + 
+                ", pos=(" + phyValues.posX + "," + phyValues.posY + ")");
+            return false; // Skip this body to prevent rendering issues
+        }
+
         target.updateFrom(
                 bodyData.entityId,
                 phyValues.posX, phyValues.posY,

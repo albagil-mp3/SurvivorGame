@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import engine.assets.core.AssetCatalog;
+import engine.assets.ports.AnimatedAssetInfoDTO;
 import engine.controller.mappers.DynamicRenderableMapper;
 import engine.controller.ports.EngineState;
 import engine.utils.images.ImageCache;
@@ -26,6 +28,7 @@ import engine.view.hud.impl.InstrumentationHUD;
 import engine.view.hud.impl.PlayerHUD;
 import engine.view.hud.impl.SpatialGridHUD;
 import engine.view.hud.impl.SystemHUD;
+import engine.view.renderables.impl.AnimatedRenderable;
 import engine.view.renderables.impl.DynamicRenderable;
 import engine.view.renderables.impl.Renderable;
 import engine.utils.pooling.PoolMDTO;
@@ -142,6 +145,7 @@ public class Renderer extends Canvas implements Runnable {
     private BufferedImage background;
     private Images images;
     private ImageCache imagesCache;
+    private AssetCatalog assetCatalog;
     private VolatileImage viBackground;
     private final PlayerHUD playerHUD = new PlayerHUD();
     private final SystemHUD systemHUD = new SystemHUD();
@@ -228,8 +232,22 @@ public class Renderer extends Canvas implements Runnable {
     }
 
     public void addDynamicRenderable(String entityId, String assetId) {
-        DynamicRenderable renderable = new DynamicRenderable(entityId, assetId, this.imagesCache, this.currentFrame);
-        this.dynamicRenderables.put(entityId, renderable);
+        // Check if assetId refers to an animation
+        if (this.assetCatalog != null && this.assetCatalog.animationExists(assetId)) {
+            AnimatedAssetInfoDTO animationInfo = this.assetCatalog.getAnimation(assetId);
+            AnimatedRenderable renderable = new AnimatedRenderable(
+                entityId, animationInfo, this.imagesCache, this.currentFrame);
+            this.dynamicRenderables.put(entityId, renderable);
+        } else {
+            // Regular static asset
+            DynamicRenderable renderable = new DynamicRenderable(
+                entityId, assetId, this.imagesCache, this.currentFrame);
+            this.dynamicRenderables.put(entityId, renderable);
+        }
+    }
+    
+    public void setAssetCatalog(AssetCatalog assetCatalog) {
+        this.assetCatalog = assetCatalog;
     }
     // endregion
 
@@ -550,6 +568,16 @@ public class Renderer extends Canvas implements Runnable {
 
         this.maxCameraClampX = Math.max(0.0, woldDim.x - this.viewDimension.x);
         this.maxCameraClampY = Math.max(0.0, woldDim.y - this.viewDimension.y);
+    }
+    // endregion
+    
+    // region Getters (get***)
+    public double getCameraX() {
+        return this.cameraX;
+    }
+    
+    public double getCameraY() {
+        return this.cameraY;
     }
     // endregion
 

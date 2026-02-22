@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import engine.assets.ports.AnimatedAssetInfoDTO;
 import engine.assets.ports.AssetInfoDTO;
 import engine.assets.ports.AssetIntensity;
 import engine.assets.ports.AssetType;
@@ -15,6 +16,7 @@ public class AssetCatalog {
     // region Fields
     private final String path;
     private final Map<String, AssetInfoDTO> assetsById = new HashMap<>();
+    private final Map<String, AnimatedAssetInfoDTO> animationsById = new HashMap<>();
     private Random rnd = new Random();
     // endregion
 
@@ -29,15 +31,27 @@ public class AssetCatalog {
     public boolean exists(String assetId) {
         return assetsById.containsKey(assetId);
     }
+    
+    public boolean animationExists(String animationId) {
+        return animationsById.containsKey(animationId);
+    }
 
     // region getters (get***)
     public AssetInfoDTO get(String assetId) {
         AssetInfoDTO aInfo = assetsById.get(assetId);
         return aInfo;
     }
+    
+    public AnimatedAssetInfoDTO getAnimation(String animationId) {
+        return animationsById.get(animationId);
+    }
 
     public ArrayList<String> getAssetIds() {
         return new ArrayList<String>(this.assetsById.keySet());
+    }
+    
+    public ArrayList<String> getAnimationIds() {
+        return new ArrayList<String>(this.animationsById.keySet());
     }
 
     public String getPath() {
@@ -107,8 +121,13 @@ public class AssetCatalog {
                         assetInfo.type,
                         assetInfo.intensity));
     }
+    
+    public void registerAnimation(AnimatedAssetInfoDTO animationInfo) {
+        this.animationsById.put(animationInfo.animationId, animationInfo);
+    }
 
     public void reset() {
         this.assetsById.clear();
+        this.animationsById.clear();
     }
 }

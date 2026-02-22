@@ -76,16 +76,16 @@ public final class WeaponDefFactory {
         return create(
                 assetId,
                 20.0d,
-                650.0d,
+                1200.0d,  // Velocidad aumentada de 650 a 1200 para que avancen más rápido
                 0.0d,
                 0.0d,
                 1.0d,
-                2,
+                1,        // Tiempo de vida aumentado de 2 a 3 segundos
 
                 0,
                 0,
                 300,
-                false,
+                true,
                 1000,
                 5.0);
 

@@ -10,11 +10,11 @@ public class Renderable {
 
     private final String entityId;
     private final String assetId;
-    private final ImageCache cache;
+    protected final ImageCache cache;
 
-    private long lastFrameSeen;
-    private RenderDTO renderData = null;
-    private BufferedImage image = null;
+    protected long lastFrameSeen;
+    protected RenderDTO renderData = null;
+    protected BufferedImage image = null;
     private String lastImageAssetId = null;
     private int lastImageAngle = Integer.MIN_VALUE;
     private int lastImageSize = -1;
@@ -88,6 +88,10 @@ public class Renderable {
         if (this.image == null) {
             return;
         }
+        
+        if (this.renderData == null) {
+            return;  // No render data yet, skip drawing
+        }
 
         final double posX = this.renderData.posX;
         final double posY = this.renderData.posY;
@@ -106,7 +110,13 @@ public class Renderable {
         this.updateImageFromCache(this.assetId, (int) entityInfo.size, entityInfo.angle);
     }
 
-    private boolean updateImageFromCache(String assetId, int size, double angle) {
+    protected boolean updateImageFromCache(String assetId, int size, double angle) {
+        // Defensive check: log warning if size is invalid
+        if (size <= 0) {
+            System.err.println("WARNING: Renderable.updateImageFromCache called with invalid size: "
+                + "entityId=" + this.getEntityId() + ", assetId=" + assetId + ", size=" + size);
+        }
+        
         int normalizedAngle = ((int) angle % 360 + 360) % 360;
         boolean imageNeedsUpdate = this.image == null
             || this.lastImageAssetId == null

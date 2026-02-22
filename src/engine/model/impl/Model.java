@@ -621,6 +621,22 @@ public class Model implements BodyEventProcessor {
             pBody.moveOff();
         }
     }
+    
+    public void playerSetAngle(String playerId, double angleDegrees) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody != null) {
+            pBody.setAngle(angleDegrees);
+        }
+    }
+    
+    public DoubleVector getPlayerPosition(String playerId) {
+        PlayerBody pBody = (PlayerBody) this.dynamicBodies.get(playerId);
+        if (pBody == null) {
+            return null;
+        }
+        PhysicsValuesDTO phyValues = pBody.getPhysicsValues();
+        return new DoubleVector(phyValues.posX, phyValues.posY);
+    }
     // endregion
 
     public void playerSelectNextWeapon(String playerId) {
@@ -867,7 +883,7 @@ public class Model implements BodyEventProcessor {
 
         BodyRefDTO primaryBodyRef = checkBody.getBodyRef();
 
-        if (!(checkBody.emittersListEmpty())) {
+        if (checkBody.emittersListEmpty()) {
             return; // ======= No emitters =======>
         }
         double dtSeconds = ((double) (newPhyValues.timeStamp - checkBody.getPhysicsValues().timeStamp))
@@ -1223,6 +1239,12 @@ public class Model implements BodyEventProcessor {
         // Body initial speed
         double speedX = bodyConfig.speed * directorX;
         double speedY = bodyConfig.speed * directorY;
+
+        // If addEmitterSpeed is true, projectiles inherit emitter's velocity
+        if (bodyConfig.addEmitterSpeed) {
+            speedX += newPhyValues.speedX;
+            speedY += newPhyValues.speedY;
+        }
 
         // Body acceleration
         double accX = bodyConfig.acceleration * directorX;

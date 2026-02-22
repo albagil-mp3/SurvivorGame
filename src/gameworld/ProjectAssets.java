@@ -1,6 +1,9 @@
 package gameworld;
 
+import java.util.Arrays;
+
 import engine.assets.core.AssetCatalog;
+import engine.assets.ports.AnimatedAssetInfoDTO;
 import engine.assets.ports.AssetIntensity;
 import engine.assets.ports.AssetType;
 
@@ -208,12 +211,13 @@ public final class ProjectAssets {
         this.catalog.register("stardust_02", "stardust-02.png", AssetType.STARDUST, AssetIntensity.HIGH);
 
         // region spaceships (spaceship-***)
-        this.catalog.register("spaceship_01", "spaceship-01.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("spaceship_01", "pac-man.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_02", "spaceship-02.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_03", "spaceship-03.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_04", "spaceship-04.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_05", "spaceship-05.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_06", "spaceship-06.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("spaceship_07", "spaceship-07.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_08", "spaceship-08.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_09", "spaceship-09.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_10", "spaceship-10.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
@@ -222,6 +226,20 @@ public final class ProjectAssets {
         this.catalog.register("spaceship_13", "spaceship-13.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_14", "spaceship-14.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_15", "spaceship-15.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        
+        // Register player spaceship animation (using spaceship frames 2-15)
+        this.catalog.registerAnimation(new AnimatedAssetInfoDTO(
+            "player_ship_animated",
+            Arrays.asList(
+                "spaceship_02", "spaceship_03", "spaceship_04", "spaceship_05",
+                "spaceship_06", "spaceship_07", "spaceship_08", "spaceship_09",
+                "spaceship_10", "spaceship_11", "spaceship_12", "spaceship_13",
+                "spaceship_14", "spaceship_15"
+            ),
+            AssetType.SPACESHIP,
+            AssetIntensity.HIGH,
+            100  // 100ms per frame = 10 FPS animation
+        ));
         // endregion
 
         // region suns (sun-***)

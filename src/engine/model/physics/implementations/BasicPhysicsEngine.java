@@ -2,6 +2,7 @@ package engine.model.physics.implementations;
 
 import static java.lang.System.nanoTime;
 
+import engine.model.bodies.ports.BodyType;
 import engine.model.physics.core.AbstractPhysicsEngine;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import engine.utils.profiling.impl.BodyProfiler;
@@ -10,12 +11,15 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
 
     // region Fields
     private final BodyProfiler profiler;
+    private final BodyType bodyType;
     // endregion
 
     // region Constructors
-    public BasicPhysicsEngine(PhysicsValuesDTO dto1, PhysicsValuesDTO dto2, PhysicsValuesDTO dto3, BodyProfiler profiler) {
+    public BasicPhysicsEngine(PhysicsValuesDTO dto1, PhysicsValuesDTO dto2, PhysicsValuesDTO dto3, 
+                              BodyType bodyType, BodyProfiler profiler) {
         super(dto1, dto2, dto3);
         this.profiler = profiler;
+        this.bodyType = bodyType;
     }
     // endregion
 
@@ -220,11 +224,20 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
 
         long linearStart = this.profiler.startInterval();
         
-        // Apply maximum damping/friction for rigid, minimal sliding movement
-        // Extremely high damping when no acceleration (instant stop)
-        // Very high damping even when accelerating (rigid, direct control)
+        // Apply different damping based on body type:
+        // - PROJECTILE: Very low friction (maintain velocity)
+        // - PLAYER/DYNAMIC: High friction for responsive control
         boolean isAccelerating = (accX != 0.0d || accY != 0.0d);
-        double dampingFactor = isAccelerating ? Math.pow(0.35, dt) : Math.pow(0.0001, dt);
+        double dampingFactor;
+        
+        if (this.bodyType == BodyType.PROJECTILE) {
+            // Projectiles: minimal friction, maintain velocity
+            dampingFactor = Math.pow(0.98, dt);
+        } else {
+            // Player/Dynamics: high friction for tight control
+            dampingFactor = isAccelerating ? Math.pow(0.35, dt) : Math.pow(0.0001, dt);
+        }
+        
         double dampedSpeedX = phyVals.speedX * dampingFactor;
         double dampedSpeedY = phyVals.speedY * dampingFactor;
         

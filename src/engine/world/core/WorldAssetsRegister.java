@@ -1,6 +1,7 @@
 package engine.world.core;
 
 import engine.assets.core.AssetCatalog;
+import engine.assets.ports.AnimatedAssetInfoDTO;
 import engine.assets.ports.AssetInfoDTO;
 import engine.assets.ports.AssetType;
 import gameworld.ProjectAssets;
@@ -59,11 +60,30 @@ public final class WorldAssetsRegister {
             throw new IllegalArgumentException("assetId cannot be null/blank.");
         }
 
+        // Check if it's a regular asset first
         AssetInfoDTO info = this.projectAssets.catalog.get(assetId);
-        if (info == null) {
-            throw new IllegalArgumentException("assetId not found in ProjectAssets catalog: " + assetId);
+        if (info != null) {
+            this.gameAssets.register(info);
+            return;
         }
-
-        this.gameAssets.register(info);
+        
+        // Check if it's an animation
+        AnimatedAssetInfoDTO animationInfo = this.projectAssets.catalog.getAnimation(assetId);
+        if (animationInfo != null) {
+            // Register the animation in gameAssets
+            this.gameAssets.registerAnimation(animationInfo);
+            
+            // Also register all frame assets that compose this animation
+            for (String frameAssetId : animationInfo.frameAssetIds) {
+                AssetInfoDTO frameInfo = this.projectAssets.catalog.get(frameAssetId);
+                if (frameInfo != null) {
+                    this.gameAssets.register(frameInfo);
+                }
+            }
+            return;
+        }
+        
+        // Not found in either catalog
+        throw new IllegalArgumentException("assetId not found in ProjectAssets catalog: " + assetId);
     }
 }

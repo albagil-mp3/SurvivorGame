@@ -353,6 +353,14 @@ public class Controller implements WorldManager, DomainEventProcessor {
     public void playerMoveOff(String playerId) {
         this.model.playerMoveOff(playerId);
     }
+    
+    public void playerSetAngle(String playerId, double angleDegrees) {
+        this.model.playerSetAngle(playerId, angleDegrees);
+    }
+    
+    public DoubleVector getPlayerPosition(String playerId) {
+        return this.model.getPlayerPosition(playerId);
+    }
     // endregion
     // endregion
 

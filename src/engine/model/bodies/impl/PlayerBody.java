@@ -346,6 +346,14 @@ public class PlayerBody extends DynamicBody {
     private void setDirectionalAcceleration(double accX, double accY) {
         this.getPhysicsEngine().setDirectAcceleration(accX, accY);
     }
+    
+    /**
+     * Set the angle of the ship (in degrees).
+     * Used for mouse-facing rotation.
+     */
+    public void setAngle(double angleDegrees) {
+        this.getPhysicsEngine().setAngle(angleDegrees);
+    }
     // endregion
 
     public void setDamage(double damage) {

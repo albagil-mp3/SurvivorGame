@@ -1,9 +1,6 @@
 package gameworld;
 
-import java.awt.Dimension;
-
 import engine.assets.ports.AssetType;
-import engine.model.bodies.ports.BodyType;
 import engine.utils.helpers.DoubleVector;
 import engine.world.core.AbstractWorldDefinitionProvider;
 
@@ -21,9 +18,10 @@ public class WorldDefinitionProvider extends AbstractWorldDefinitionProvider {
     protected void define() {
         this.setBackgroundStatic("back_13");
         // region Players
-        //this.addSpaceship("spaceship_3", 40, 10, 300, 300, 200);
+        //this.addSpaceship("spaceship_02", 19250, 19250, 55);
+        this.addSpaceship("player_ship_animated", 19250, 19250, 55);
+        this.addWeaponPresetBulletRandomAsset(AssetType.BULLET);
 
-		this.addSpaceshipRandomAsset(1, AssetType.SPACESHIP, 10, 10, 55, 19000, 19500);
         
 		// endregion
     }

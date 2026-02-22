@@ -28,7 +28,7 @@ public class Main {
 		// => *** or... no set viewDimension                         ***
 		// => **********************************************************
 		DoubleVector viewDimension = new DoubleVector(1200, 1200);
-		DoubleVector worldDimension = new DoubleVector(1000, 1000);
+		DoubleVector worldDimension = new DoubleVector(5000, 5000);
 		// endregion
 
 		int maxBodies = 1000;
@@ -36,9 +36,9 @@ public class Main {
 
 		ProjectAssets projectAssets = new ProjectAssets();
 
-		// ActionsGenerator gameRules = new gamerules.LimitRebound();
+		 ActionsGenerator gameRules = new gamerules.DeadInLimitsPlayerImmunity();
 		// ActionsGenerator gameRules = new gamerules.ReboundAndCollision();
-		ActionsGenerator gameRules = new gamerules.InLimitsGoToCenter();
+		//ActionsGenerator gameRules = new gamerules.InLimitsGoToCenter();
 
 		// *** WORLD DEFINITION PROVIDER ***
 		WorldDefinitionProvider worldProv = new gameworld.WorldDefinitionProvider(
@@ -65,8 +65,5 @@ public class Main {
 		new gamelevel.LevelBasic(controller, worldDef);
 		// endregion
 
-		// region AI generator (AI***)
-		new gameai.AIBasicSpawner(controller, worldDef, maxAsteroidCreationDelay).activate();
-		// endregion
 	}
 }
