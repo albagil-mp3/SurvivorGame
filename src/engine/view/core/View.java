@@ -241,6 +241,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
             fileName = assets.get(assetId).fileName;
             this.images.add(assetId, path + fileName);
         }
+        System.out.println("View.loadAssets: loaded " + this.images.getSize() + " images: " + this.images.getAssetIds());
 
         // Setting background
         String backgroundId = assets.randomId(AssetType.BACKGROUND);

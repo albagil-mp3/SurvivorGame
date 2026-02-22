@@ -20,7 +20,8 @@ public class WorldDefinitionProvider extends AbstractWorldDefinitionProvider {
         // region Players
         //this.addSpaceship("spaceship_02", 19250, 19250, 55);
         this.addSpaceship("player_ship_animated", 19250, 19250, 55);
-        this.addWeaponPresetBulletRandomAsset(AssetType.BULLET);
+        this.registerAsset("player_weapon"); // weapon visual overlay - must be in Images
+        this.addWeaponPresetBullet("bullet_01");
 
         
 		// endregion

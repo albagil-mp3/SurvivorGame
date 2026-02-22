@@ -20,6 +20,11 @@ public class AnimatedRenderable extends DynamicRenderable {
     private String currentFrameAssetId;
     private int lastFrameIndex = -1;
     
+    // Weapon overlay support for player ships
+    private boolean isPlayerShip = false;
+    private String weaponAssetId = null;
+    private int weaponSize = 0;
+    
     /**
      * Creates an animated renderable for dynamic entities
      * 
@@ -80,15 +85,17 @@ public class AnimatedRenderable extends DynamicRenderable {
         DynamicRenderDTO current = (DynamicRenderDTO) this.getRenderData();
         if (current != null && renderInfo != null) {
             current.updateFrom(renderInfo);
-            // Update image cache with current animation frame
-            this.updateImageFromCache(this.currentFrameAssetId, (int) current.size, current.angle);
+            // Update image cache with current animation frame - always angle 0 for player ship
+            double imageAngle = isPlayerShip ? 0.0 : current.angle;
+            this.updateImageFromCache(this.currentFrameAssetId, (int) current.size, imageAngle);
             this.lastFrameSeen = currentFrame;
             this.renderData = current;
             return;
         }
         
         // First time: renderInfo is from pool, keep it and update image
-        this.updateImageFromCache(this.currentFrameAssetId, (int) renderInfo.size, renderInfo.angle);
+        double imageAngle = isPlayerShip ? 0.0 : renderInfo.angle;
+        this.updateImageFromCache(this.currentFrameAssetId, (int) renderInfo.size, imageAngle);
         this.lastFrameSeen = currentFrame;
         this.renderData = renderInfo;
     }
@@ -99,7 +106,53 @@ public class AnimatedRenderable extends DynamicRenderable {
     @Override
     public void paint(Graphics2D g, long currentFrame) {
         updateAnimationFrame();
-        super.paint(g, currentFrame);
+        
+        // Draw ship (always at angle 0 if it's a player ship, otherwise use actual angle)
+        RenderDTO renderData = this.getRenderData();
+        if (renderData == null || this.image == null) {
+            return;
+        }
+        
+        int x = (int) (renderData.posX - (this.image.getWidth(null) * 0.5d));
+        int y = (int) (renderData.posY - (this.image.getHeight(null) * 0.5d));
+        
+        g.drawImage(this.image, x, y, null);
+        
+        // If this is a player ship with a weapon, draw weapon overlay rotated
+        if (isPlayerShip && weaponAssetId != null && weaponSize > 0 && this.cache != null) {
+            drawWeaponOverlay(g, renderData);
+        }
+    }
+    
+    /**
+     * Draw weapon overlay rotated to match player angle
+     */
+    private void drawWeaponOverlay(Graphics2D g, RenderDTO renderData) {
+        // Get weapon image rotated to player angle
+        int angle = (int) renderData.angle;
+        java.awt.image.BufferedImage weaponImg = this.cache.getImage(angle, weaponAssetId, weaponSize);
+        
+        if (weaponImg == null) {
+            System.err.println("WARNING: Weapon image is NULL! Asset: " + weaponAssetId + 
+                             ", Angle: " + angle + ", Size: " + weaponSize);
+            return;
+        }
+        
+        // Draw weapon centered on ship
+        int wx = (int) (renderData.posX - (weaponImg.getWidth() * 0.5));
+        int wy = (int) (renderData.posY - (weaponImg.getHeight() * 0.5));
+        g.drawImage(weaponImg, wx, wy, null);
+    }
+    
+    /**
+     * Configure this as a player ship with weapon overlay
+     */
+    public void setAsPlayerShip(String weaponAssetId, int weaponSize) {
+        this.isPlayerShip = true;
+        this.weaponAssetId = weaponAssetId;
+        this.weaponSize = weaponSize;
+        System.out.println("AnimatedRenderable: Configured as player ship with weapon: " + 
+                          weaponAssetId + ", size: " + weaponSize);
     }
     
     /**

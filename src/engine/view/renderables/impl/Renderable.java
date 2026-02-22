@@ -10,7 +10,7 @@ public class Renderable {
 
     private final String entityId;
     private final String assetId;
-    protected final ImageCache cache;
+    protected ImageCache cache;
 
     protected long lastFrameSeen;
     protected RenderDTO renderData = null;
@@ -75,6 +75,12 @@ public class Renderable {
 
     public BufferedImage getImage() {
         return this.image;
+    }
+    
+    public void setCache(ImageCache cache) {
+        this.cache = cache;
+        // Invalidate cached image so it gets reloaded with the new cache
+        this.image = null;
     }
 
     public void update(RenderDTO renderInfo, long currentFrame) {

@@ -118,6 +118,8 @@ public class ImageCache {
 
                 g2.drawImage(imageDto.image, 0, 0, size, size, null);
             } else {
+                System.err.println("ImageCache MISSING: assetId='" + assetId + "' size=" + size + " angle=" + angle
+                    + " => drawing RED CIRCLE. Available: " + this.baseImages.getAssetIds());
                 g2.setColor(Color.RED);
                 g2.fillOval(0, 0, size, size); // se dibuja UNA vez
             }

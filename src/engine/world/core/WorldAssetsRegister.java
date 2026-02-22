@@ -78,6 +78,9 @@ public final class WorldAssetsRegister {
                 AssetInfoDTO frameInfo = this.projectAssets.catalog.get(frameAssetId);
                 if (frameInfo != null) {
                     this.gameAssets.register(frameInfo);
+                    System.out.println("WorldAssetsRegister: registered animation frame '" + frameAssetId + "' for animation '" + assetId + "'");
+                } else {
+                    System.err.println("WorldAssetsRegister: frame '" + frameAssetId + "' NOT FOUND in projectAssets for animation '" + assetId + "'");
                 }
             }
             return;

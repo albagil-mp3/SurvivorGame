@@ -233,10 +233,22 @@ public class Renderer extends Canvas implements Runnable {
 
     public void addDynamicRenderable(String entityId, String assetId) {
         // Check if assetId refers to an animation
-        if (this.assetCatalog != null && this.assetCatalog.animationExists(assetId)) {
+        boolean isAnimation = this.assetCatalog != null && this.assetCatalog.animationExists(assetId);
+        System.out.println("Renderer.addDynamicRenderable: entityId=" + entityId + " assetId=" + assetId
+            + " assetCatalogNull=" + (this.assetCatalog == null)
+            + " isAnimation=" + isAnimation);
+        if (isAnimation) {
             AnimatedAssetInfoDTO animationInfo = this.assetCatalog.getAnimation(assetId);
+            // Pass the Renderer's imagesCache reference wrapper so when setImages() is called
+            // and a new ImageCache is created, we update the renderables cache too
             AnimatedRenderable renderable = new AnimatedRenderable(
                 entityId, animationInfo, this.imagesCache, this.currentFrame);
+            
+            // If it's a player animation, configure weapon overlay
+            if (assetId.toLowerCase().contains("player")) {
+                renderable.setAsPlayerShip("player_weapon", 100);
+            }
+            
             this.dynamicRenderables.put(entityId, renderable);
         } else {
             // Regular static asset
@@ -248,8 +260,16 @@ public class Renderer extends Canvas implements Runnable {
     
     public void setAssetCatalog(AssetCatalog assetCatalog) {
         this.assetCatalog = assetCatalog;
+        System.out.println("Renderer.setAssetCatalog: animations registered = " + assetCatalog.getAnimationIds());
     }
     // endregion
+
+    // Called after setImages() to update all renderables with the new ImageCache
+    private void refreshRenderablesCaches() {
+        for (DynamicRenderable renderable : this.dynamicRenderables.values()) {
+            renderable.setCache(this.imagesCache);
+        }
+    }
 
     // region getters (get***)
     public Renderable getLocalPlayerRenderable() {
@@ -292,6 +312,9 @@ public class Renderer extends Canvas implements Runnable {
 
         this.images = images;
         this.imagesCache = new ImageCache(this.getGraphicsConfSafe(), this.images);
+        
+        // Update all existing renderables with the new cache
+        this.refreshRenderablesCaches();
     }
 
     public void setViewDimension(DoubleVector viewDim) {

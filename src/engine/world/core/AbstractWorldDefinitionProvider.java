@@ -372,6 +372,17 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
         this.weapons.add(weapon);
     }
 
+    protected final void registerAsset(String assetId) {
+        requireNotNull(assetId, "assetId cannot be null");
+        this.assetsRegister.registerAssetId(assetId);
+    }
+
+    protected final void addWeaponPresetBullet(String assetId) {
+        requireNotNull(assetId, "assetId cannot be null");
+        this.assetsRegister.registerAssetId(assetId);
+        this.addWeapon(WeaponDefFactory.createPresetedBulletBasic(assetId));
+    }
+
     protected final void addWeaponPresetBulletRandomAsset(AssetType assetType) {
         String assetId = this.assetsRegister.pickRandomAssetId(assetType);
         this.addWeapon(WeaponDefFactory.createPresetedBulletBasic(assetId));

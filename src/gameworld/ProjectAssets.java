@@ -66,7 +66,6 @@ public final class ProjectAssets {
         // endregion
 
         // region bullets (bullet-***)
-        this.catalog.register("bullet_01", "bullet-01.png", AssetType.BULLET, AssetIntensity.LOW);
         // endregion
 
         // region bombs (bomb-***)
@@ -229,6 +228,11 @@ public final class ProjectAssets {
         this.catalog.register("pac-man-a-1", "pac-man-a-1.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("pac-man-a-2", "pac-man-a-2.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("pac-man-a-3", "pac-man-a-3.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+
+        this.catalog.register("bullet_01", "bullet-01.png", AssetType.BULLET, AssetIntensity.LOW);
+
+        // Player weapon visual overlay - AssetType.WEAPON solo para armas visuales
+        this.catalog.register("player_weapon", "ak-47.png", AssetType.WEAPON, AssetIntensity.LOW);
 
 
 
