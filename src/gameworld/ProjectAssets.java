@@ -226,19 +226,23 @@ public final class ProjectAssets {
         this.catalog.register("spaceship_13", "spaceship-13.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_14", "spaceship-14.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("spaceship_15", "spaceship-15.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("pac-man-a-1", "pac-man-a-1.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("pac-man-a-2", "pac-man-a-2.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("pac-man-a-3", "pac-man-a-3.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+
+
+
         
         // Register player spaceship animation (using spaceship frames 2-15)
         this.catalog.registerAnimation(new AnimatedAssetInfoDTO(
             "player_ship_animated",
             Arrays.asList(
-                "spaceship_02", "spaceship_03", "spaceship_04", "spaceship_05",
-                "spaceship_06", "spaceship_07", "spaceship_08", "spaceship_09",
-                "spaceship_10", "spaceship_11", "spaceship_12", "spaceship_13",
-                "spaceship_14", "spaceship_15"
+                "pac-man-a-1", "pac-man-a-2", "pac-man-a-3","pac-man-a-2"
+                
             ),
             AssetType.SPACESHIP,
             AssetIntensity.HIGH,
-            100  // 100ms per frame = 10 FPS animation
+            200  // 100ms per frame = 10 FPS animation  
         ));
         // endregion
 
