@@ -473,12 +473,12 @@ public class Renderer extends Canvas implements Runnable {
                 AffineTransform defaultTransform = gg.getTransform();
                 gg.translate(-this.cameraX, -this.cameraY);
 
-                // Draw static renderables
+                // Draw static renderables FIRST (walls in background)
                 long staticStart = this.rendererProfiler.startInterval();
                 this.drawStaticRenderables(gg);
                 this.rendererProfiler.stopInterval(RendererProfiler.METRIC_DRAW_STATIC, staticStart);
 
-                // Draw dynamic renderables
+                // Draw dynamic renderables LAST (enemies on top - always visible!)
                 long dynamicStart = this.rendererProfiler.startInterval();
                 this.drawDynamicRenderable(gg);
                 this.rendererProfiler.stopInterval(RendererProfiler.METRIC_DRAW_DYNAMIC, dynamicStart);
@@ -615,40 +615,14 @@ public class Renderer extends Canvas implements Runnable {
 
         RenderDTO playerData = localPlayerRenderable.getRenderData();
 
-        double playerX = playerData.posX - this.cameraX;
-        double playerY = playerData.posY - this.cameraY;
+        // Center camera on player position
+        double desiredX = playerData.posX - (this.viewDimension.x / 2.0d);
+        double desiredY = playerData.posY - (this.viewDimension.y / 2.0d);
 
-        double desiredX;
-        double desiredY;
+        this.cameraX = desiredX;
+        this.cameraY = desiredY;
 
-        double minX = this.viewDimension.x * 0.3;
-        double maxX = this.viewDimension.x * 0.7;
-        double minY = this.viewDimension.y * 0.3;
-        double maxY = this.viewDimension.y * 0.7;
-
-        if (playerX < minX) {
-            desiredX = playerData.posX - minX;
-        } else if (playerX > maxX) {
-            desiredX = playerData.posX - maxX;
-        } else {
-            desiredX = playerData.posX - (playerX);
-        }
-
-        if (playerY < minY) {
-            desiredY = playerData.posY - minY;
-        } else if (playerY > maxY) {
-            desiredY = playerData.posY - maxY;
-        } else {
-            desiredY = playerData.posY - (playerY);
-        }
-
-        // double desiredX = playerData.posX - (this.viewDimension.x / 2.0d);
-        // double desiredY = playerData.posY - (this.viewDimension.y / 2.0d);
-
-        this.cameraX += (desiredX - this.cameraX);
-        this.cameraY += (desiredY - this.cameraY);
-
-        // // Clamp when camera goes out of world limits
+        // Clamp when camera goes out of world limits
         this.cameraX = clamp(cameraX, 0.0, this.maxCameraClampX);
         this.cameraY = clamp(cameraY, 0.0, this.maxCameraClampY);
     }

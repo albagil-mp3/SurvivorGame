@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "KillerGameMain",
+            "request": "launch",
+            "mainClass": "killergame.KillerGameMain",
+            "projectName": "MVCGameEngine"
+        },
+        {
+            "type": "java",
             "name": "Main",
             "request": "launch",
             "mainClass": "Main",
