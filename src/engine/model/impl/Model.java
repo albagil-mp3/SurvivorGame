@@ -456,6 +456,26 @@ public class Model implements BodyEventProcessor {
         return new ArrayList<>(this.scratchDynamicsBuffer);
     }
 
+    /**
+     * Thread-safe snapshot for AI threads: uses its own buffer so it never
+     * corrupts scratchDynamicsBuffer used by the Renderer path.
+     * Only returns DYNAMIC bodies (not PLAYER / PROJECTILE).
+     */
+    public ArrayList<BodyData> snapshotDynamicEnemies() {
+        ArrayList<BodyData> result = new ArrayList<>();
+        this.dynamicBodies.forEach((entityId, body) -> {
+            if (body.getBodyType() != BodyType.DYNAMIC) {
+                return;
+            }
+            PhysicsValuesDTO phyValues = body.getPhysicsValues();
+            if (phyValues == null) {
+                return;
+            }
+            result.add(body.getBodyData());
+        });
+        return result;
+    }
+
     public int getDefaultMaxBodies() {
         return this.maxBodies;
     }

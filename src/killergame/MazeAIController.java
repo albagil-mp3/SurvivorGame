@@ -2,7 +2,6 @@ package killergame;
 
 import java.util.ArrayList;
 
-import engine.controller.impl.Controller;
 import engine.model.bodies.ports.BodyData;
 import engine.model.impl.Model;
 import engine.model.physics.ports.PhysicsValuesDTO;
@@ -70,24 +69,14 @@ public class MazeAIController implements Runnable {
     }
     
     private void updateEnemyDirections() {
-        // Get all dynamic bodies (enemies)
-        ArrayList<BodyData> bodies = model.snapshotRenderData();
-        
-        if (bodies == null || bodies.isEmpty()) {
+        // Get only DYNAMIC enemy bodies via thread-safe snapshot
+        // (avoids corrupting the shared scratchDynamicsBuffer used by the Renderer)
+        ArrayList<BodyData> bodiesCopy = model.snapshotDynamicEnemies();
+
+        if (bodiesCopy == null || bodiesCopy.isEmpty()) {
             return;
         }
-        
-        // IMPORTANT: Make a defensive copy and filter out nulls
-        // The snapshot buffer is shared and can be cleared by other threads
-        ArrayList<BodyData> bodiesCopy = new ArrayList<>();
-        synchronized (bodies) {
-            for (BodyData body : bodies) {
-                if (body != null && body.type == engine.model.bodies.ports.BodyType.DYNAMIC) {
-                    bodiesCopy.add(body);
-                }
-            }
-        }
-        
+
         // Update each enemy
         for (BodyData bodyData : bodiesCopy) {
             updateSingleEnemy(bodyData);
