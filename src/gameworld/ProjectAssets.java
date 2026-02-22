@@ -137,14 +137,21 @@ public final class ProjectAssets {
         // endregion
 
         // region moons (moon-***)
-        this.catalog.register("moon_01", "moon-01.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_02", "moon-02.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_03", "moon-03.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_04", "moon-04.png", AssetType.MOON, AssetIntensity.LOW);
+        this.catalog.register("moon_01", "asteroid-01-mini.png", AssetType.ASTEROID, AssetIntensity.LOW);
+        this.catalog.register("moon_02", "asteroid-02-mini.png", AssetType.ASTEROID, AssetIntensity.LOW);
+        this.catalog.register("moon_03", "asteroid-03-mini.png", AssetType.ASTEROID, AssetIntensity.LOW);
+        this.catalog.register("moon_04", "asteroid-04-mini.png", AssetType.ASTEROID, AssetIntensity.LOW);
         this.catalog.register("moon_05", "moon-05.png", AssetType.MOON, AssetIntensity.LOW);
         this.catalog.register("moon_06", "moon-06.png", AssetType.MOON, AssetIntensity.LOW);
         this.catalog.register("moon_07", "moon-07.png", AssetType.MOON, AssetIntensity.LOW);
         this.catalog.register("moon_08", "moon-08.png", AssetType.MOON, AssetIntensity.LOW);
+        // endregion
+
+        // region walls (wall-***)
+        this.catalog.register("wall_01", "wall-01.png", AssetType.STATIC, AssetIntensity.LOW);
+        this.catalog.register("wall_02", "wall-02.png", AssetType.STATIC, AssetIntensity.LOW);
+        this.catalog.register("wall_03", "wall-03.png", AssetType.STATIC, AssetIntensity.LOW);
+        this.catalog.register("wall_04", "wall-04.png", AssetType.STATIC, AssetIntensity.LOW);
         // endregion
 
         // region planets (planet-***)

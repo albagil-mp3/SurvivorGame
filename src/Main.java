@@ -27,7 +27,7 @@ public class Main {
 		// => *** Keep viewDimension smaller than actual screen size ***
 		// => *** or... no set viewDimension                         ***
 		// => **********************************************************
-		DoubleVector viewDimension = new DoubleVector(2400, 1500);
+		DoubleVector viewDimension = new DoubleVector(1920, 1000);
 		DoubleVector worldDimension = new DoubleVector(40000, 40000);
 		// endregion
 
