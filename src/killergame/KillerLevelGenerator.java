@@ -93,7 +93,12 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
     
     @Override
     protected void createPlayers() {
-        // No player for now
+        java.util.ArrayList<engine.world.ports.DefItem> shipDefs = this.getWorldDefinition().spaceships;
+        java.util.ArrayList<engine.world.ports.DefEmitterDTO> weaponDefs = this.getWorldDefinition().weapons;
+        for (engine.world.ports.DefItem def : shipDefs) {
+            engine.world.ports.DefItemDTO body = this.defItemToDTO(def);
+            this.addLocalPlayerIntoTheGame(body, weaponDefs);
+        }
     }
     
     // *** PUBLIC METHODS ***

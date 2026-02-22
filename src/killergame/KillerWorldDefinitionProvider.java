@@ -32,8 +32,8 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
         
         // Register wall assets for LevelGenerator (walls are created there)
         // These assets must be registered here so they load into gameAssets
-        this.registerAssetId("wall_01");
-        this.registerAssetId("wall_02");
+        this.registerAsset("wall_01");
+        this.registerAsset("wall_02");
         
         System.out.println("[DEBUG] KillerWorldDefinitionProvider defining world...");
         
@@ -50,10 +50,8 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
                 this.worldHeight / 2.0);// Center Y
         
         System.out.println("[DEBUG] Added " + this.asteroids.size() + " enemy definitions");
-        
-        // NO player - will be added later
-        // NO weapons - will be added later
-        
-        // Walls will be created directly in LevelGenerator using the wall assets
+
+        // Player - spawns in the center of the maze
+        this.addSpaceship("player_ship_animated", this.worldWidth / 2.0, this.worldHeight / 2.0, 35);
     }
 }

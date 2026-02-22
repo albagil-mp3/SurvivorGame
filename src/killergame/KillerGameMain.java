@@ -34,7 +34,7 @@ public class KillerGameMain {
         // endregion
 
         // region Game configuration
-        int maxBodies = 1000; // Max number of entities (player + enemies + walls) - maze has ~600-800 walls!
+        int maxBodies = 20000; // Max number of entities (player + enemies + walls) - maze has thousands of walls!
         int maxEnemySpawnDelay = 2000; // Spawn delay in milliseconds (2000ms = 2 seconds)
         // endregion
 
