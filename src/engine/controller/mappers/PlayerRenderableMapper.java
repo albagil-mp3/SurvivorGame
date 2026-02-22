@@ -2,6 +2,7 @@ package engine.controller.mappers;
 
 import engine.model.bodies.ports.PlayerDTO;
 import engine.view.renderables.ports.PlayerRenderDTO;
+import gameworld.GameState;
 
 public class PlayerRenderableMapper {
 
@@ -24,7 +25,9 @@ public class PlayerRenderableMapper {
                 playerDto.prymaryAmmoStatus,
                 playerDto.secondaryAmmoStatus,
                 playerDto.minesStatus,
-                playerDto.missilesStatus);
+                playerDto.missilesStatus,
+                playerDto.score,
+                GameState.get().getWorldLevel()); // nivel de mundo, no de jugador
 
         return renderableData;
     }

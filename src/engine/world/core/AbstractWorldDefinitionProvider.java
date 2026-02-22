@@ -79,6 +79,10 @@ public abstract class AbstractWorldDefinitionProvider implements WorldDefinition
 
     // *** PROTECTED ***
 
+    protected final ProjectAssets getProjectAssets() {
+        return this.projectAssets;
+    }
+
     // region Asteroid adders (addAsteroid ***)
     protected final void addAsteroidRandomAsset(
             int num, AssetType assetType,

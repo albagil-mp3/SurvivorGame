@@ -10,9 +10,49 @@ import engine.assets.ports.AssetType;
 public final class ProjectAssets {
 
     public final AssetCatalog catalog;
+    private final Theme theme;
 
+    // Constructor por defecto: tema SPACE
     public ProjectAssets() {
+        this(Theme.SPACE);
+    }
+
+    public ProjectAssets(Theme theme) {
+        this.theme = theme;
         this.catalog = new AssetCatalog("src/resources/images/");
+        this.registerCommonAssets();
+        this.registerThemeAssets(theme);
+    }
+
+    public Theme getTheme() {
+        return this.theme;
+    }
+
+    // *** PRIVATE ***
+
+    /**
+     * Registra los assets temáticos bajo IDs predecibles:
+     *   "theme_back"   → fondo principal del mundo
+     *   "theme_enemy"  → enemigo/asteroide principal del tema
+     *
+     * WorldDefinitionProvider usa estos IDs sin saber qué tema está activo.
+     */
+    private void registerThemeAssets(Theme theme) {
+        switch (theme) {
+            case JUNGLE -> {
+                // Fondo de jungla
+                this.catalog.register("theme_back",  "jungle-floor.jpg",   AssetType.BACKGROUND, AssetIntensity.LOW);
+                // Enemigos/obstáculos de jungla  ← añade aquí tus PNGs de jungla
+                // this.catalog.register("theme_enemy_01", "jungle-rock-01.png",  AssetType.ASTEROID, AssetIntensity.HIGH);
+            }
+            case SPACE -> {
+                // Fondo de espacio (por defecto)
+                this.catalog.register("theme_back",  "bg-13-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
+            }
+        }
+    }
+
+    private void registerCommonAssets() {
 
         // region asteroids (asteroid-***)
         this.catalog.register("asteroid_01", "asteroid-01-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
@@ -26,6 +66,7 @@ public final class ProjectAssets {
         // endregion
 
         // region backgrounds (bg-***)
+        // NOTA: el fondo del tema activo se registra como "theme_back" en registerThemeAssets()
         this.catalog.register("back_01", "bg-01-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
         this.catalog.register("back_02", "bg-02-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
         this.catalog.register("back_03", "bg-03-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
@@ -138,42 +179,7 @@ public final class ProjectAssets {
         this.catalog.register("meteor_05", "meteor-05.png", AssetType.METEOR, AssetIntensity.HIGH);
         // endregion
 
-        // region moons (moon-***)
-        this.catalog.register("moon_01", "moon-01.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_02", "moon-02.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_03", "moon-03.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_04", "moon-04.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_05", "moon-05.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_06", "moon-06.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_07", "moon-07.png", AssetType.MOON, AssetIntensity.LOW);
-        this.catalog.register("moon_08", "moon-08.png", AssetType.MOON, AssetIntensity.LOW);
-        // endregion
-
-        // region planets (planet-***)
-        this.catalog.register("planet_01", "planet-01.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_02", "planet-02.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_03", "planet-03.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_04", "planet-04.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_05", "planet-05.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_06", "planet-06.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_07", "planet-07.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_08", "planet-08.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_09", "planet-09.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_10", "planet-10.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_11", "planet-11.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_12", "planet-12.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_13", "planet-13.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_14", "planet-14.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_15", "planet-15.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_16", "planet-16.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_17", "planet-17.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_18", "planet-18.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_19", "planet-19.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_20", "planet-20.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_21", "planet-21.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_22", "planet-22.png", AssetType.PLANET, AssetIntensity.HIGH);
-        this.catalog.register("planet_23", "planet-23.png", AssetType.PLANET, AssetIntensity.HIGH);
-        // endregion
+     
 
         // region rainbows (rainbow-***)
         this.catalog.register("rainbow_01", "rainbow-01.png", AssetType.RAINBOW, AssetIntensity.HIGH);

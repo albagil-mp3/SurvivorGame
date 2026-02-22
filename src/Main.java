@@ -34,11 +34,11 @@ public class Main {
 		int maxBodies = 1000;
 		int maxAsteroidCreationDelay = 3; // Used by AIBasicSpawner
 
-		ProjectAssets projectAssets = new ProjectAssets();
+		ProjectAssets projectAssets = new ProjectAssets(gameworld.Theme.JUNGLE); // <-- cambia el tema aquí
 
-		 ActionsGenerator gameRules = new gamerules.DeadInLimitsPlayerImmunity();
+		 //ActionsGenerator gameRules = new gamerules.DeadInLimitsPlayerImmunity();
 		// ActionsGenerator gameRules = new gamerules.ReboundAndCollision();
-		//ActionsGenerator gameRules = new gamerules.InLimitsGoToCenter();
+		ActionsGenerator gameRules = new gamerules.InLimitsGoToCenter();
 
 		// *** WORLD DEFINITION PROVIDER ***
 		WorldDefinitionProvider worldProv = new gameworld.WorldDefinitionProvider(

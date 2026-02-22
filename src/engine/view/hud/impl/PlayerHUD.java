@@ -17,19 +17,21 @@ public class PlayerHUD extends DataHUD {
     }
 
     private void addItems() {
-        this.addTitle("PLAYER STATUS");
-        this.addSkipValue(); // Entity ID
-        this.addSkipValue(); // Player name
-        this.addBarItem("Damage", 125, false);
-        this.addBarItem("Energy", 125, false);
-        this.addBarItem("Shield", 125, false);
-        this.addTextItem("Temperature");
-        this.addTitle("Weapons");
-        this.addSkipValue(); // Active weapon
-        this.addBarItem("Guns", 125, false);
-        this.addBarItem("Burst", 125, false);
-        this.addBarItem("Mines", 125, false);
-        this.addBarItem("Missiles", 125, false);
+        this.addSkipValue();              // entityId
+        this.addSkipValue();              // playerName
+        this.addSkipValue();              // damage
+        this.addSkipValue();              // energy
+        this.addSkipValue();              // shield
+        this.addSkipValue();              // temperature
+        this.addSkipValue();              // activeWeapon
+        this.addSkipValue();              // guns
+        this.addSkipValue();              // burst
+        this.addSkipValue();              // mines
+        this.addSkipValue();              // missiles
+        this.addTitle("Progress");
+        this.addTextItem("Level");
+        this.addTextItem("Score");
+
         this.prepareHud();
     }
 }

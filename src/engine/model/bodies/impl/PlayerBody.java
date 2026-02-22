@@ -25,6 +25,7 @@ public class PlayerBody extends DynamicBody {
     private int temperature = 1;
     private double shield = 1D;
     private int score = 0;
+    private int level = 1;
     
     // Directional movement state
     private boolean movingUp = false;
@@ -152,7 +153,8 @@ public class PlayerBody extends DynamicBody {
                 this.getAmmoStatusSecondary(),
                 this.getAmmoStatusMines(),
                 this.getAmmoStatusMissiles(),
-                this.score);
+                this.score,
+                this.level);
         return playerData;
     }
 

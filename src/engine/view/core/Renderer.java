@@ -402,10 +402,10 @@ public class Renderer extends Canvas implements Runnable {
             this.playerHUD.draw(g, playerData.toObjectArray());
         }
 
-        SpatialGridStatisticsRenderDTO spatialGridStats = this.view.getSpatialGridStatistics();
+       /*/ SpatialGridStatisticsRenderDTO spatialGridStats = this.view.getSpatialGridStatistics();
         if (spatialGridStats != null) {
             this.spatialGridHUD.draw(g, spatialGridStats.toObjectArray());
-        }
+        }*/
     }
 
     private void drawStaticRenderables(Graphics2D g) {

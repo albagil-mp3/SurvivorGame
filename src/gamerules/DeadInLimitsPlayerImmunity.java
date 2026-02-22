@@ -90,6 +90,7 @@ public class DeadInLimitsPlayerImmunity implements ActionsGenerator {
 
         if (player != null)
             actions.add(new ActionDTO(player.id(), player.type(), ActionType.NO_MOVE, event));
+            
 
         if (primaryDie)
             actions.add(new ActionDTO(

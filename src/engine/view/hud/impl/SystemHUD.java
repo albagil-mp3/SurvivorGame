@@ -11,7 +11,7 @@ public class SystemHUD extends DataHUD {
                 Color.GRAY, // Highlight color
                 new Color(255, 255, 255, 150), // Label color
                 new Color(255, 255, 255, 255), // Data color
-                1200, 400, 35);
+                50, 200, 35);
 
         this.addItems();
     }
@@ -19,13 +19,12 @@ public class SystemHUD extends DataHUD {
     private void addItems() {
         this.addTitle("SYSTEM STATUS");
         this.addTextItem("FPS");
-        this.addTextItem("Draw Scene");
-        this.addTextItem("Cache images");
-        this.addTextItem("Cache hits");
-        this.addTextItem("Entities Alive");
-        this.addTextItem("Entities Dead");
-        this.addTextItem("Curren Frame");
-
+        this.addSkipValue();              // Draw Scene
+        this.addSkipValue();             // Draw HUD
+        this.addSkipValue();             // Draw Total
+        this.addSkipValue();
+        this.addSkipValue();      
+        this.addSkipValue();
         this.prepareHud();
     }
 }

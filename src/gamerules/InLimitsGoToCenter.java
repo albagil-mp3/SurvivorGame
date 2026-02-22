@@ -11,11 +11,10 @@ import engine.events.domain.ports.eventtype.DomainEvent;
 import engine.events.domain.ports.eventtype.EmitEvent;
 import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
+import gameworld.*;
 
 public class InLimitsGoToCenter implements ActionsGenerator {
-
     // *** INTERFACE IMPLEMENTATIONS ***
-
     @Override //
     public void provideActions(List<DomainEvent> domainEvents, List<ActionDTO> actions) {
         if (domainEvents != null) {
@@ -26,6 +25,7 @@ public class InLimitsGoToCenter implements ActionsGenerator {
     }
 
     // *** PRIVATE ***
+    
 
     private void applyGameRules(DomainEvent event, List<ActionDTO> actions) {
         switch (event) {
@@ -36,6 +36,11 @@ public class InLimitsGoToCenter implements ActionsGenerator {
                 actions.add(new ActionDTO(
                         limitEvent.primaryBodyRef.id(), limitEvent.primaryBodyRef.type(),
                         action, event));
+
+                GameState.get().incrementWorldLevel();
+           
+                System.out.println(GameState.get().getWorldLevel());
+
                 break;
 
             }
@@ -44,6 +49,7 @@ public class InLimitsGoToCenter implements ActionsGenerator {
                 actions.add(new ActionDTO(
                         e.primaryBodyRef.id(), e.primaryBodyRef.type(),
                         ActionType.DIE, event));
+                        
 
             case EmitEvent e -> {
 
@@ -53,7 +59,6 @@ public class InLimitsGoToCenter implements ActionsGenerator {
                             e.primaryBodyRef.type(),
                             ActionType.SPAWN_BODY,
                             event));
-
                 } else {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),

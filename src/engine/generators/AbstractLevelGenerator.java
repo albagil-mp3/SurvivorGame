@@ -67,8 +67,7 @@ public abstract class AbstractLevelGenerator {
     }
 
     protected String addLocalPlayerIntoTheGame(
-            DefItemDTO bodyDef, ArrayList<DefEmitterDTO> weaponDefs,
-            ArrayList<DefEmitterDTO> trailDefs) {
+            DefItemDTO bodyDef, ArrayList<DefEmitterDTO> weaponDefs) {
 
         String playerId = this.worldManager.addPlayer(
                 bodyDef.assetId, bodyDef.size,
@@ -83,7 +82,6 @@ public abstract class AbstractLevelGenerator {
             throw new IllegalStateException("Failed to create local player.");
         }
 
-        this.equipEmitters(playerId, trailDefs);
         this.equipWeapons(playerId, weaponDefs);
 
         this.worldManager.setLocalPlayer(playerId);

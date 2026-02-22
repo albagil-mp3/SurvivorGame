@@ -49,12 +49,11 @@ public class LevelBasic extends AbstractLevelGenerator {
         WorldDefinition worldDef = this.getWorldDefinition();
         ArrayList<DefItem> shipDefs = worldDef.spaceships;
         ArrayList<DefEmitterDTO> weaponDefs = worldDef.weapons;
-        ArrayList<DefEmitterDTO> trailDefs = worldDef.trailEmitters;
 
         for (DefItem def : shipDefs) {
             DefItemDTO body = this.defItemToDTO(def);
 
-            this.addLocalPlayerIntoTheGame(body, weaponDefs, trailDefs);
+            this.addLocalPlayerIntoTheGame(body, weaponDefs);
         }
     }
 }

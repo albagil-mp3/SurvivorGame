@@ -15,6 +15,7 @@ public class PlayerDTO {
     public final double minesStatus;
     public final double missilesStatus;
     public final int score;
+    public final int level;
 
     public PlayerDTO(
             String entityId,
@@ -29,7 +30,8 @@ public class PlayerDTO {
             double secondaryAmmoStatus,
             double minesStatus,
             double missilesStatus,
-            int score) {
+            int score,
+            int level) {
 
         this.entityId = entityId;
         this.playerName = playerName;
@@ -43,5 +45,6 @@ public class PlayerDTO {
         this.minesStatus = minesStatus;
         this.missilesStatus = missilesStatus;
         this.score = score;
+        this.level = level;
     }
 }
