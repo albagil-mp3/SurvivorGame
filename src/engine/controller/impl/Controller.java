@@ -445,9 +445,21 @@ public class Controller implements WorldManager, DomainEventProcessor {
                 accX, accY, angle, angularSpeed, angularAcc, thrust, -1L);
 
         if (entityId == null || entityId.isEmpty()) {
+            System.err.println("[ERROR] Failed to create dynamic body - entityId is null/empty! Max entities reached?");
             return; // ======= Max entity quantity reached =======>
         }
+        
         this.view.addDynamicRenderable(entityId, assetId);
+    }
+
+    @Override
+    public boolean canAddDynamicBody() {
+        return this.model.canAddDynamicBody();
+    }
+
+    @Override
+    public int getDynamicEnemyCount() {
+        return this.model.getDynamicEnemyCount();
     }
 
     @Override

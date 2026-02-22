@@ -35,8 +35,23 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
         this.registerAssetId("wall_01");
         this.registerAssetId("wall_02");
         
+        System.out.println("[DEBUG] KillerWorldDefinitionProvider defining world...");
+        
+        // Enemies - Small circular enemies that fit in maze corridors
+        // Size 30 (diameter) - small enough to navigate the maze
+        // Spawned in the center (spawner will create more instances)
+        this.addAsteroidRandomAsset(
+                1,                      // Number of definitions (spawner will create more)
+                AssetType.ASTEROID,     // Enemy type
+                0.0,                    // Heading (will be randomized by spawner)
+                1.0,                    // Density
+                30.0,                   // Size 30 - small for maze navigation
+                this.worldWidth / 2.0,  // Center X
+                this.worldHeight / 2.0);// Center Y
+        
+        System.out.println("[DEBUG] Added " + this.asteroids.size() + " enemy definitions");
+        
         // NO player - will be added later
-        // NO enemies - will be added later
         // NO weapons - will be added later
         
         // Walls will be created directly in LevelGenerator using the wall assets

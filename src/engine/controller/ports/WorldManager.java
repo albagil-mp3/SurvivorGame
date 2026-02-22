@@ -12,6 +12,10 @@ public interface WorldManager {
                         double speedX, double speedY, double accX, double accY,
                         double angle, double angularSpeed, double angularAcc, double thrust);
 
+        public boolean canAddDynamicBody();
+
+        public int getDynamicEnemyCount();
+
         public String addPlayer(String assetId, double size, double posX, double posY,
                         double speedX, double speedY, double accX, double accY,
                         double angle, double angularSpeed, double angularAcc, double thrust);

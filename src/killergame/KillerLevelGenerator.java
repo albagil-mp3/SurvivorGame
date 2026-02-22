@@ -27,6 +27,7 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
     private double mazeOffsetX;
     private double mazeOffsetY;
     private int mazeCellSize;
+    private int[][] mazeGrid; // Store the maze grid for navigation
     
     // Maze generation constants
     private static final int WALL = 0;
@@ -95,6 +96,19 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
         // No player for now
     }
     
+    // *** PUBLIC METHODS ***
+    
+    /**
+     * Creates a MazeNavigator for AI pathfinding.
+     * Call this after level generation is complete.
+     */
+    public MazeNavigator createMazeNavigator() {
+        if (mazeGrid == null) {
+            throw new IllegalStateException("Maze not generated yet. Call createStatics() first.");
+        }
+        return new MazeNavigator(mazeGrid, mazeOffsetX, mazeOffsetY, mazeCellSize);
+    }
+    
     // *** PRIVATE HELPERS - Global Maze Generation ***
     
     /**
@@ -149,10 +163,11 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
         // Vaciar zona central
         clearCentralSpawnArea(maze, cellSize);
 
-        // Guardar datos del grid para alinear el spawn
+        // Guardar datos del grid para alinear el spawn y navegación
         this.mazeOffsetX = offsetX;
         this.mazeOffsetY = offsetY;
         this.mazeCellSize = cellSize;
+        this.mazeGrid = maze; // Store for navigation
 
         // Renderizar centrado
         renderMazeGrid(maze, offsetX, offsetY, cellSize, "wall_01");

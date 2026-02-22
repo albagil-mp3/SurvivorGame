@@ -17,10 +17,13 @@ import engine.world.ports.WorldDefinition;
 public class KillerEnemySpawner extends AbstractIAGenerator {
 
     // region Fields
+    private static final int MAX_ENEMIES = 20; // Maximum number of concurrent enemies
+    
     private final ArrayList<DefItem> enemyDefs;
     private final Random rnd = new Random();
     private final double worldWidth;
     private final double worldHeight;
+    private final MazeNavigator navigator;
     // endregion
 
     // *** CONSTRUCTORS ***
@@ -28,13 +31,15 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
     public KillerEnemySpawner(
             WorldManager worldEvolver, 
             WorldDefinition worldDefinition,
-            int maxCreationDelay) {
+            int maxCreationDelay,
+            MazeNavigator navigator) {
 
         super(worldEvolver, worldDefinition, maxCreationDelay);
 
         this.enemyDefs = this.worldDefinition.asteroids;
         this.worldWidth = worldDefinition.worldWidth;
         this.worldHeight = worldDefinition.worldHeight;
+        this.navigator = navigator;
     }
 
     // *** PROTECTED (alphabetical order) ***
@@ -52,6 +57,26 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
 
     @Override
     protected void onTick() {
+        if (this.enemyDefs.isEmpty()) {
+            System.err.println("[ERROR] No enemy definitions available!");
+            return;
+        }
+        
+        // Check current enemy count
+        int currentEnemies = this.worldEvolver.getDynamicEnemyCount();
+        
+        // Don't spawn if we've reached the maximum
+        if (currentEnemies >= MAX_ENEMIES) {
+            // Max enemy limit reached - wait for an enemy to be destroyed
+            return;
+        }
+        
+        // Check if we can add more bodies to the world (total entity limit)
+        if (!this.worldEvolver.canAddDynamicBody()) {
+            // Max total entities reached - wait for space to become available
+            return;
+        }
+        
         // Select a random enemy definition
         DefItem defItem = this.enemyDefs.get(
                 this.rnd.nextInt(this.enemyDefs.size()));
@@ -65,30 +90,51 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
         // Convert prototype to DTO to resolve range-based properties
         DefItemDTO enemyDef = this.defItemToDTO(defItem);
 
-        // Spawn enemies at random positions in the maze
-        // Avoid the corners and edges where walls are
-        double margin = 150.0; // Stay away from outer walls
-        double newPosX = margin + rnd.nextDouble() * (worldWidth - 2 * margin);
-        double newPosY = margin + rnd.nextDouble() * (worldHeight - 2 * margin);
+        // Spawn enemies at the center of the map, aligned to grid
+        double centerX = worldWidth / 2.0;
+        double centerY = worldHeight / 2.0;
         
-        // Give enemies random movement direction
-        double angle = rnd.nextDouble() * 360.0;
-        double speed = 60.0 + rnd.nextDouble() * 40.0; // Random speed between 60-100
-        double speedX = speed * Math.cos(Math.toRadians(angle));
-        double speedY = speed * Math.sin(Math.toRadians(angle));
+        // Convert to grid and back to ensure spawn at cell center
+        MazeNavigator.GridPosition spawnGrid = navigator.worldToGrid(centerX, centerY);
+        MazeNavigator.WorldPosition spawnPos = navigator.gridToWorld(spawnGrid.row, spawnGrid.col);
+        double newPosX = spawnPos.x;
+        double newPosY = spawnPos.y;
+        
+        // Use navigator to get a valid starting direction
+        java.util.List<MazeNavigator.Direction> validDirs = navigator.getValidDirections(newPosX, newPosY);
+        
+        MazeNavigator.Direction startDir;
+        if (validDirs.isEmpty()) {
+            // Fallback to random direction if no valid paths (shouldn't happen in center)
+            MazeNavigator.Direction[] allDirs = MazeNavigator.Direction.values();
+            startDir = allDirs[rnd.nextInt(allDirs.length)];
+            System.err.println("[WARN] No valid paths at spawn position, using random direction");
+        } else {
+            // Choose random valid direction
+            startDir = validDirs.get(rnd.nextInt(validDirs.size()));
+        }
+        
+        // Get velocity for chosen direction
+        double speed = 40.0; // Constant speed
+        MazeNavigator.Velocity velocity = navigator.getVelocityForDirection(startDir, speed);
+        double speedX = velocity.vx;
+        double speedY = velocity.vy;
+        double angle = Math.toDegrees(Math.atan2(speedY, speedX));
+
+        double enemySize = 30.0; // Small enemy size to fit in maze corridors
 
         // Create new DTO with updated position and velocity
         DefItemDTO updatedEnemyDef = new DefItemDTO(
                 enemyDef.assetId,
-                enemyDef.size,
-                angle,  // Random heading
+                enemySize,      // Small size to fit in corridors
+                angle,          // Direction angle
                 newPosX,
                 newPosY,
                 enemyDef.density,
                 speedX,
                 speedY,
                 enemyDef.angularSpeed,
-                0.0);  // No thrust for enemies
+                0.0);           // No thrust for enemies
 
         // Inject enemy into the game
         this.addDynamicIntoTheGame(updatedEnemyDef);

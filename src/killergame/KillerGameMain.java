@@ -29,13 +29,13 @@ public class KillerGameMain {
 
         // region Game dimensions
         // Maze size - square world for Pacman-style gameplay
-        DoubleVector viewDimension = new DoubleVector(1000, 1000);
-        DoubleVector worldDimension = new DoubleVector(1000, 1000); // Square maze
+        DoubleVector viewDimension = new DoubleVector(800, 800);    // Camera viewport (what you see)
+        DoubleVector worldDimension = new DoubleVector(2400, 2400); // Full maze world (much larger)
         // endregion
 
         // region Game configuration
-        int maxBodies = 150; // Max number of entities (player + enemies + walls)
-        int maxEnemySpawnDelay = 3; // Spawn delay in seconds for enemies (slower spawn)
+        int maxBodies = 1000; // Max number of entities (player + enemies + walls) - maze has ~600-800 walls!
+        int maxEnemySpawnDelay = 2000; // Spawn delay in milliseconds (2000ms = 2 seconds)
         // endregion
 
         // *** ASSETS ***
@@ -50,13 +50,17 @@ public class KillerGameMain {
 
         // *** CORE ENGINE ***
 
+        // region Model - Create model first to access it for AI
+        Model model = new Model(worldDimension, maxBodies);
+        // endregion
+
         // region Controller
         Controller controller = new Controller(
                 worldDimension,
                 viewDimension,
                 maxBodies,
                 new View(),
-                new Model(worldDimension, maxBodies),
+                model,  // Pass the model reference
                 gameRules);
 
         controller.activate();
@@ -69,11 +73,21 @@ public class KillerGameMain {
         // endregion
 
         // region Level generator
-        new KillerLevelGenerator(controller, worldDef);
+        KillerLevelGenerator levelGenerator = new KillerLevelGenerator(controller, worldDef);
         // endregion
 
-        // region AI generator - DISABLED for now
-        // new KillerEnemySpawner(controller, worldDef, maxEnemySpawnDelay).activate();
+        // region Maze Navigation - Create navigator for AI pathfinding
+        MazeNavigator mazeNavigator = levelGenerator.createMazeNavigator();
+        // endregion
+
+        // region Maze AI Controller - Manages enemy navigation
+        MazeAIController mazeAI = new MazeAIController(model, mazeNavigator);
+        mazeAI.activate();
+        System.out.println("[MAIN] === Game initialization complete! ===\n");
+        // endregion
+
+        // region AI generator - Enemy spawner
+        new KillerEnemySpawner(controller, worldDef, maxEnemySpawnDelay, mazeNavigator).activate();
         // endregion
     }
 }
