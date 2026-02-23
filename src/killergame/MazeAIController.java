@@ -99,10 +99,8 @@ public class MazeAIController implements Runnable {
         // Only consider changing direction when very close to the center of the current cell
         Direction nextDir = currentDir; // Default: keep current direction
         
-        if (navigator.isAtCellCenter(posX, posY)) {
-            // Only when very close to center, check if we need to change direction
-            nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
-        }
+        // Check if we need to change direction (always attempt to choose next direction)
+        nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
 
         // Prevent movement into walls even if we're off-center
         boolean blocked = navigator.isDirectionBlocked(posX, posY, nextDir);
