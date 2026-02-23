@@ -29,7 +29,6 @@ public class MazeAIController implements Runnable {
     public void activate() {
         this.running = true;
         this.thread.start();
-        System.out.println("MazeAIController activated!");
     }
     
     public void deactivate() {
@@ -38,7 +37,6 @@ public class MazeAIController implements Runnable {
     
     @Override
     public void run() {
-        System.out.println("[MAZE-AI] MazeAIController thread started!");
         
         int updateCount = 0;
         while (this.running) {
@@ -116,9 +114,39 @@ public class MazeAIController implements Runnable {
             // Only when very close to center, check if we need to change direction
             nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
         }
-        
+
+        // Prevent movement into walls even if we're off-center
+        boolean blocked = navigator.isDirectionBlocked(posX, posY, nextDir);
+        if (blocked) {
+            Direction alternative = navigator.chooseNextDirection(posX, posY, currentDir);
+            if (!navigator.isDirectionBlocked(posX, posY, alternative)) {
+                nextDir = alternative;
+                blocked = false;
+            }
+        }
+
         // Calculate new velocity for the chosen direction
-        Velocity newVelocity = navigator.getVelocityForDirection(nextDir, enemySpeed);
+        Velocity newVelocity = blocked
+                ? new Velocity(0.0, 0.0)
+                : navigator.getVelocityForDirection(nextDir, enemySpeed);
+
+        double newPosX = posX;
+        double newPosY = posY;
+        if (blocked) {
+            var center = navigator.getCellCenterForWorld(posX, posY);
+            newPosX = center.x;
+            newPosY = center.y;
+        }
+
+        // Keep enemies centered on the corridor axis to avoid clipping walls
+        if (!blocked) {
+            var center = navigator.getCellCenterForWorld(posX, posY);
+            if (nextDir == Direction.EAST || nextDir == Direction.WEST) {
+                newPosY = center.y;
+            } else if (nextDir == Direction.NORTH || nextDir == Direction.SOUTH) {
+                newPosX = center.x;
+            }
+        }
         
         // NO POSITION MODIFICATION - Let the enemy move completely naturally
         // Position is never modified, only velocity changes when direction changes
@@ -126,8 +154,8 @@ public class MazeAIController implements Runnable {
         // Always update velocity to maintain movement (even if not changing position)
         PhysicsValuesDTO newPhyValues = new PhysicsValuesDTO(
             phyValues.timeStamp,
-            posX,
-            posY,
+            newPosX,
+            newPosY,
             phyValues.angle,
             phyValues.size,
             newVelocity.vx,  // New velocity X

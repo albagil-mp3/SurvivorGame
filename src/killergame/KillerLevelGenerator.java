@@ -97,7 +97,19 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
         java.util.ArrayList<engine.world.ports.DefEmitterDTO> weaponDefs = this.getWorldDefinition().weapons;
         for (engine.world.ports.DefItem def : shipDefs) {
             engine.world.ports.DefItemDTO body = this.defItemToDTO(def);
-            this.addLocalPlayerIntoTheGame(body, weaponDefs);
+            double[] spawnPos = findValidCornerSpawnPosition();
+            engine.world.ports.DefItemDTO spawnedBody = new engine.world.ports.DefItemDTO(
+                    body.assetId,
+                    body.size,
+                    body.angle,
+                    spawnPos[0],
+                    spawnPos[1],
+                    body.density,
+                    body.speedX,
+                    body.speedY,
+                    body.angularSpeed,
+                    body.thrust);
+            this.addLocalPlayerIntoTheGame(spawnedBody, weaponDefs);
         }
     }
     
@@ -112,6 +124,64 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
             throw new IllegalStateException("Maze not generated yet. Call createStatics() first.");
         }
         return new MazeNavigator(mazeGrid, mazeOffsetX, mazeOffsetY, mazeCellSize);
+    }
+
+    private double[] findValidCornerSpawnPosition() {
+        if (mazeGrid == null) {
+            return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+        }
+
+        int rows = mazeGrid.length;
+        int cols = mazeGrid[0].length;
+
+        int[][] corners = new int[][] {
+            { 1, 1 },
+            { 1, cols - 2 },
+            { rows - 2, 1 },
+            { rows - 2, cols - 2 }
+        };
+
+        int[] order = new int[] { 0, 1, 2, 3 };
+        for (int i = order.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int tmp = order[i];
+            order[i] = order[j];
+            order[j] = tmp;
+        }
+
+        for (int idx : order) {
+            int[] corner = corners[idx];
+            int[] cell = findNearestPathCell(corner[0], corner[1], 6);
+            if (cell != null) {
+                double x = mazeOffsetX + (cell[1] + 0.5) * mazeCellSize;
+                double y = mazeOffsetY + (cell[0] + 0.5) * mazeCellSize;
+                return new double[] { x, y };
+            }
+        }
+
+        return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+    }
+
+    private int[] findNearestPathCell(int startRow, int startCol, int maxRadius) {
+        int rows = mazeGrid.length;
+        int cols = mazeGrid[0].length;
+
+        for (int radius = 0; radius <= maxRadius; radius++) {
+            for (int dr = -radius; dr <= radius; dr++) {
+                for (int dc = -radius; dc <= radius; dc++) {
+                    int r = startRow + dr;
+                    int c = startCol + dc;
+                    if (r < 0 || r >= rows || c < 0 || c >= cols) {
+                        continue;
+                    }
+                    if (mazeGrid[r][c] == PATH) {
+                        return new int[] { r, c };
+                    }
+                }
+            }
+        }
+
+        return null;
     }
     
     // *** PRIVATE HELPERS - Global Maze Generation ***
