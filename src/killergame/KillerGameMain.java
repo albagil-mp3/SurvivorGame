@@ -56,15 +56,14 @@ public class KillerGameMain {
         ActionsGenerator gameRules = new KillerGameRules(model);
 
         // region Controller
+        View view = new View();
         Controller controller = new Controller(
-                worldDimension,
-                viewDimension,
-                maxBodies,
-                new View(),
-                model,  // Pass the model reference
-                gameRules);
-
-        controller.activate();
+            worldDimension,
+            viewDimension,
+            maxBodies,
+            view,
+            model,  // Pass the model reference
+            gameRules);
         // endregion
 
         // *** SCENE ***
@@ -83,12 +82,26 @@ public class KillerGameMain {
 
         // region Maze AI Controller - Manages enemy navigation
         MazeAIController mazeAI = new MazeAIController(model, mazeNavigator);
-        mazeAI.activate();
-        System.out.println("[MAIN] === Game initialization complete! ===\n");
         // endregion
 
         // region AI generator - Enemy spawner
-        new KillerEnemySpawner(controller, worldDef, maxEnemySpawnDelay, mazeNavigator).activate();
+        KillerEnemySpawner spawner = new KillerEnemySpawner(controller, worldDef, maxEnemySpawnDelay, mazeNavigator);
         // endregion
+
+        boolean[] started = new boolean[] { false };
+        GameMenuPanel menuPanel = new GameMenuPanel(() -> {
+            if (started[0]) {
+                return;
+            }
+            started[0] = true;
+            view.showGame();
+            controller.activate();
+            mazeAI.activate();
+            spawner.activate();
+            System.out.println("[MAIN] === Game initialization complete! ===\n");
+        });
+
+        view.setMenuPanel(menuPanel);
+        view.showMenu();
     }
 }
