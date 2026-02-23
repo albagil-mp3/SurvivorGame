@@ -256,14 +256,6 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
             addWallSegment("wall_02", mazeCellSize, x, topY);
             addWallSegment("wall_02", mazeCellSize, x, bottomY);
-            
-            // UPDATE MAZE GRID - mark these cells as walls for MazeNavigator
-            if (topRow >= 0 && topRow < mazeGrid.length && c >= 0 && c < mazeGrid[0].length) {
-                mazeGrid[topRow][c] = WALL;
-            }
-            if (bottomRow >= 0 && bottomRow < mazeGrid.length && c >= 0 && c < mazeGrid[0].length) {
-                mazeGrid[bottomRow][c] = WALL;
-            }
         }
 
         // --- PARED IZQUIERDA Y DERECHA ---
@@ -279,14 +271,6 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
             addWallSegment("wall_02", mazeCellSize, leftX, y);
             addWallSegment("wall_02", mazeCellSize, rightX, y);
-            
-            // UPDATE MAZE GRID - mark these cells as walls for MazeNavigator
-            if (r >= 0 && r < mazeGrid.length && leftCol >= 0 && leftCol < mazeGrid[0].length) {
-                mazeGrid[r][leftCol] = WALL;
-            }
-            if (r >= 0 && r < mazeGrid.length && rightCol >= 0 && rightCol < mazeGrid[0].length) {
-                mazeGrid[r][rightCol] = WALL;
-            }
         }
     }
 
