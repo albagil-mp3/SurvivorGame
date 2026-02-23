@@ -49,8 +49,8 @@ public class PlayerBody extends DynamicBody {
                 emitterId,
                 profiler);
 
-        this.setMaxThrustForce(1000); // Increased for more responsive movement
-        this.setMaxAngularAcceleration(1000);
+        this.setMaxThrustForce(500); // Increased for more responsive movement
+        this.setMaxAngularAcceleration(500);
         this.setAngularSpeed(30);
     }
 
@@ -183,6 +183,10 @@ public class PlayerBody extends DynamicBody {
         return this.temperature;
     }
     // endregion
+
+    public void addScore(int points) {
+        this.score += points;
+    }
 
     public void registerFireRequest() {
         if (this.currentWeaponIndex < 0 || this.currentWeaponIndex >= this.weaponIds.size()) {

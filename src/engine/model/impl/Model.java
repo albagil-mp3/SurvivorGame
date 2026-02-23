@@ -678,6 +678,14 @@ public class Model implements BodyEventProcessor {
 
         pBody.selectNextWeapon();
     }
+
+    public void playerAddScoreToAll(int points) {
+        this.dynamicBodies.values().forEach(body -> {
+            if (body.getBodyType() == BodyType.PLAYER) {
+                ((PlayerBody) body).addScore(points);
+            }
+        });
+    }
     // endregion Player Actions
 
     // region Query methods (query***)
@@ -1067,18 +1075,125 @@ public class Model implements BodyEventProcessor {
 
             case NO_MOVE:
                 PhysicsValuesDTO oldPhyValues = body.getPhysicsValues();
-                PhysicsValuesDTO frozen = new PhysicsValuesDTO(
+                
+                // Small position offset to separate from wall
+                double offsetX = this.clampX(oldPhyValues.posX);
+                double offsetY = this.clampY(oldPhyValues.posY);
+                
+                // Add small separation offset based on velocity direction
+                if (oldPhyValues.speedX > 0.1) offsetX -= 2.0; // moving right, nudge left
+                else if (oldPhyValues.speedX < -0.1) offsetX += 2.0; // moving left, nudge right
+                
+                if (oldPhyValues.speedY > 0.1) offsetY -= 2.0; // moving down, nudge up  
+                else if (oldPhyValues.speedY < -0.1) offsetY += 2.0; // moving up, nudge down
+                
+                // Gentle bounce while preserving player control
+                PhysicsValuesDTO wallSeparate = new PhysicsValuesDTO(
                         newPhyValues.timeStamp,
-                        this.clampX(oldPhyValues.posX), this.clampY(oldPhyValues.posY), newPhyValues.angle,
+                        offsetX, offsetY, newPhyValues.angle,
                         newPhyValues.size,
-                        0D, 0D,
-                        0D, 0D,
+                        -oldPhyValues.speedX * 0.2, -oldPhyValues.speedY * 0.2, // gentle bounce
+                        oldPhyValues.accX, oldPhyValues.accY, // preserve acceleration for control
                         newPhyValues.angularSpeed,
                         newPhyValues.angularAcc,
-                        0D);
-                body.doMovement(frozen);
+                        0D); // zero thrust momentarily
+                body.doMovement(wallSeparate);
                 spatialGridUpsert((AbstractBody) body);
                 break;
+
+            case WALL_STOP: {
+                // Improved bounce: place player just outside the wall surface
+                // and invert only the velocity component heading into the wall.
+                // Use the pre-collision player physics to compute a robust separation
+                PhysicsValuesDTO playerPre = body.getPhysicsValues();
+                final double BOUNCE_FACTOR = 0.28; // tweakable
+
+                double outPosX = playerPre.posX;
+                double outPosY = playerPre.posY;
+                double outSpeedX = playerPre.speedX;
+                double outSpeedY = playerPre.speedY;
+                double outAccX = playerPre.accX;
+                double outAccY = playerPre.accY;
+
+                boolean separated = false;
+
+                if (action.relatedEvent instanceof CollisionEvent collEvent) {
+                    String wallId = collEvent.primaryBodyRef.type() == BodyType.GRAVITY
+                            ? collEvent.primaryBodyRef.id()
+                            : collEvent.secondaryBodyRef.id();
+
+                    AbstractBody wallBody = this.gravityBodies.get(wallId);
+                    if (wallBody != null) {
+                        PhysicsValuesDTO wallPhy = wallBody.getPhysicsValues();
+
+                        double dx = playerPre.posX - wallPhy.posX;
+                        double dy = playerPre.posY - wallPhy.posY;
+                        double dist = Math.sqrt(dx * dx + dy * dy);
+
+                        double combinedRadius = (playerPre.size + wallPhy.size) * 0.5;
+                        double epsilon = Math.max(0.5, combinedRadius * 0.08);
+
+                        double nx, ny;
+                        if (dist <= 1e-6) {
+                            nx = 1.0;
+                            ny = 0.0;
+                            dist = 1.0;
+                        } else {
+                            nx = dx / dist;
+                            ny = dy / dist;
+                        }
+
+                        double overlap = combinedRadius - dist;
+                        if (overlap >= 0) {
+                            // Move player just outside wall along normal
+                            outPosX = wallPhy.posX + nx * (combinedRadius + epsilon);
+                            outPosY = wallPhy.posY + ny * (combinedRadius + epsilon);
+
+                            // Reflect and damp the normal velocity component
+                            double vDotN = playerPre.speedX * nx + playerPre.speedY * ny;
+                            if (vDotN < 0) {
+                                double factor = (1.0 + BOUNCE_FACTOR);
+                                outSpeedX = playerPre.speedX - factor * vDotN * nx;
+                                outSpeedY = playerPre.speedY - factor * vDotN * ny;
+                            } else {
+                                outSpeedX = playerPre.speedX;
+                                outSpeedY = playerPre.speedY;
+                            }
+
+                            // Remove acceleration into the wall
+                            double aDotN = playerPre.accX * nx + playerPre.accY * ny;
+                            outAccX = playerPre.accX - aDotN * nx;
+                            outAccY = playerPre.accY - aDotN * ny;
+
+                            separated = true;
+                        }
+                    }
+                }
+
+                if (!separated) {
+                    // Fallback: freeze at pre-collision clamped position and damp velocities
+                    outPosX = this.clampX(playerPre.posX);
+                    outPosY = this.clampY(playerPre.posY);
+                    outSpeedX = -playerPre.speedX * BOUNCE_FACTOR;
+                    outSpeedY = -playerPre.speedY * BOUNCE_FACTOR;
+                    outAccX = 0.0;
+                    outAccY = 0.0;
+                }
+
+                PhysicsValuesDTO bounced = new PhysicsValuesDTO(
+                        playerPre.timeStamp,
+                        outPosX, outPosY,
+                        playerPre.angle,
+                        playerPre.size,
+                        outSpeedX, outSpeedY,
+                        outAccX, outAccY,
+                        playerPre.angularSpeed, playerPre.angularAcc,
+                        0.0D); // zero thrust to avoid immediate re-penetration into wall
+
+                body.doMovement(bounced);
+                spatialGridUpsert((AbstractBody) body);
+                break;
+            }
 
             case GO_INSIDE:
                 // To-Do: lógica futura

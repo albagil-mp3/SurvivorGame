@@ -41,18 +41,19 @@ public class KillerGameMain {
         // *** ASSETS ***
         ProjectAssets projectAssets = new ProjectAssets();
 
-        // *** GAME RULES ***
-        ActionsGenerator gameRules = new KillerGameRules();
-
         // *** WORLD DEFINITION PROVIDER ***
         WorldDefinitionProvider worldProv = new KillerWorldDefinitionProvider(
                 worldDimension, projectAssets);
 
         // *** CORE ENGINE ***
 
-        // region Model - Create model first to access it for AI
+        // region Model - Create model first so KillerGameRules can reference it
         Model model = new Model(worldDimension, maxBodies);
         // endregion
+
+        // *** GAME RULES (created after Model so it can receive the reference) ***
+        // KillerGameRules needs Model to award score on kills
+        ActionsGenerator gameRules = new KillerGameRules(model);
 
         // region Controller
         Controller controller = new Controller(
