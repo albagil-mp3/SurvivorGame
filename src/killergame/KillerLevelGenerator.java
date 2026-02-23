@@ -78,8 +78,8 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
         MazeType[] allVariants = MazeType.values();
         MazeType selectedVariant = allVariants[random.nextInt(allVariants.length)];
         
-        System.out.println("Creating global procedural maze");
-        System.out.println("Selected variant: " + selectedVariant);
+        // Silent: creating global procedural maze
+        // Silent: selected variant info
         
         // Generate global maze
         generateGlobalMaze(selectedVariant);

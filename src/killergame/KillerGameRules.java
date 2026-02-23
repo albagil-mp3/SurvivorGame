@@ -13,6 +13,7 @@ import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
 import engine.model.bodies.ports.BodyType;
 import engine.model.impl.Model;
+import gameworld.GameTimer;
 
 /**
  * Game rules for Killer Game - Maze Chase Edition.
@@ -26,6 +27,7 @@ public class KillerGameRules implements ActionsGenerator {
     private static final int KILL_SCORE = 10;
 
     private final Model model;
+    private int killCount = 0;
 
     public KillerGameRules(Model model) {
         this.model = model;
@@ -104,6 +106,11 @@ public class KillerGameRules implements ActionsGenerator {
                             ActionType.DIE,
                             event));
                     this.model.playerAddScoreToAll(KILL_SCORE);
+                    // increment kill count and give +15s every 3 kills
+                    this.killCount++;
+                    if (this.killCount % 3 == 0) {
+                        GameTimer.get().addTime(15_000L);
+                    }
                 }
                 // Enemy hits projectile - enemy dies, projectile dies, +10 score
                 else if (primaryType == BodyType.DYNAMIC && secondaryType == BodyType.PROJECTILE) {
@@ -118,6 +125,11 @@ public class KillerGameRules implements ActionsGenerator {
                             ActionType.DIE,
                             event));
                     this.model.playerAddScoreToAll(KILL_SCORE);
+                    // increment kill count and give +15s every 3 kills
+                    this.killCount++;
+                    if (this.killCount % 3 == 0) {
+                        GameTimer.get().addTime(15_000L);
+                    }
                 }
                 // Projectile hits wall (GRAVITY) - projectile dies
                 else if (primaryType == BodyType.PROJECTILE && secondaryType == BodyType.GRAVITY) {

@@ -39,7 +39,7 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
         this.registerAsset("wall_01");
         this.registerAsset("wall_02");
 
-        System.out.println("[DEBUG] KillerWorldDefinitionProvider defining world...");
+        // Silent: KillerWorldDefinitionProvider defining world
         
         // Enemies - Small circular enemies that fit in maze corridors
         // Size 30 (diameter) - small enough to navigate the maze
@@ -53,7 +53,7 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
                 this.worldWidth / 2.0,  // Center X
                 this.worldHeight / 2.0);// Center Y
         
-        System.out.println("[DEBUG] Added " + this.asteroids.size() + " enemy definitions");
+        // Silent: added enemy definitions
 
         // Player - spawns in the center of the maze
         this.addSpaceship("player_ship_animated", this.worldWidth / 2.0, this.worldHeight / 2.0, 25);

@@ -39,7 +39,7 @@ public class InLimitsGoToCenter implements ActionsGenerator {
 
                 GameState.get().incrementWorldLevel();
            
-                System.out.println(GameState.get().getWorldLevel());
+                // Silent: debug world level
 
                 break;
 

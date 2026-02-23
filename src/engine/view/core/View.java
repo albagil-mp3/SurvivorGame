@@ -200,7 +200,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         // this.renderer.setViewDimension(this.viewDimension);
         this.renderer.activate();
         this.pack();
-        System.out.println("View: Activated");
+        // Silent: View activated
     }
 
     // region adders (add***)
@@ -234,7 +234,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
 
     public void setLocalPlayer(String localPlayerId) {
         this.localPlayerId = localPlayerId;
-        System.out.println("Viewer: Local player setted " + localPlayerId);
+        // Silent: local player set
     }
 
     public void setViewDimension(DoubleVector viewDim) {
@@ -295,7 +295,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
             fileName = assets.get(assetId).fileName;
             this.images.add(assetId, path + fileName);
         }
-        System.out.println("View.loadAssets: loaded " + this.images.getSize() + " images: " + this.images.getAssetIds());
+        // Silent: view assets loaded
 
         // Setting background
         String backgroundId = assets.randomId(AssetType.BACKGROUND);
@@ -318,7 +318,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
             // Try menu-back first
             if (this.images.getImage("menu-back") != null) {
                 bgImg = this.images.getImage("menu-back").image;
-                System.out.println("Using menu-back for background");
+                // Silent: using menu-back for background
             } 
             // Try theme_back
             else if (this.images.getImage("theme_back") != null) {
@@ -372,6 +372,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     public void updateStaticRenderables(ArrayList<RenderDTO> renderablesData) {
         this.renderer.updateStaticRenderables(renderablesData);
     }
+    
 
     // *** PROTECTED ***
 
@@ -532,7 +533,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         
         // Ensure backgroundPanel expands to fill entire frame
         this.backgroundPanel.setPreferredSize(null);
-        this.backgroundPanel.setMinimumSize(new Dimension(800, 600));
+        this.backgroundPanel.setMinimumSize(new Dimension(800, 800));
 
         this.addComponentListener(new ComponentAdapter() {
             @Override

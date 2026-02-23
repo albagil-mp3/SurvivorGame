@@ -49,7 +49,7 @@ public class KillerGameMain {
             try {
                 resolvedTheme = Theme.valueOf(args[0].toUpperCase());
             } catch (IllegalArgumentException ex) {
-                System.out.println("Unknown theme '" + args[0] + "', defaulting to SPACE.");
+                // Silent: unknown theme, defaulting to SPACE.
             }
         } else {
             // No arg provided -> pick a random theme at startup
@@ -60,7 +60,7 @@ public class KillerGameMain {
 
         final Theme selectedTheme = resolvedTheme;
 
-        System.out.println("Selected theme: " + selectedTheme);
+        // Silent: selected theme is set
         ProjectAssets projectAssets = new ProjectAssets(selectedTheme);
 
         // *** WORLD DEFINITION PROVIDER ***
@@ -78,6 +78,7 @@ public class KillerGameMain {
         ActionsGenerator gameRules = new KillerGameRules(model);
 
         // region Controller
+
         View view = new View();
 
         Controller controller = new Controller(
@@ -140,7 +141,7 @@ public class KillerGameMain {
         AtomicBoolean gameplayStarted = new AtomicBoolean(false);
 
         Runnable startRoundTimer = () -> gameworld.GameTimer.get().start(120_000L, () -> {
-            System.out.println("[TIMER] Time up! Game over.");
+            System.err.println("[TIMER] Time up! Game over.");
 
             // Determine final score from local player (if available) and set GameState
             try {

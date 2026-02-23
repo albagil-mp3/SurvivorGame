@@ -229,7 +229,7 @@ public class Model implements BodyEventProcessor {
             throw new IllegalArgumentException("Invalid world dimension");
         }
 
-        System.out.println("Model: Activated");
+        // Silent: Model activated
         this.bodyBatchManager.activate();
         this.state = ModelState.ALIVE;
     }

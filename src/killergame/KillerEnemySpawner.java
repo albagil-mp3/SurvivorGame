@@ -52,7 +52,7 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
     @Override
     protected void onActivate() {
         // Initialize any resources needed for spawning
-        System.out.println("Killer Game - Enemy maze spawner activated!");
+        // Silent: enemy spawner activated
     }
 
     @Override
