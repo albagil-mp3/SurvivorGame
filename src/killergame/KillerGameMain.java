@@ -8,6 +8,7 @@ import engine.view.core.View;
 import engine.world.ports.WorldDefinition;
 import engine.world.ports.WorldDefinitionProvider;
 import gameworld.ProjectAssets;
+import gameworld.Theme;
 
 /**
  * Main entry point for Killer Game.
@@ -39,7 +40,25 @@ public class KillerGameMain {
         // endregion
 
         // *** ASSETS ***
-        ProjectAssets projectAssets = new ProjectAssets();
+        // Allow selecting theme via first command-line argument (SPACE or JUNGLE)
+        Theme resolvedTheme = Theme.JUNGLE;
+        if (args != null && args.length > 0) {
+            try {
+                resolvedTheme = Theme.valueOf(args[0].toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                System.out.println("Unknown theme '" + args[0] + "', defaulting to SPACE.");
+            }
+        } else {
+            // No arg provided -> pick a random theme at startup
+            Theme[] themes = Theme.values();
+            int idx = java.util.concurrent.ThreadLocalRandom.current().nextInt(themes.length);
+            resolvedTheme = themes[idx];
+        }
+
+        final Theme selectedTheme = resolvedTheme;
+
+        System.out.println("Selected theme: " + selectedTheme);
+        ProjectAssets projectAssets = new ProjectAssets(selectedTheme);
 
         // *** WORLD DEFINITION PROVIDER ***
         WorldDefinitionProvider worldProv = new KillerWorldDefinitionProvider(
@@ -56,13 +75,15 @@ public class KillerGameMain {
         ActionsGenerator gameRules = new KillerGameRules(model);
 
         // region Controller
+        View view = new View();
+
         Controller controller = new Controller(
-                worldDimension,
-                viewDimension,
-                maxBodies,
-                new View(),
-                model,  // Pass the model reference
-                gameRules);
+            worldDimension,
+            viewDimension,
+            maxBodies,
+            view,
+            model,  // Pass the model reference
+            gameRules);
 
         controller.activate();
         // endregion
@@ -90,5 +111,47 @@ public class KillerGameMain {
         // region AI generator - Enemy spawner
         new KillerEnemySpawner(controller, worldDef, maxEnemySpawnDelay, mazeNavigator).activate();
         // endregion
+
+        // Start 10-second game timer. When it finishes, stop the engine (game over)
+        gameworld.GameTimer.get().start(10_000L, () -> {
+            System.out.println("[TIMER] Time up! Game over.");
+
+            // Determine final score from local player (if available) and set GameState
+            try {
+                String localPlayerId = view.getLocalPlayerId();
+                int finalScore = 0;
+                if (localPlayerId != null && !localPlayerId.isEmpty()) {
+                    engine.view.renderables.ports.PlayerRenderDTO p = controller.getPlayerRenderData(localPlayerId);
+                    if (p != null) finalScore = p.score;
+                }
+
+                gameworld.GameState.get().setFinalScore(finalScore);
+                gameworld.GameState.get().setGameOver(true);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+
+            // Show Play Again button. When clicked, stop the current engine and relaunch main.
+            view.showPlayAgainButton(() -> {
+                try {
+                    controller.engineStop();
+                } catch (Throwable ex) {
+                    ex.printStackTrace();
+                }
+
+                // Small pause to allow threads to terminate gracefully
+                try { Thread.sleep(500L); } catch (InterruptedException e) { /* ignore */ }
+
+                // Relaunch the game in the same JVM by calling main again with the
+                // previously selected theme. This approach works for quick reload
+                // during development; if you need a full process restart consider
+                // launching a new JVM process instead.
+                try {
+                    KillerGameMain.main(new String[] { selectedTheme.name() });
+                } catch (Throwable ex) {
+                    ex.printStackTrace();
+                }
+            });
+        });
     }
 }

@@ -315,7 +315,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         return this.controller.getPlayerRenderData(this.localPlayerId);
     }
 
-    protected String getLocalPlayerId() {
+    public String getLocalPlayerId() {
         return this.localPlayerId;
     }
 
@@ -371,6 +371,21 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         container.add(this.renderer, c);
     }
 
+    private void addControlPanel(Container container) {
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.fill = GridBagConstraints.VERTICAL;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0F;
+        c.weighty = 0F;
+        c.gridheight = 10;
+        c.gridwidth = 1;
+
+        container.add(this.controlPanel, c);
+    }
+
     private void createFrame() {
         Container panel;
 
@@ -378,6 +393,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.setLayout(new GridBagLayout());
 
         panel = this.getContentPane();
+        this.addControlPanel(panel);
         this.addRenderer(panel);
 
         this.setFocusable(true);
@@ -392,6 +408,25 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.setVisible(true);
 
         SwingUtilities.invokeLater(() -> this.requestFocusInWindow());
+    }
+
+    /**
+     * Show the "Play again" button and attach the action to run when clicked.
+     * The provided runnable will be executed in a new thread to avoid blocking
+     * the Swing EDT.
+     */
+    public void showPlayAgainButton(Runnable onPlayAgain) {
+        SwingUtilities.invokeLater(() -> {
+            this.controlPanel.setPlayAgainAction(e -> {
+                this.controlPanel.showPlayAgain(false);
+                if (onPlayAgain != null) new Thread(onPlayAgain, "PlayAgainAction").start();
+            });
+            this.controlPanel.showPlayAgain(true);
+        });
+    }
+
+    public void hidePlayAgainButton() {
+        SwingUtilities.invokeLater(() -> this.controlPanel.showPlayAgain(false));
     }
 
     private void resetAllKeyStates() {

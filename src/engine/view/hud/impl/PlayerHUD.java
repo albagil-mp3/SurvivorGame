@@ -17,8 +17,11 @@ public class PlayerHUD extends DataHUD {
     }
 
     private void addItems() {
+        this.addTitle("Progress");
+
         this.addSkipValue();              // entityId
         this.addSkipValue();              // playerName
+        this.addTextItem("Time");       // remaining time
         this.addSkipValue();              // damage
         this.addSkipValue();              // energy
         this.addSkipValue();              // shield
@@ -28,9 +31,9 @@ public class PlayerHUD extends DataHUD {
         this.addSkipValue();              // burst
         this.addSkipValue();              // mines
         this.addSkipValue();              // missiles
-        this.addTitle("Progress");
-        this.addTextItem("Level");
         this.addTextItem("Score");
+       
+        this.addTextItem("Level");
 
         this.prepareHud();
     }

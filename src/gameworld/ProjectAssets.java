@@ -42,12 +42,27 @@ public final class ProjectAssets {
             case JUNGLE -> {
                 // Fondo de jungla
                 this.catalog.register("theme_back",  "jungle-floor.jpg",   AssetType.BACKGROUND, AssetIntensity.LOW);
+                this.catalog.register("wall_01", "wall-01.png", AssetType.STATIC, AssetIntensity.HIGH);
+                this.catalog.register("wall_02", "wall-02.png", AssetType.STATIC, AssetIntensity.HIGH);
+                this.catalog.register("stars_01", "dec1-jungle.png", AssetType.STARS, AssetIntensity.HIGH);
+                this.catalog.register("stars_02", "dec2-jungle.png", AssetType.STARS, AssetIntensity.HIGH);
+                this.catalog.register("stars_03", "dec3-jungle.png", AssetType.STARS, AssetIntensity.HIGH);
+
+
+
+
                 // Enemigos/obstáculos de jungla  ← añade aquí tus PNGs de jungla
                 // this.catalog.register("theme_enemy_01", "jungle-rock-01.png",  AssetType.ASTEROID, AssetIntensity.HIGH);
             }
             case SPACE -> {
                 // Fondo de espacio (por defecto)
                 this.catalog.register("theme_back",  "bg-13-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
+                this.catalog.register("wall_01", "wall-space1.png", AssetType.STATIC, AssetIntensity.HIGH);
+                this.catalog.register("wall_02", "wall-space2.png", AssetType.STATIC, AssetIntensity.HIGH);
+                this.catalog.register("stars_01", "stars-01.png", AssetType.STARS, AssetIntensity.HIGH);
+               
+                this.catalog.register("stars_06", "stars-06.png", AssetType.STARS, AssetIntensity.HIGH);
+                this.catalog.register("stars_07", "stars-07.png", AssetType.STARS, AssetIntensity.HIGH);
             }
         }
     }
@@ -111,8 +126,7 @@ public final class ProjectAssets {
         // endregion
 
         // region walls (wall-***)
-        this.catalog.register("wall_01", "wall-01.png", AssetType.STATIC, AssetIntensity.HIGH);
-        this.catalog.register("wall_02", "wall-02.png", AssetType.STATIC, AssetIntensity.HIGH);
+      
         this.catalog.register("wall_03", "wall-03.png", AssetType.STATIC, AssetIntensity.HIGH);
         this.catalog.register("wall_04", "wall-04.png", AssetType.STATIC, AssetIntensity.HIGH);
         // endregion
@@ -210,13 +224,7 @@ public final class ProjectAssets {
         // endregion
 
         // region stars (stars-***)
-        this.catalog.register("stars_01", "stars-01.png", AssetType.STARS, AssetIntensity.HIGH);
-        this.catalog.register("stars_02", "stars-02.png", AssetType.STARS, AssetIntensity.HIGH);
-        this.catalog.register("stars_03", "stars-03.png", AssetType.STARS, AssetIntensity.HIGH);
-        this.catalog.register("stars_04", "stars-04.png", AssetType.STARS, AssetIntensity.HIGH);
-        this.catalog.register("stars_05", "stars-05.png", AssetType.STARS, AssetIntensity.HIGH);
-        this.catalog.register("stars_06", "stars-06.png", AssetType.STARS, AssetIntensity.HIGH);
-        this.catalog.register("stars_07", "stars-07.png", AssetType.STARS, AssetIntensity.HIGH);
+       
         // endregion
 
         // region stardusts (stardust-***)
