@@ -72,14 +72,7 @@ public final class ProjectAssets {
         // region asteroids (asteroid-***)
         this.catalog.register("borde-panel",  "menu-back.jpg",   AssetType.BACKGROUND, AssetIntensity.LOW);
 
-        this.catalog.register("asteroid_01", "asteroid-01-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_02", "asteroid-02-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_03", "asteroid-03-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_04", "asteroid-04-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_05", "asteroid-05-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_06", "asteroid-06-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_07", "asteroid-07.png", AssetType.ASTEROID, AssetIntensity.HIGH);
-        this.catalog.register("asteroid_08", "asteroid-08.png", AssetType.ASTEROID, AssetIntensity.HIGH);
+        this.catalog.register("asteroid_07", "fantasma.png", AssetType.ASTEROID, AssetIntensity.HIGH);
         // endregion
 
         // region backgrounds (bg-***)
