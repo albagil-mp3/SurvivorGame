@@ -16,6 +16,7 @@ import killergame.MazeNavigator.Velocity;
 public class MazeAIController implements Runnable {
 
     private static final int FLEE_RADIUS_CELLS = 4;
+    private static final double UNSTUCK_CENTER_SPEED_FACTOR = 0.45;
 
     private final Model model;
     private final MazeNavigator navigator;
@@ -126,19 +127,31 @@ public class MazeAIController implements Runnable {
         // Prevent movement into walls even if we're off-center
         boolean blocked = navigator.isDirectionBlocked(posX, posY, nextDir);
         if (blocked) {
-            Direction alternative = playerNear
-                    ? chooseFleeDirection(posX, posY, currentDir, playerGrid)
-                    : navigator.chooseNextDirection(posX, posY, currentDir);
-            if (!navigator.isDirectionBlocked(posX, posY, alternative)) {
+            Direction alternative = findViableDirection(posX, posY, currentDir, playerNear, playerGrid);
+            if (alternative != null) {
                 nextDir = alternative;
                 blocked = false;
             }
         }
 
         // Calculate new velocity for the chosen direction
-        Velocity newVelocity = blocked
-                ? new Velocity(0.0, 0.0)
-                : navigator.getVelocityForDirection(nextDir, enemySpeed);
+        Velocity newVelocity;
+        if (!blocked) {
+            newVelocity = navigator.getVelocityForDirection(nextDir, enemySpeed);
+        } else {
+            // Last-resort anti-stuck: gently steer towards cell center instead of freezing.
+            MazeNavigator.WorldPosition center = navigator.getCellCenterForWorld(posX, posY);
+            double toCenterX = center.x - posX;
+            double toCenterY = center.y - posY;
+            double len = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY);
+
+            if (len > 0.001) {
+                double unstuckSpeed = enemySpeed * UNSTUCK_CENTER_SPEED_FACTOR;
+                newVelocity = new Velocity((toCenterX / len) * unstuckSpeed, (toCenterY / len) * unstuckSpeed);
+            } else {
+                newVelocity = new Velocity(0.0, 0.0);
+            }
+        }
         
         // Always update velocity to maintain movement (even if not changing position)
         PhysicsValuesDTO newPhyValues = new PhysicsValuesDTO(
@@ -270,5 +283,34 @@ public class MazeAIController implements Runnable {
             default:
                 return dir;
         }
+    }
+
+    private Direction findViableDirection(
+            double worldX,
+            double worldY,
+            Direction currentDir,
+            boolean playerNear,
+            MazeNavigator.GridPosition playerGrid) {
+
+        Direction preferred = playerNear
+                ? chooseFleeDirection(worldX, worldY, currentDir, playerGrid)
+                : navigator.chooseNextDirection(worldX, worldY, currentDir);
+
+        if (preferred != null && !navigator.isDirectionBlocked(worldX, worldY, preferred)) {
+            return preferred;
+        }
+
+        Direction opposite = getOpposite(currentDir);
+        if (opposite != null && !navigator.isDirectionBlocked(worldX, worldY, opposite)) {
+            return opposite;
+        }
+
+        for (Direction dir : navigator.getValidDirections(worldX, worldY)) {
+            if (!navigator.isDirectionBlocked(worldX, worldY, dir)) {
+                return dir;
+            }
+        }
+
+        return null;
     }
 }

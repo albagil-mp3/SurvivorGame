@@ -29,18 +29,20 @@ public class GameMenuPanel extends JPanel {
 
     private void buildLayout() {
         setLayout(new BorderLayout());
-        setBackground(Color.BLACK);
+        setOpaque(true);
+        setBackground(new Color(0, 0, 0, 80));
 
         JPanel titlePanel = new JPanel();
-        titlePanel.setBackground(Color.BLACK);
+        titlePanel.setOpaque(true);
+        titlePanel.setBackground(new Color(0, 0, 0, 110));
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
 
-        JLabel titleLabel = new JLabel("KILLER GAME", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("BABILONIAN MAZE", SwingConstants.CENTER);
         titleLabel.setFont(titleLabel.getFont().deriveFont(48f));
         titleLabel.setForeground(Color.YELLOW);
         titleLabel.setAlignmentX(CENTER_ALIGNMENT);
 
-        JLabel subtitleLabel = new JLabel("Pac-Man Maze Survival", SwingConstants.CENTER);
+        JLabel subtitleLabel = new JLabel("Have fun", SwingConstants.CENTER);
         subtitleLabel.setFont(subtitleLabel.getFont().deriveFont(20f));
         subtitleLabel.setForeground(Color.WHITE);
         subtitleLabel.setAlignmentX(CENTER_ALIGNMENT);
@@ -52,7 +54,8 @@ public class GameMenuPanel extends JPanel {
         titlePanel.add(Box.createVerticalGlue());
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(Color.BLACK);
+        buttonPanel.setOpaque(true);
+        buttonPanel.setBackground(new Color(0, 0, 0, 110));
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
 
         JButton playButton = createMenuButton("PLAY", Color.GREEN);
@@ -108,11 +111,12 @@ public class GameMenuPanel extends JPanel {
 
     private void showInstructions() {
         JOptionPane.showMessageDialog(this,
-                "KILLER GAME - Instructions\n\n"
+                "BABILONIAN MAZE - Instructions\n\n"
                         + "- Use W, A, S, D keys to move around the maze\n"
-                        + "- Click mouse to shoot bullets at enemies\n"
-                        + "- Enemies will chase you through the maze\n"
-                        + "- Survive as long as you can\n",
+                        + "- Move mouse to aim at enemies\n"
+                        + "- Use Space to shoot your weapon\n"
+                        + "- Enemies will run from you through the maze\n"
+                        + "- Kill as many enemies as you can!\n",
                 "How to Play",
                 JOptionPane.INFORMATION_MESSAGE);
     }

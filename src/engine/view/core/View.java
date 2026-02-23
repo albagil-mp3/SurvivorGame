@@ -141,6 +141,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     private JPanel gamePanel;
     private JPanel menuPanel;
     private ImagePanel backgroundPanel;
+    private volatile boolean menuLocked = false;
     private DoubleVector viewDimension;
     private DoubleVector viewportDimension;
     private DoubleVector worldDimension;
@@ -261,7 +262,18 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         }
     }
 
+    public void setMenuLocked(boolean locked) {
+        this.menuLocked = locked;
+        if (locked) {
+            this.showMenu();
+        }
+    }
+
     public void showGame() {
+        if (this.menuLocked) {
+            this.showMenu();
+            return;
+        }
         if (this.cardLayout != null && this.rootPanel != null) {
             this.cardLayout.show(this.rootPanel, "game");
             SwingUtilities.invokeLater(this::updateViewportToFrame);

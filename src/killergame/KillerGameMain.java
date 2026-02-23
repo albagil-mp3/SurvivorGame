@@ -11,6 +11,7 @@ import gameworld.ProjectAssets;
 import gameworld.Theme;
 import javax.swing.SwingUtilities;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Main entry point for Killer Game.
@@ -88,6 +89,27 @@ public class KillerGameMain {
             gameRules);
 
         controller.activate();
+
+        AtomicBoolean playRequested = new AtomicBoolean(false);
+        AtomicReference<Runnable> startGameActionRef = new AtomicReference<>(null);
+
+        Runnable onPlayRequested = () -> SwingUtilities.invokeLater(() -> {
+            playRequested.set(true);
+            Runnable action = startGameActionRef.get();
+            if (action != null) {
+                action.run();
+            }
+        });
+
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                view.setMenuPanel(new GameMenuPanel(onPlayRequested));
+                view.setMenuLocked(true);
+                view.showMenu();
+            });
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to initialize main menu", ex);
+        }
         // endregion
 
         // *** SCENE ***
@@ -114,6 +136,8 @@ public class KillerGameMain {
 
         // Start app with world initialized but paused until user presses PLAY.
         controller.enginePause();
+
+        AtomicBoolean gameplayStarted = new AtomicBoolean(false);
 
         Runnable startRoundTimer = () -> gameworld.GameTimer.get().start(120_000L, () -> {
             System.out.println("[TIMER] Time up! Game over.");
@@ -205,17 +229,26 @@ public class KillerGameMain {
                 });
         });
 
-        AtomicBoolean gameplayStarted = new AtomicBoolean(false);
-        view.setMenuPanel(new GameMenuPanel(() -> SwingUtilities.invokeLater(() -> {
-            if (gameplayStarted.compareAndSet(false, true)) {
-                mazeAI.activate();
-                spawner.activate();
-                startRoundTimer.run();
+        Runnable startGameAction = () -> SwingUtilities.invokeLater(() -> {
+            try {
+                if (gameplayStarted.compareAndSet(false, true)) {
+                    mazeAI.activate();
+                    spawner.activate();
+                    startRoundTimer.run();
+                }
+
+                controller.engineResume();
+                view.setMenuLocked(false);
+                view.showGame();
+                view.requestFocusInWindow();
+            } catch (Throwable ex) {
+                ex.printStackTrace();
             }
-            controller.engineResume();
-            view.showGame();
-            view.requestFocusInWindow();
-        })));
-        view.showMenu();
+        });
+
+        startGameActionRef.set(startGameAction);
+        if (playRequested.get()) {
+            startGameAction.run();
+        }
     }
 }
