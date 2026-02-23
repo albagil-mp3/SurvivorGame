@@ -763,7 +763,8 @@ public class Renderer extends Canvas implements Runnable {
     private ViewportTransform calculateViewportTransform(CanvasMetrics metrics) {
         double scaleX = metrics.width / this.viewDimension.x;
         double scaleY = metrics.height / this.viewDimension.y;
-        double scale = Math.min(scaleX, scaleY);
+        // Use COVER scaling so the world/background fills the whole canvas (no letterbox)
+        double scale = Math.max(scaleX, scaleY);
 
         double scaledWidth = this.viewDimension.x * scale;
         double scaledHeight = this.viewDimension.y * scale;

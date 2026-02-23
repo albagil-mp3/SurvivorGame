@@ -26,6 +26,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.JButton;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Image;
 
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetType;
@@ -136,8 +140,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     private JPanel rootPanel;
     private JPanel gamePanel;
     private JPanel menuPanel;
-    private JPanel leftPanel;
-    private JPanel rightPanel;
+    private ImagePanel backgroundPanel;
     private DoubleVector viewDimension;
     private DoubleVector viewportDimension;
     private DoubleVector worldDimension;
@@ -295,6 +298,53 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.renderer.setAssetCatalog(assets);
 
         this.renderer.setImages(this.background, this.images);
+        
+        // Set full-window background image: try multiple sources until one works
+        try {
+            java.awt.image.BufferedImage bgImg = null;
+            
+            // Try menu-back first
+            if (this.images.getImage("menu-back") != null) {
+                bgImg = this.images.getImage("menu-back").image;
+                System.out.println("Using menu-back for background");
+            } 
+            // Try theme_back
+            else if (this.images.getImage("theme_back") != null) {
+                bgImg = this.images.getImage("theme_back").image;
+                System.out.println("Using theme_back for background");
+            }
+            // Use primary background
+            else if (this.background != null) {
+                bgImg = this.background;
+                System.out.println("Using primary background image");
+            }
+            // Try any available background asset
+            else {
+                try {
+                    String randomBgId = assets.randomId(AssetType.BACKGROUND);
+                    if (randomBgId != null && this.images.getImage(randomBgId) != null) {
+                        bgImg = this.images.getImage(randomBgId).image;
+                        System.out.println("Using random background: " + randomBgId);
+                    }
+                } catch (Exception e) {
+                    System.out.println("No background assets available");
+                }
+            }
+
+            if (this.backgroundPanel != null) {
+                if (bgImg != null) {
+                    this.backgroundPanel.setImage(bgImg);
+                    System.out.println("Background image applied to backgroundPanel successfully");
+                } else {
+                    System.out.println("No background image found, keeping black background");
+                }
+                this.backgroundPanel.revalidate();
+                this.backgroundPanel.repaint();
+            }
+        } catch (Throwable t) {
+            System.out.println("View.loadAssets: could not set background image: " + t.getMessage());
+            t.printStackTrace();
+        }
     }
 
     // region notifiers (notify***)
@@ -397,42 +447,23 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     // *** PRIVATE ***
 
     private void addRenderer(Container container) {
-        this.leftPanel = new JPanel();
-        this.leftPanel.setBackground(Color.BLACK);
-        this.leftPanel.setPreferredSize(new Dimension(220, 1));
-
-        this.rightPanel = new JPanel();
-        this.rightPanel.setBackground(Color.BLACK);
-        this.rightPanel.setPreferredSize(new Dimension(220, 1));
-
-        this.renderer.setPreferredSize(new Dimension(1000, 1000));
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.anchor = GridBagConstraints.CENTER;
-        c.fill = GridBagConstraints.BOTH;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        container.add(this.leftPanel, c);
+        // Renderer centered with fixed preferred size inside the game panel
+        this.renderer.setPreferredSize(new Dimension(800, 800));
+        
+        // Wrap renderer in a panel to add border (Canvas doesn't support setBorder)
+        JPanel rendererWrapper = new JPanel(new BorderLayout());
+        rendererWrapper.setOpaque(false);
+        rendererWrapper.setBorder(javax.swing.BorderFactory.createLineBorder(Color.WHITE, 3));
+        rendererWrapper.add(this.renderer, BorderLayout.CENTER);
 
         GridBagConstraints center = new GridBagConstraints();
         center.anchor = GridBagConstraints.CENTER;
-        center.fill = GridBagConstraints.NONE;
-        center.gridx = 1;
+        center.fill = GridBagConstraints.NONE; // keep renderer fixed size
+        center.gridx = 0;
         center.gridy = 0;
-        center.weightx = 0.0;
+        center.weightx = 1.0;
         center.weighty = 1.0;
-        container.add(this.renderer, center);
-
-        GridBagConstraints right = new GridBagConstraints();
-        right.anchor = GridBagConstraints.CENTER;
-        right.fill = GridBagConstraints.BOTH;
-        right.gridx = 2;
-        right.gridy = 0;
-        right.weightx = 1.0;
-        right.weighty = 1.0;
-        container.add(this.rightPanel, right);
+        container.add(rendererWrapper, center);
     }
 
     private void addControlPanel(Container container) {
@@ -452,6 +483,10 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
 
     private void createFrame() {
         Container panel;
+        this.backgroundPanel = new ImagePanel();
+        this.backgroundPanel.setBackground(Color.BLACK);
+        // Default black background until assets load
+        this.backgroundPanel.setOpaque(true);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLayout(new GridBagLayout());
@@ -465,9 +500,11 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
 
         this.cardLayout = new CardLayout();
         this.rootPanel = new JPanel(this.cardLayout);
-        this.gamePanel = new JPanel(new GridBagLayout());
+        this.rootPanel.setOpaque(false);
+        this.gamePanel = new JPanel(new GridBagLayout()); 
+        this.gamePanel.setOpaque(false);
         this.menuPanel = new JPanel(new BorderLayout());
-        this.menuPanel.setBackground(Color.BLACK);
+        this.menuPanel.setOpaque(false);
 
         this.addRenderer(this.gamePanel);
 
@@ -475,9 +512,15 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.rootPanel.add(this.gamePanel, "game");
         this.cardLayout.show(this.rootPanel, "menu");
 
+        // Set backgroundPanel as content pane and add rootPanel into it
+        this.setContentPane(this.backgroundPanel);
         panel = this.getContentPane();
         panel.setLayout(new BorderLayout());
         panel.add(this.rootPanel, BorderLayout.CENTER);
+        
+        // Ensure backgroundPanel expands to fill entire frame
+        this.backgroundPanel.setPreferredSize(null);
+        this.backgroundPanel.setMinimumSize(new Dimension(800, 600));
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -511,13 +554,6 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         }
 
         int gameSize = 800;
-        int sideWidth = Math.max(0, (size.width - gameSize) / 2);
-        if (this.leftPanel != null) {
-            this.leftPanel.setPreferredSize(new Dimension(sideWidth, size.height));
-        }
-        if (this.rightPanel != null) {
-            this.rightPanel.setPreferredSize(new Dimension(sideWidth, size.height));
-        }
         this.renderer.setPreferredSize(new Dimension(gameSize, gameSize));
 
         DoubleVector viewport = new DoubleVector(gameSize, gameSize);
@@ -846,6 +882,51 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         
         // Update player angle - this happens every frame so ship always points to mouse
         this.controller.playerSetAngle(this.localPlayerId, angleDegrees);
+    }
+
+    // Simple panel that paints a scaled background image
+    private static class ImagePanel extends JPanel {
+        private java.awt.image.BufferedImage image;
+
+        public void setImage(java.awt.image.BufferedImage img) {
+            this.image = img;
+            this.repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            
+            int w = this.getWidth();
+            int h = this.getHeight();
+            
+            if (this.image == null) {
+                // Fill with background color if no image
+                g.setColor(this.getBackground());
+                g.fillRect(0, 0, w, h);
+                return;
+            }
+
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+            int imgW = this.image.getWidth();
+            int imgH = this.image.getHeight();
+
+            if (imgW <= 0 || imgH <= 0) {
+                g2.drawImage(this.image, 0, 0, w, h, null);
+            } else {
+                // Scale image to COVER the panel (may crop)
+                double scale = Math.max((double) w / imgW, (double) h / imgH);
+                int drawW = (int) Math.ceil(imgW * scale);
+                int drawH = (int) Math.ceil(imgH * scale);
+                int x = (w - drawW) / 2;
+                int y = (h - drawH) / 2;
+                g2.drawImage(this.image, x, y, drawW, drawH, null);
+            }
+
+            g2.dispose();
+        }
     }
 
 }

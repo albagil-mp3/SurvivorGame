@@ -70,6 +70,8 @@ public final class ProjectAssets {
     private void registerCommonAssets() {
 
         // region asteroids (asteroid-***)
+        this.catalog.register("borde-panel",  "menu-back.jpg",   AssetType.BACKGROUND, AssetIntensity.LOW);
+
         this.catalog.register("asteroid_01", "asteroid-01-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
         this.catalog.register("asteroid_02", "asteroid-02-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
         this.catalog.register("asteroid_03", "asteroid-03-mini.png", AssetType.ASTEROID, AssetIntensity.HIGH);
@@ -82,6 +84,8 @@ public final class ProjectAssets {
 
         // region backgrounds (bg-***)
         // NOTA: el fondo del tema activo se registra como "theme_back" en registerThemeAssets()
+        // Menu background used by the View for side/menu panels
+        this.catalog.register("menu-back", "menu-back.png", AssetType.BACKGROUND, AssetIntensity.LOW);
         
         // region bullets (bullet-***)
         this.catalog.register("bullet_01", "bullet-01.png", AssetType.BULLET, AssetIntensity.LOW);
