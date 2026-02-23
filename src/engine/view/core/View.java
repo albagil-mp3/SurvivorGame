@@ -299,7 +299,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
 
         // Setting background
         String backgroundId = assets.randomId(AssetType.BACKGROUND);
-        System.out.println("View: Setting background image <" + backgroundId + ">");
+        // Silent: setting background image
         this.background = this.images.getImage(backgroundId).image;
 
         if (this.background == null) {
@@ -323,12 +323,12 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
             // Try theme_back
             else if (this.images.getImage("theme_back") != null) {
                 bgImg = this.images.getImage("theme_back").image;
-                System.out.println("Using theme_back for background");
+                // Silent: using theme_back for background
             }
             // Use primary background
             else if (this.background != null) {
                 bgImg = this.background;
-                System.out.println("Using primary background image");
+                // Silent: using primary background image
             }
             // Try any available background asset
             else {
@@ -336,25 +336,25 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
                     String randomBgId = assets.randomId(AssetType.BACKGROUND);
                     if (randomBgId != null && this.images.getImage(randomBgId) != null) {
                         bgImg = this.images.getImage(randomBgId).image;
-                        System.out.println("Using random background: " + randomBgId);
+                        // Silent: using random background
                     }
                 } catch (Exception e) {
-                    System.out.println("No background assets available");
+                    // Silent: no background assets available
                 }
             }
 
             if (this.backgroundPanel != null) {
                 if (bgImg != null) {
                     this.backgroundPanel.setImage(bgImg);
-                    System.out.println("Background image applied to backgroundPanel successfully");
+                    // Silent: background image applied to backgroundPanel
                 } else {
-                    System.out.println("No background image found, keeping black background");
+                    // Silent: no background image found, keeping black background
                 }
                 this.backgroundPanel.revalidate();
                 this.backgroundPanel.repaint();
             }
         } catch (Throwable t) {
-            System.out.println("View.loadAssets: could not set background image: " + t.getMessage());
+            System.err.println("View.loadAssets: could not set background image: " + t.getMessage());
             t.printStackTrace();
         }
     }
@@ -675,8 +675,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         // When window lacks focus, all keys should be released
         if (!this.wasWindowFocused) {
             if (!this.pressedKeys.isEmpty()) {
-                System.out.println("View.syncInputState: Window not focused but keys tracked: "
-                        + this.pressedKeys + " - clearing");
+                // Silent: Window not focused but keys tracked; clearing
 
                 Set<Integer> keysToRelease = new HashSet<>(this.pressedKeys);
                 this.pressedKeys.clear();
@@ -717,13 +716,13 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
             }
         }
 
-        System.out.println("View: Window lost focus - pressed keys cleared: " + keysToRelease);
+        // Silent: Window lost focus - pressed keys cleared
     }
 
     @Override
     public void windowGainedFocus(WindowEvent e) {
         this.wasWindowFocused = true;
-        System.out.println("View: Window gained focus");
+        // Silent: Window gained focus
     }
     // endregion
 

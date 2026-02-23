@@ -223,7 +223,7 @@ public class Renderer extends Canvas implements Runnable {
         this.thread.setPriority(Thread.NORM_PRIORITY + 2);
         this.thread.start();
 
-        System.out.println("Renderer: Activated");
+        // Silent: Renderer activated
         return true;
     }
 
@@ -236,9 +236,7 @@ public class Renderer extends Canvas implements Runnable {
     public void addDynamicRenderable(String entityId, String assetId) {
         // Check if assetId refers to an animation
         boolean isAnimation = this.assetCatalog != null && this.assetCatalog.animationExists(assetId);
-        System.out.println("Renderer.addDynamicRenderable: entityId=" + entityId + " assetId=" + assetId
-            + " assetCatalogNull=" + (this.assetCatalog == null)
-            + " isAnimation=" + isAnimation);
+        // Silent: addDynamicRenderable information removed
         if (isAnimation) {
             AnimatedAssetInfoDTO animationInfo = this.assetCatalog.getAnimation(assetId);
             // Pass the Renderer's imagesCache reference wrapper so when setImages() is called
@@ -264,7 +262,7 @@ public class Renderer extends Canvas implements Runnable {
     
     public void setAssetCatalog(AssetCatalog assetCatalog) {
         this.assetCatalog = assetCatalog;
-        System.out.println("Renderer.setAssetCatalog: animations registered = " + assetCatalog.getAnimationIds());
+        // Silent: asset catalog set, animations registered
     }
     // endregion
 

@@ -53,7 +53,7 @@ public abstract class AbstractIAGenerator implements Runnable {
 
         this.onActivate();
 
-        System.out.println(this.getThreadName() + " activated!");
+        // Silent: generator activated
     }
 
     // *** PROTECTED (alphabetical order) ***
