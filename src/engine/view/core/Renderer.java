@@ -39,6 +39,8 @@ import engine.view.renderables.ports.RenderMetricsDTO;
 import engine.view.renderables.ports.SpatialGridStatisticsRenderDTO;
 
 import java.awt.Toolkit;
+import gameworld.GameState;
+import java.awt.Font;
 
 /**
  * Renderer
@@ -245,10 +247,10 @@ public class Renderer extends Canvas implements Runnable {
                 entityId, animationInfo, this.imagesCache, this.currentFrame);
             
             // If it's a player animation, configure weapon overlay (only if player_weapon asset is available)
-            if (assetId.toLowerCase().contains("player")
+                if (assetId.toLowerCase().contains("player")
                     && this.assetCatalog != null
                     && this.assetCatalog.exists("player_weapon")) {
-                renderable.setAsPlayerShip("player_weapon", 100);
+                renderable.setAsPlayerShip("player_weapon", 60);
             }
             
             this.dynamicRenderables.put(entityId, renderable);
@@ -357,6 +359,15 @@ public class Renderer extends Canvas implements Runnable {
 
         newRenderables.entrySet().removeIf(e -> e.getValue().getLastFrameSeen() != cFrame);
         this.staticRenderables = newRenderables; // atomic swap
+    }
+
+    /**
+     * Clear all renderables (dynamic + static). Used when restarting a game
+     * to ensure the canvas does not show remnants from the previous session.
+     */
+    public void clearAllRenderables() {
+        this.dynamicRenderables.clear();
+        this.staticRenderables = new java.util.concurrent.ConcurrentHashMap<>();
     }
 
     // *** PRIVATES ***
@@ -492,6 +503,33 @@ public class Renderer extends Canvas implements Runnable {
                 gg.setComposite(AlphaComposite.SrcOver); // With transparency
                 this.drawHUDs(gg);
                 this.rendererProfiler.stopInterval(RendererProfiler.METRIC_DRAW_HUDS, hudsStart);
+
+                // If game over, draw overlay with final score
+                if (GameState.get().isGameOver()) {
+                    // Dim the screen
+                    gg.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.75f));
+                    gg.setColor(Color.BLACK);
+                    gg.fillRect(0, 0, (int) this.viewDimension.x, (int) this.viewDimension.y);
+
+                    // Draw GAME OVER text centered
+                    gg.setComposite(AlphaComposite.SrcOver);
+                    Font fTitle = new Font("SansSerif", Font.BOLD, 72);
+                    Font fScore = new Font("SansSerif", Font.PLAIN, 36);
+                    gg.setFont(fTitle);
+                    gg.setColor(Color.WHITE);
+                    String title = "GAME OVER";
+                    int tw = gg.getFontMetrics(fTitle).stringWidth(title);
+                    int th = gg.getFontMetrics(fTitle).getAscent();
+                    int cx = (int) (this.viewDimension.x * 0.5d);
+                    int cy = (int) (this.viewDimension.y * 0.5d);
+                    gg.drawString(title, cx - tw / 2, cy - th / 2);
+
+                    // Draw final score below
+                    gg.setFont(fScore);
+                    String scoreText = "Final score: " + GameState.get().getFinalScore();
+                    int sw = gg.getFontMetrics(fScore).stringWidth(scoreText);
+                    gg.drawString(scoreText, cx - sw / 2, cy + th);
+                }
 
             } finally {
                 gg.dispose();

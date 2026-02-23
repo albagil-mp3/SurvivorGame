@@ -19,7 +19,7 @@ public class WorldDefinitionProvider extends AbstractWorldDefinitionProvider {
         this.setBackgroundStatic("theme_back");
 
         // region Players
-        this.addSpaceship("player_ship_animated", 1250, 1250, 55);
+        this.addSpaceship("player_ship_animated", 1250, 1250, 40);
         this.registerAsset("player_weapon");
         this.addWeaponPresetBullet("bullet_01");
         // endregion

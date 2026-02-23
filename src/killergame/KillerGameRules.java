@@ -135,7 +135,7 @@ public class KillerGameRules implements ActionsGenerator {
                             ActionType.DIE,
                             event));
                 }
-                // Player hits wall - bounce off the wall surface
+                // Player hits wall - use rebound system that works correctly
                 else if (primaryType == BodyType.PLAYER && secondaryType == BodyType.GRAVITY) {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
@@ -143,7 +143,7 @@ public class KillerGameRules implements ActionsGenerator {
                             ActionType.NO_MOVE,
                             event));
                 }
-                // Wall hits player - bounce the player
+                // Wall hits player - use rebound system
                 else if (primaryType == BodyType.GRAVITY && secondaryType == BodyType.PLAYER) {
                     actions.add(new ActionDTO(
                             e.secondaryBodyRef.id(),

@@ -75,7 +75,7 @@ public final class WeaponDefFactory {
     public static DefEmitterDTO createPresetedBulletBasic(String assetId) {
         return create(
                 assetId,
-                20.0d,
+                17.0d,
                 1200.0d,  // Velocidad aumentada de 650 a 1200 para que avancen más rápido
                 0.0d,
                 0.0d,

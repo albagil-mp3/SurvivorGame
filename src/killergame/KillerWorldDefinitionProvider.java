@@ -24,17 +24,21 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
     protected void define() {
 
         // Background - simple background for the maze
-        this.setBackgroundStatic("back_01");
+        this.setBackgroundStatic("theme_back");
 
         // Add a small decorator to satisfy WorldDefinition validation
         // This will be a tiny light in the corner, barely visible
-        this.addDecorator("light_01", 50.0, 50.0, 10.0);
-        
+        // Add a set of random background decorations to give variety to the arena
+        double density = 100.0;
+        // Small stars scattered across the world
+        this.addDecoratorAnywhereRandomAsset(100, AssetType.STARS, density, 10, 30);
+     
+       
         // Register wall assets for LevelGenerator (walls are created there)
         // These assets must be registered here so they load into gameAssets
         this.registerAsset("wall_01");
         this.registerAsset("wall_02");
-        
+
         System.out.println("[DEBUG] KillerWorldDefinitionProvider defining world...");
         
         // Enemies - Small circular enemies that fit in maze corridors
@@ -52,7 +56,7 @@ public final class KillerWorldDefinitionProvider extends AbstractWorldDefinition
         System.out.println("[DEBUG] Added " + this.asteroids.size() + " enemy definitions");
 
         // Player - spawns in the center of the maze
-        this.addSpaceship("player_ship_animated", this.worldWidth / 2.0, this.worldHeight / 2.0, 35);
+        this.addSpaceship("player_ship_animated", this.worldWidth / 2.0, this.worldHeight / 2.0, 25);
         this.registerAsset("player_weapon");
         this.addWeaponPresetBullet("bullet_01");
         

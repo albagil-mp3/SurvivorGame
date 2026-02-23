@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JButton;
 
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetType;
@@ -353,7 +354,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         return this.controller.getPlayerRenderData(this.localPlayerId);
     }
 
-    protected String getLocalPlayerId() {
+    public String getLocalPlayerId() {
         return this.localPlayerId;
     }
 
@@ -434,6 +435,21 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         container.add(this.rightPanel, right);
     }
 
+    private void addControlPanel(Container container) {
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.fill = GridBagConstraints.VERTICAL;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0F;
+        c.weighty = 0F;
+        c.gridheight = 10;
+        c.gridwidth = 1;
+
+        container.add(this.controlPanel, c);
+    }
+
     private void createFrame() {
         Container panel;
 
@@ -509,6 +525,73 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.renderer.setViewDimension(viewport);
         this.renderer.revalidate();
         this.renderer.repaint();
+    }
+
+    /**
+     * Show the "Play again" button and attach the action to run when clicked.
+     * The provided runnable will be executed in a new thread to avoid blocking
+     * the Swing EDT.
+     */
+    public void showPlayAgainButton(Runnable onPlayAgain) {
+        SwingUtilities.invokeLater(() -> {
+            // Configure action on the control panel button
+            this.controlPanel.setPlayAgainAction(e -> {
+                // Hide overlay/button immediately
+                this.hidePlayAgainButton();
+                if (onPlayAgain != null) new Thread(onPlayAgain, "PlayAgainAction").start();
+            });
+
+            // Move the button to the layered pane so it appears OVER the renderer
+            try {
+                JButton btn = this.controlPanel.getPlayAgainButton();
+                java.awt.Container parent = btn.getParent();
+                if (parent != null) parent.remove(btn);
+
+                // Center button under the GAME OVER / Final score text using same fonts as Renderer
+                int btnW = 160;
+                int btnH = 34;
+                int cx = (int) (this.viewDimension == null ? this.getWidth() / 2 : this.viewDimension.x * 0.5d);
+                int cy = (int) (this.viewDimension == null ? this.getHeight() / 2 : this.viewDimension.y * 0.5d);
+
+                // Compute title and score font ascents using this component's FontMetrics
+                java.awt.Font titleFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 72);
+                java.awt.Font scoreFont = new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 36);
+                int titleAscent = this.getFontMetrics(titleFont).getAscent();
+                int scoreAscent = this.getFontMetrics(scoreFont).getAscent();
+
+                // Renderer draws title at (cy - titleAscent/2) and score at (cy + titleAscent)
+                // Place button a few pixels below the score baseline
+                int scoreY = cy + titleAscent;
+                int padding = 12;
+                int x = cx - btnW / 2;
+                int y = scoreY + scoreAscent + padding;
+
+                btn.setBounds(x, y, btnW, btnH);
+                btn.setVisible(true);
+
+                this.getLayeredPane().add(btn, javax.swing.JLayeredPane.PALETTE_LAYER);
+                this.getLayeredPane().revalidate();
+                this.getLayeredPane().repaint();
+            } catch (Throwable t) {
+                // Fallback to showing in control panel if layered pane fails
+                this.controlPanel.showPlayAgain(true);
+            }
+        });
+    }
+
+    public void hidePlayAgainButton() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                JButton btn = this.controlPanel.getPlayAgainButton();
+                java.awt.Container parent = btn.getParent();
+                if (parent != null) parent.remove(btn);
+                this.getLayeredPane().revalidate();
+                this.getLayeredPane().repaint();
+            } catch (Throwable t) {
+                // ignore
+            }
+            this.controlPanel.showPlayAgain(false);
+        });
     }
 
     private void resetAllKeyStates() {
