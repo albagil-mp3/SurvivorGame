@@ -163,7 +163,14 @@ public class KillerGameRules implements ActionsGenerator {
                 // Enemy hits wall - enemy bounces
                 else if ((primaryType == BodyType.DYNAMIC && secondaryType == BodyType.GRAVITY) ||
                          (primaryType == BodyType.GRAVITY && secondaryType == BodyType.DYNAMIC)) {
-                    // Let physics handle the bounce
+                    String enemyId = (primaryType == BodyType.DYNAMIC)
+                        ? e.primaryBodyRef.id()
+                        : e.secondaryBodyRef.id();
+                    actions.add(new ActionDTO(
+                        enemyId,
+                        BodyType.DYNAMIC,
+                        ActionType.NO_MOVE,
+                        event));
                 }
             }
 

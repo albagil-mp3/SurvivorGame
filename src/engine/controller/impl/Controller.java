@@ -240,6 +240,16 @@ public class Controller implements WorldManager, DomainEventProcessor {
     // region Engine (engine**)
     public void enginePause() {
         this.engineState = EngineState.PAUSED;
+        if (this.model != null) {
+            this.model.pause();
+        }
+    }
+
+    public void engineResume() {
+        this.engineState = EngineState.ALIVE;
+        if (this.model != null) {
+            this.model.resume();
+        }
     }
 
     public void engineStop() {

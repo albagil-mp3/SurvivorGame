@@ -234,6 +234,18 @@ public class Model implements BodyEventProcessor {
         this.state = ModelState.ALIVE;
     }
 
+    public void pause() {
+        if (this.state == ModelState.ALIVE) {
+            this.state = ModelState.PAUSED;
+        }
+    }
+
+    public void resume() {
+        if (this.state == ModelState.PAUSED || this.state == ModelState.STARTING) {
+            this.state = ModelState.ALIVE;
+        }
+    }
+
     // region Body adders (add***)
     public String addBody(BodyType bodyType,
             double size,
@@ -440,7 +452,7 @@ public class Model implements BodyEventProcessor {
     }
 
     public ArrayList<BodyData> snapshotRenderData() {
-        this.scratchDynamicsBuffer.clear();
+        ArrayList<BodyData> renderSnapshot = new ArrayList<>(this.dynamicBodies.size());
 
         this.dynamicBodies.forEach((entityId, body) -> {
             PhysicsValuesDTO phyValues = body.getPhysicsValues();
@@ -449,11 +461,12 @@ public class Model implements BodyEventProcessor {
             }
 
             BodyData bodyInfo = body.getBodyData();
-            this.scratchDynamicsBuffer.add(bodyInfo);
+            if (bodyInfo != null) {
+                renderSnapshot.add(bodyInfo);
+            }
         });
 
-        // Return defensive copy to avoid ConcurrentModificationException
-        return new ArrayList<>(this.scratchDynamicsBuffer);
+        return renderSnapshot;
     }
 
     /**
@@ -780,6 +793,26 @@ public class Model implements BodyEventProcessor {
     public void processBodyEvents(AbstractBody checkBody,
             PhysicsValuesDTO checkBodyNewPhyValues, PhysicsValuesDTO checkBodyOldPhyValues) {
 
+        if (this.state == ModelState.PAUSED && checkBody != null && checkBody.getBodyState() == BodyState.ALIVE) {
+            // Keep physics clock in sync while paused to avoid large dt spikes on resume.
+            // Preserve body state (position, velocity, angle), update only timestamp.
+            checkBodyOldPhyValues.update(
+                    nanoTime(),
+                    checkBodyOldPhyValues.posX,
+                    checkBodyOldPhyValues.posY,
+                    checkBodyOldPhyValues.angle,
+                    checkBodyOldPhyValues.size,
+                    checkBodyOldPhyValues.speedX,
+                    checkBodyOldPhyValues.speedY,
+                    checkBodyOldPhyValues.accX,
+                    checkBodyOldPhyValues.accY,
+                    checkBodyOldPhyValues.angularSpeed,
+                    checkBodyOldPhyValues.angularAcc,
+                    checkBodyOldPhyValues.thrust);
+            checkBody.doMovement(checkBodyOldPhyValues);
+            return;
+        }
+
         if (!isProcessable(checkBody)) {
             return; // To avoid duplicate or unnecesary event processing ======>
         }
@@ -1073,51 +1106,81 @@ public class Model implements BodyEventProcessor {
 
                 break;
 
-            case NO_MOVE:
+            case NO_MOVE: {
                 PhysicsValuesDTO oldPhyValues = body.getPhysicsValues();
-                
-                // Start with clamped position for safety
+                boolean isPlayerBody = body.getBodyType() == BodyType.PLAYER;
+
+                // Defaults: clamp to world and apply tiny inverse speed (fallback path)
                 double safeX = this.clampX(oldPhyValues.posX);
                 double safeY = this.clampY(oldPhyValues.posY);
-                
-                // Calculate more robust separation using body size
-                double separationDistance = Math.max(5.0, oldPhyValues.size * 0.6);
-                
-                // Detect collision axis from position clamping differences
-                boolean hitHorizontalWall = Math.abs(safeY - oldPhyValues.posY) > 0.1;
-                boolean hitVerticalWall = Math.abs(safeX - oldPhyValues.posX) > 0.1;
-                
-                // Apply separation based on collision axis
-                if (hitHorizontalWall) {
-                    // Hit top/bottom wall - separate along Y axis
-                    if (oldPhyValues.posY < safeY) {
-                        safeY -= separationDistance; // hit top, move up
-                    } else {
-                        safeY += separationDistance; // hit bottom, move down
+                double outSpeedX = -oldPhyValues.speedX * 0.12;
+                double outSpeedY = -oldPhyValues.speedY * 0.12;
+
+                // Prefer wall-normal response for maze GRAVITY walls when collision event is available
+                if (action.relatedEvent instanceof CollisionEvent collEvent) {
+                    String wallId = collEvent.primaryBodyRef.type() == BodyType.GRAVITY
+                            ? collEvent.primaryBodyRef.id()
+                            : collEvent.secondaryBodyRef.id();
+
+                    AbstractBody wallBody = this.gravityBodies.get(wallId);
+                    if (wallBody != null) {
+                        PhysicsValuesDTO wallPhy = wallBody.getPhysicsValues();
+
+                        double dx = oldPhyValues.posX - wallPhy.posX;
+                        double dy = oldPhyValues.posY - wallPhy.posY;
+                        double dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist > 0.001) {
+                            double nx = dx / dist;
+                            double ny = dy / dist;
+
+                            // Keep a tiny separation so player doesn't stay interpenetrating the wall
+                            double combinedRadius = (oldPhyValues.size + wallPhy.size) * 0.5;
+                            double minSeparation = 0.05;
+                            double targetDist = combinedRadius + minSeparation;
+
+                            if (dist < targetDist) {
+                                safeX = wallPhy.posX + nx * targetDist;
+                                safeY = wallPhy.posY + ny * targetDist;
+                            }
+
+                            // Player keeps previous rebound feel; enemies use slide to reduce center-wall sticking.
+                            double vDotN = oldPhyValues.speedX * nx + oldPhyValues.speedY * ny;
+                            if (vDotN < 0) {
+                                if (isPlayerBody) {
+                                    double bounceFactor = 0.20;
+                                    outSpeedX = oldPhyValues.speedX - (1.0 + bounceFactor) * vDotN * nx;
+                                    outSpeedY = oldPhyValues.speedY - (1.0 + bounceFactor) * vDotN * ny;
+                                } else {
+                                    outSpeedX = oldPhyValues.speedX - vDotN * nx;
+                                    outSpeedY = oldPhyValues.speedY - vDotN * ny;
+                                }
+                            }
+                        }
                     }
                 }
-                
-                if (hitVerticalWall) {
-                    // Hit left/right wall - separate along X axis  
-                    if (oldPhyValues.posX < safeX) {
-                        safeX -= separationDistance; // hit left, move left
-                    } else {
-                        safeX += separationDistance; // hit right, move right
-                    }
-                }
-                
-                // Gentle bounce with preserved control
+
                 PhysicsValuesDTO wallSeparated = new PhysicsValuesDTO(
                         newPhyValues.timeStamp,
                         safeX, safeY, newPhyValues.angle,
                         newPhyValues.size,
-                        -oldPhyValues.speedX * 0.15, -oldPhyValues.speedY * 0.15, // very gentle bounce
-                        oldPhyValues.accX, oldPhyValues.accY, // full player control preserved
+                        outSpeedX, outSpeedY,
+                        oldPhyValues.accX, oldPhyValues.accY,
                         newPhyValues.angularSpeed,
                         newPhyValues.angularAcc,
-                        0D);
+                        oldPhyValues.thrust);
                 body.doMovement(wallSeparated);
                 spatialGridUpsert((AbstractBody) body);
+
+                // Resolve possible multi-wall overlap (common in dense center areas)
+                // Keep previous player behavior unchanged.
+                if (!isPlayerBody) {
+                    PhysicsValuesDTO resolvedOverlap = resolveGravityOverlap(wallSeparated, 4);
+                    if (resolvedOverlap != null) {
+                        body.doMovement(resolvedOverlap);
+                        spatialGridUpsert((AbstractBody) body);
+                    }
+                }
 
                 // If still overlapping a wall, try to relocate to nearest free position
                 if (isOverlappingAnyGravity(body)) {
@@ -1128,15 +1191,16 @@ public class Model implements BodyEventProcessor {
                                 free.x, free.y,
                                 newPhyValues.angle,
                                 newPhyValues.size,
-                                0D, 0D,
+                            outSpeedX * 0.5, outSpeedY * 0.5,
                                 0D, 0D,
                                 newPhyValues.angularSpeed, newPhyValues.angularAcc,
-                                0D);
+                            oldPhyValues.thrust);
                         body.doMovement(relocated);
                         spatialGridUpsert((AbstractBody) body);
                     }
                 }
                 break;
+            }
 
             case WALL_STOP: {
                 // Stop at wall surface like original rebounds but for GRAVITY bodies
@@ -1375,6 +1439,73 @@ public class Model implements BodyEventProcessor {
         }
 
         return false;
+    }
+
+    /**
+     * Iteratively separates a body position from all overlapping gravity walls.
+     * Returns a corrected PhysicsValuesDTO or null when no correction is needed.
+     */
+    private PhysicsValuesDTO resolveGravityOverlap(PhysicsValuesDTO source, int maxIterations) {
+        if (source == null || maxIterations <= 0) return null;
+
+        double outX = source.posX;
+        double outY = source.posY;
+        boolean corrected = false;
+
+        for (int iteration = 0; iteration < maxIterations; iteration++) {
+            boolean overlappedThisPass = false;
+
+            for (AbstractBody wall : this.gravityBodies.values()) {
+                PhysicsValuesDTO wallPhy = wall.getPhysicsValues();
+                if (wallPhy == null) continue;
+
+                double dx = outX - wallPhy.posX;
+                double dy = outY - wallPhy.posY;
+                double distSq = dx * dx + dy * dy;
+
+                double bodyRadius = source.size * 0.5 * 0.9;
+                double wallRadius = wallPhy.size * 0.5 * 0.9;
+                double targetDist = bodyRadius + wallRadius + 0.02;
+                double targetDistSq = targetDist * targetDist;
+
+                if (distSq >= targetDistSq) {
+                    continue;
+                }
+
+                double dist = Math.sqrt(Math.max(distSq, 1.0e-10));
+                double nx = dx / dist;
+                double ny = dy / dist;
+                double penetration = targetDist - dist;
+
+                outX += nx * (penetration + 0.01);
+                outY += ny * (penetration + 0.01);
+                outX = this.clampX(outX);
+                outY = this.clampY(outY);
+
+                overlappedThisPass = true;
+                corrected = true;
+            }
+
+            if (!overlappedThisPass) {
+                break;
+            }
+        }
+
+        if (!corrected) return null;
+
+        return new PhysicsValuesDTO(
+                source.timeStamp,
+                outX,
+                outY,
+                source.angle,
+                source.size,
+                source.speedX,
+                source.speedY,
+                source.accX,
+                source.accY,
+                source.angularSpeed,
+                source.angularAcc,
+                source.thrust);
     }
 
     /**

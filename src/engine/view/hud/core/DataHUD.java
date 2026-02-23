@@ -68,6 +68,10 @@ public class DataHUD {
         this.addItem(new TextItem(label, this.labelColor, this.dataColor));
     }
 
+    public void addTextItemWithBackground(String label, Color backgroundColor) {
+        this.addItem(new BackgroundTextItem(label, this.labelColor, this.dataColor, backgroundColor, 10, 3));
+    }
+
     public void addTitle(String title) {
         this.addItem(new TitleItem(title, this.titleColor));
     }

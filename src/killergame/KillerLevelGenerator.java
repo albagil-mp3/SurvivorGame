@@ -95,9 +95,9 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
     protected void createPlayers() {
         java.util.ArrayList<engine.world.ports.DefItem> shipDefs = this.getWorldDefinition().spaceships;
         java.util.ArrayList<engine.world.ports.DefEmitterDTO> weaponDefs = this.getWorldDefinition().weapons;
+        double[] spawnPos = findCenterSpawnPosition();
         for (engine.world.ports.DefItem def : shipDefs) {
             engine.world.ports.DefItemDTO body = this.defItemToDTO(def);
-            double[] spawnPos = findValidCornerSpawnPosition();
             engine.world.ports.DefItemDTO spawnedBody = new engine.world.ports.DefItemDTO(
                     body.assetId,
                     body.size,
@@ -160,6 +160,24 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
         }
 
         return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+    }
+
+    private double[] findCenterSpawnPosition() {
+        if (mazeGrid == null) {
+            return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+        }
+
+        int centerRow = mazeGrid.length / 2;
+        int centerCol = mazeGrid[0].length / 2;
+
+        int[] centerCell = findNearestPathCell(centerRow, centerCol, 6);
+        if (centerCell == null) {
+            return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+        }
+
+        double x = mazeOffsetX + (centerCell[1] + 0.5) * mazeCellSize;
+        double y = mazeOffsetY + (centerCell[0] + 0.5) * mazeCellSize;
+        return new double[] { x, y };
     }
 
     private int[] findNearestPathCell(int startRow, int startCol, int maxRadius) {

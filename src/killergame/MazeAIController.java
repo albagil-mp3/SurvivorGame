@@ -3,6 +3,7 @@ package killergame;
 import java.util.ArrayList;
 
 import engine.model.bodies.ports.BodyData;
+import engine.model.bodies.ports.BodyType;
 import engine.model.impl.Model;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import killergame.MazeNavigator.Direction;
@@ -13,6 +14,8 @@ import killergame.MazeNavigator.Velocity;
  * Periodically updates enemy velocities based on grid-based pathfinding.
  */
 public class MazeAIController implements Runnable {
+
+    private static final int FLEE_RADIUS_CELLS = 4;
 
     private final Model model;
     private final MazeNavigator navigator;
@@ -71,6 +74,7 @@ public class MazeAIController implements Runnable {
         // Get only DYNAMIC enemy bodies via thread-safe snapshot
         // (avoids corrupting the shared scratchDynamicsBuffer used by the Renderer)
         ArrayList<BodyData> bodiesCopy = model.snapshotDynamicEnemies();
+        MazeNavigator.GridPosition playerGrid = getNearestPlayerGridPosition();
 
         if (bodiesCopy == null || bodiesCopy.isEmpty()) {
             return; // No enemies to update
@@ -81,7 +85,7 @@ public class MazeAIController implements Runnable {
         // Update each enemy
         int updatedCount = 0;
         for (BodyData bodyData : bodiesCopy) {
-            if (updateSingleEnemy(bodyData)) {
+            if (updateSingleEnemy(bodyData, playerGrid)) {
                 updatedCount++;
             }
         }
@@ -92,7 +96,7 @@ public class MazeAIController implements Runnable {
         }
     }
     
-    private boolean updateSingleEnemy(BodyData bodyData) {
+    private boolean updateSingleEnemy(BodyData bodyData, MazeNavigator.GridPosition playerGrid) {
         PhysicsValuesDTO phyValues = bodyData.getPhysicsValues();
         if (phyValues == null) {
             System.out.println("[MAZE-AI] Enemy has null physics values");
@@ -106,19 +110,25 @@ public class MazeAIController implements Runnable {
         
         // Get current direction based on velocity
         Direction currentDir = navigator.getCurrentDirection(speedX, speedY);
+        MazeNavigator.GridPosition enemyGrid = navigator.worldToGrid(posX, posY);
+        boolean playerNear = isPlayerNear(enemyGrid, playerGrid);
        
         // Only consider changing direction when very close to the center of the current cell
         Direction nextDir = currentDir; // Default: keep current direction
         
         if (navigator.isAtCellCenter(posX, posY)) {
             // Only when very close to center, check if we need to change direction
-            nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
+            nextDir = playerNear
+                    ? chooseFleeDirection(posX, posY, currentDir, playerGrid)
+                    : navigator.chooseNextDirection(posX, posY, currentDir);
         }
 
         // Prevent movement into walls even if we're off-center
         boolean blocked = navigator.isDirectionBlocked(posX, posY, nextDir);
         if (blocked) {
-            Direction alternative = navigator.chooseNextDirection(posX, posY, currentDir);
+            Direction alternative = playerNear
+                    ? chooseFleeDirection(posX, posY, currentDir, playerGrid)
+                    : navigator.chooseNextDirection(posX, posY, currentDir);
             if (!navigator.isDirectionBlocked(posX, posY, alternative)) {
                 nextDir = alternative;
                 blocked = false;
@@ -129,33 +139,12 @@ public class MazeAIController implements Runnable {
         Velocity newVelocity = blocked
                 ? new Velocity(0.0, 0.0)
                 : navigator.getVelocityForDirection(nextDir, enemySpeed);
-
-        double newPosX = posX;
-        double newPosY = posY;
-        if (blocked) {
-            var center = navigator.getCellCenterForWorld(posX, posY);
-            newPosX = center.x;
-            newPosY = center.y;
-        }
-
-        // Keep enemies centered on the corridor axis to avoid clipping walls
-        if (!blocked) {
-            var center = navigator.getCellCenterForWorld(posX, posY);
-            if (nextDir == Direction.EAST || nextDir == Direction.WEST) {
-                newPosY = center.y;
-            } else if (nextDir == Direction.NORTH || nextDir == Direction.SOUTH) {
-                newPosX = center.x;
-            }
-        }
-        
-        // NO POSITION MODIFICATION - Let the enemy move completely naturally
-        // Position is never modified, only velocity changes when direction changes
         
         // Always update velocity to maintain movement (even if not changing position)
         PhysicsValuesDTO newPhyValues = new PhysicsValuesDTO(
             phyValues.timeStamp,
-            newPosX,
-            newPosY,
+            posX,
+            posY,
             phyValues.angle,
             phyValues.size,
             newVelocity.vx,  // New velocity X
@@ -176,5 +165,110 @@ public class MazeAIController implements Runnable {
             System.out.println("[MAZE-AI] Could not find body for enemy " + bodyData.entityId);
         }
         return false;
+    }
+
+    private MazeNavigator.GridPosition getNearestPlayerGridPosition() {
+        ArrayList<BodyData> allDynamics = model.snapshotRenderData();
+        if (allDynamics == null || allDynamics.isEmpty()) {
+            return null;
+        }
+
+        for (BodyData bodyData : allDynamics) {
+            if (bodyData == null) {
+                continue;
+            }
+            if (bodyData.type != BodyType.PLAYER) {
+                continue;
+            }
+
+            PhysicsValuesDTO playerPhy = bodyData.getPhysicsValues();
+            if (playerPhy == null) {
+                continue;
+            }
+
+            return navigator.worldToGrid(playerPhy.posX, playerPhy.posY);
+        }
+
+        return null;
+    }
+
+    private boolean isPlayerNear(MazeNavigator.GridPosition enemyGrid, MazeNavigator.GridPosition playerGrid) {
+        if (enemyGrid == null || playerGrid == null) {
+            return false;
+        }
+
+        int manhattan = Math.abs(enemyGrid.row - playerGrid.row) + Math.abs(enemyGrid.col - playerGrid.col);
+        return manhattan <= FLEE_RADIUS_CELLS;
+    }
+
+    private Direction chooseFleeDirection(
+            double enemyWorldX,
+            double enemyWorldY,
+            Direction currentDir,
+            MazeNavigator.GridPosition playerGrid) {
+
+        if (playerGrid == null) {
+            return navigator.chooseNextDirection(enemyWorldX, enemyWorldY, currentDir);
+        }
+
+        java.util.List<Direction> validDirs = navigator.getValidDirections(enemyWorldX, enemyWorldY);
+        if (validDirs.isEmpty()) {
+            return currentDir;
+        }
+
+        MazeNavigator.GridPosition enemyGrid = navigator.worldToGrid(enemyWorldX, enemyWorldY);
+        Direction opposite = getOpposite(currentDir);
+
+        Direction bestDir = validDirs.get(0);
+        int bestDistance = Integer.MIN_VALUE;
+
+        for (Direction dir : validDirs) {
+            int nextRow = enemyGrid.row;
+            int nextCol = enemyGrid.col;
+
+            switch (dir) {
+                case NORTH:
+                    nextRow--;
+                    break;
+                case SOUTH:
+                    nextRow++;
+                    break;
+                case EAST:
+                    nextCol++;
+                    break;
+                case WEST:
+                    nextCol--;
+                    break;
+                default:
+                    break;
+            }
+
+            int distance = Math.abs(nextRow - playerGrid.row) + Math.abs(nextCol - playerGrid.col);
+
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                bestDir = dir;
+            } else if (distance == bestDistance && dir == opposite) {
+                // Tie-breaker: prefer reversing direction to quickly escape in corridors.
+                bestDir = dir;
+            }
+        }
+
+        return bestDir;
+    }
+
+    private Direction getOpposite(Direction dir) {
+        switch (dir) {
+            case NORTH:
+                return Direction.SOUTH;
+            case SOUTH:
+                return Direction.NORTH;
+            case EAST:
+                return Direction.WEST;
+            case WEST:
+                return Direction.EAST;
+            default:
+                return dir;
+        }
     }
 }

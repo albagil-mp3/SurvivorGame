@@ -10,6 +10,7 @@ import engine.world.ports.WorldDefinitionProvider;
 import gameworld.ProjectAssets;
 import gameworld.Theme;
 import javax.swing.SwingUtilities;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Main entry point for Killer Game.
@@ -36,8 +37,8 @@ public class KillerGameMain {
         // endregion
 
         // region Game configuration
-        int maxBodies = 20000; // Max number of entities (player + enemies + walls) - maze has thousands of walls!
-        int maxEnemySpawnDelay = 2000; // Spawn delay in milliseconds (2000ms = 2 seconds)
+        int maxBodies = 3000; // Max number of entities (player + enemies + walls)
+        int maxEnemySpawnDelay = 1000; // Spawn delay in milliseconds (2000ms = 2 seconds)
         // endregion
 
         // *** ASSETS ***
@@ -77,11 +78,6 @@ public class KillerGameMain {
 
         // region Controller
         View view = new View();
-        view.setMenuPanel(new GameMenuPanel(() -> SwingUtilities.invokeLater(() -> {
-            view.showGame();
-            view.requestFocusInWindow();
-        })));
-        view.showMenu();
 
         Controller controller = new Controller(
             worldDimension,
@@ -116,8 +112,10 @@ public class KillerGameMain {
         KillerEnemySpawner spawner = new KillerEnemySpawner(controller, worldDef, maxEnemySpawnDelay, mazeNavigator);
         // endregion
 
-        // Start 10-second game timer. When it finishes, stop the engine (game over)
-        gameworld.GameTimer.get().start(10_000L, () -> {
+        // Start app with world initialized but paused until user presses PLAY.
+        controller.enginePause();
+
+        Runnable startRoundTimer = () -> gameworld.GameTimer.get().start(120_000L, () -> {
             System.out.println("[TIMER] Time up! Game over.");
 
             // Determine final score from local player (if available) and set GameState
@@ -184,7 +182,7 @@ public class KillerGameMain {
                         new KillerEnemySpawner(newController, newWorldDef, maxEnemySpawnDelayRef, newMazeNavigator).activate();
 
                         // Restart timer
-                        gameworld.GameTimer.get().start(10_000L, () -> {
+                        gameworld.GameTimer.get().start(120_000L, () -> {
                             try {
                                 String localPlayerId = viewRef.getLocalPlayerId();
                                 int finalScore = 0;
@@ -206,5 +204,18 @@ public class KillerGameMain {
                     }
                 });
         });
+
+        AtomicBoolean gameplayStarted = new AtomicBoolean(false);
+        view.setMenuPanel(new GameMenuPanel(() -> SwingUtilities.invokeLater(() -> {
+            if (gameplayStarted.compareAndSet(false, true)) {
+                mazeAI.activate();
+                spawner.activate();
+                startRoundTimer.run();
+            }
+            controller.engineResume();
+            view.showGame();
+            view.requestFocusInWindow();
+        })));
+        view.showMenu();
     }
 }
