@@ -8,6 +8,7 @@ import engine.view.core.View;
 import engine.world.ports.WorldDefinition;
 import engine.world.ports.WorldDefinitionProvider;
 import gameworld.ProjectAssets;
+import gameworld.Theme;
 
 /**
  * Main entry point for Killer Game.
@@ -39,7 +40,25 @@ public class KillerGameMain {
         // endregion
 
         // *** ASSETS ***
-        ProjectAssets projectAssets = new ProjectAssets();
+        // Allow selecting theme via first command-line argument (SPACE or JUNGLE)
+        Theme resolvedTheme = Theme.JUNGLE;
+        if (args != null && args.length > 0) {
+            try {
+                resolvedTheme = Theme.valueOf(args[0].toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                System.out.println("Unknown theme '" + args[0] + "', defaulting to SPACE.");
+            }
+        } else {
+            // No arg provided -> pick a random theme at startup
+            Theme[] themes = Theme.values();
+            int idx = java.util.concurrent.ThreadLocalRandom.current().nextInt(themes.length);
+            resolvedTheme = themes[idx];
+        }
+
+        final Theme selectedTheme = resolvedTheme;
+
+        System.out.println("Selected theme: " + selectedTheme);
+        ProjectAssets projectAssets = new ProjectAssets(selectedTheme);
 
         // *** WORLD DEFINITION PROVIDER ***
         WorldDefinitionProvider worldProv = new KillerWorldDefinitionProvider(

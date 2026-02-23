@@ -16,7 +16,7 @@ public class MazeAIController implements Runnable {
 
     private final Model model;
     private final MazeNavigator navigator;
-    private final double enemySpeed = 150.0; 
+    private final double enemySpeed = 40.0; // Constant speed for enemies
     private final Thread thread;
     private volatile boolean running = false;
     
@@ -45,15 +45,14 @@ public class MazeAIController implements Runnable {
                 updateEnemyDirections();
                 updateCount++;
                 
-                // Log every 60 updates (~6 seconds) with less frequency
-                if (updateCount % 60 == 0) {
+                // Log every 50 updates (~5 seconds)
+                if (updateCount % 50 == 0) {
                     int enemyCount = model.getDynamicEnemyCount();
-                    System.out.println("[MAZE-AI] Update #" + updateCount + " - Active enemies: " + enemyCount + 
-                                     " - Smooth navigation active");
+                    System.out.println("[MAZE-AI] Update #" + updateCount + " - Active enemies: " + enemyCount);
                 }
                 
-                // Sleep for 150ms (about 7 updates per second) - slightly slower for smoother visuals
-                Thread.sleep(150);
+                // Sleep for 100ms (10 updates per second)
+                Thread.sleep(100);
                 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -73,22 +72,12 @@ public class MazeAIController implements Runnable {
         ArrayList<BodyData> bodiesCopy = model.snapshotDynamicEnemies();
 
         if (bodiesCopy == null || bodiesCopy.isEmpty()) {
-            return; // No enemies to update
+            return;
         }
-
-        // System.out.println("[MAZE-AI] Updating " + bodiesCopy.size() + " enemies");
 
         // Update each enemy
-        int updatedCount = 0;
         for (BodyData bodyData : bodiesCopy) {
-            if (updateSingleEnemy(bodyData)) {
-                updatedCount++;
-            }
-        }
-        
-        // Log periodically (less frequently for smoother output)
-        if (updatedCount > 0 && System.currentTimeMillis() % 3000 < 100) { // Log roughly every 3 seconds
-            System.out.println("[MAZE-AI] Smoothly updated " + updatedCount + "/" + bodiesCopy.size() + " enemies");
+            updateSingleEnemy(bodyData);
         }
     }
     
@@ -151,7 +140,8 @@ public class MazeAIController implements Runnable {
         // NO POSITION MODIFICATION - Let the enemy move completely naturally
         // Position is never modified, only velocity changes when direction changes
         
-        // Always update velocity to maintain movement (even if not changing position)
+        // Always update velocity to counteract friction/collisions
+        // Even if direction didn't change, we need to maintain speed
         PhysicsValuesDTO newPhyValues = new PhysicsValuesDTO(
             phyValues.timeStamp,
             newPosX,
@@ -172,8 +162,6 @@ public class MazeAIController implements Runnable {
         if (body != null) {
             body.doMovement(newPhyValues);
             return true;
-        } else {
-            System.out.println("[MAZE-AI] Could not find body for enemy " + bodyData.entityId);
         }
         return false;
     }

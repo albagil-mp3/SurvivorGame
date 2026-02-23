@@ -51,7 +51,7 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
     @Override
     protected void createDecorators() {
-        // No decorators for the maze
+        // Decorators are placed after maze statics are created to avoid overlapping walls
     }
 
     @Override
@@ -246,6 +246,69 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
         // Renderizar centrado
         renderMazeGrid(maze, offsetX, offsetY, cellSize, "wall_01");
+
+        // Place decorators now that maze layout (walls) is known. Ensure decorators don't overlap walls.
+        placeDecoratorsAvoidingWalls(maze, offsetX, offsetY, cellSize);
+    }
+
+    /**
+     * Place world decorators avoiding wall cells. If a decorator falls on a wall cell,
+     * attempt to move it to the nearest PATH cell within a small radius.
+     */
+    private void placeDecoratorsAvoidingWalls(int[][] maze, double offsetX, double offsetY, int cellSize) {
+        java.util.ArrayList<engine.world.ports.DefItem> decorators = this.getWorldDefinition().spaceDecorators;
+        if (decorators == null || decorators.isEmpty()) return;
+
+        int rows = maze.length;
+        int cols = maze[0].length;
+
+        for (engine.world.ports.DefItem def : decorators) {
+            engine.world.ports.DefItemDTO defDto = this.defItemToDTO(def);
+            double px = defDto.posX;
+            double py = defDto.posY;
+
+            int col = (int) ((px - offsetX) / cellSize);
+            int row = (int) ((py - offsetY) / cellSize);
+
+            boolean placed = false;
+
+            if (row >= 0 && row < rows && col >= 0 && col < cols) {
+                if (maze[row][col] == PATH) {
+                    // original position is free
+                        engine.world.ports.DefItemDTO dto = new engine.world.ports.DefItemDTO(
+                            defDto.assetId, defDto.size, defDto.angle, px, py, defDto.density);
+                    this.addDecoratorIntoTheGame(dto);
+                    placed = true;
+                } else {
+                    // search nearest PATH cell within radius
+                    int maxRadius = 8; // cells
+                    for (int r = 1; r <= maxRadius && !placed; r++) {
+                        for (int dy = -r; dy <= r && !placed; dy++) {
+                            for (int dx = -r; dx <= r && !placed; dx++) {
+                                int nr = row + dy;
+                                int nc = col + dx;
+                                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                                if (maze[nr][nc] == PATH) {
+                                    double nx = offsetX + nc * cellSize + cellSize / 2.0;
+                                    double ny = offsetY + nr * cellSize + cellSize / 2.0;
+                                    engine.world.ports.DefItemDTO dto = new engine.world.ports.DefItemDTO(
+                                            defDto.assetId, defDto.size, defDto.angle, nx, ny, defDto.density);
+                                    this.addDecoratorIntoTheGame(dto);
+                                    placed = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!placed) {
+                // If outside maze bounds or not placed, place at original position as fallback
+                engine.world.ports.DefItemDTO dto = new engine.world.ports.DefItemDTO(
+                        defDto.assetId, defDto.size, defDto.angle, px, py, defDto.density);
+                this.addDecoratorIntoTheGame(dto);
+            }
+        }
     }
     
     /**
@@ -326,14 +389,6 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
             addWallSegment("wall_02", mazeCellSize, x, topY);
             addWallSegment("wall_02", mazeCellSize, x, bottomY);
-            
-            // UPDATE MAZE GRID - mark these cells as walls for MazeNavigator
-            if (topRow >= 0 && topRow < mazeGrid.length && c >= 0 && c < mazeGrid[0].length) {
-                mazeGrid[topRow][c] = WALL;
-            }
-            if (bottomRow >= 0 && bottomRow < mazeGrid.length && c >= 0 && c < mazeGrid[0].length) {
-                mazeGrid[bottomRow][c] = WALL;
-            }
         }
 
         // --- PARED IZQUIERDA Y DERECHA ---
@@ -349,14 +404,6 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
             addWallSegment("wall_02", mazeCellSize, leftX, y);
             addWallSegment("wall_02", mazeCellSize, rightX, y);
-            
-            // UPDATE MAZE GRID - mark these cells as walls for MazeNavigator
-            if (r >= 0 && r < mazeGrid.length && leftCol >= 0 && leftCol < mazeGrid[0].length) {
-                mazeGrid[r][leftCol] = WALL;
-            }
-            if (r >= 0 && r < mazeGrid.length && rightCol >= 0 && rightCol < mazeGrid[0].length) {
-                mazeGrid[r][rightCol] = WALL;
-            }
         }
     }
 

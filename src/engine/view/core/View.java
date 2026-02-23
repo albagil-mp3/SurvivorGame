@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.JButton;
 
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetType;
@@ -353,7 +354,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         return this.controller.getPlayerRenderData(this.localPlayerId);
     }
 
-    protected String getLocalPlayerId() {
+    public String getLocalPlayerId() {
         return this.localPlayerId;
     }
 
