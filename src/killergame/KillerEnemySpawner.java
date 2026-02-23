@@ -115,7 +115,7 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
         }
         
         // Get velocity for chosen direction
-        double speed = 40.0; // Constant speed
+        double speed = 150.0; // Matched with MazeAIController speed
         MazeNavigator.Velocity velocity = navigator.getVelocityForDirection(startDir, speed);
         double speedX = velocity.vx;
         double speedY = velocity.vy;
