@@ -91,6 +91,32 @@ public class KillerGameMain {
 
         controller.activate();
 
+        // Wire pause overlay handlers to perform reset and exit similar to PlayAgain
+        final Controller controllerRefPause = controller;
+        final Model modelRefPause = model;
+        final View viewRefPause = view;
+        final WorldDefinitionProvider worldProvRefPause = worldProv;
+        final DoubleVector worldDimRefPause = worldDimension;
+        final DoubleVector viewDimRefPause = viewDimension;
+        final int maxBodiesRefPause = maxBodies;
+        final int maxEnemySpawnDelayRefPause = maxEnemySpawnDelay;
+
+        // Reset action removed: PauseOverlay has no REINICIAR button now.
+
+        view.setPauseExitHandler(() -> SwingUtilities.invokeLater(() -> {
+            try {
+                // Pause the engine and show main menu
+                controller.enginePause();
+                view.setMenuLocked(true);
+                view.showMenu();
+                view.requestFocusInWindow();
+                // reset transient game state
+                gameworld.GameState.get().reset();
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }));
+
         AtomicBoolean playRequested = new AtomicBoolean(false);
         AtomicReference<Runnable> startGameActionRef = new AtomicReference<>(null);
 
@@ -104,9 +130,30 @@ public class KillerGameMain {
 
         try {
             SwingUtilities.invokeAndWait(() -> {
-                view.setMenuPanel(new GameMenuPanel(onPlayRequested));
+                final GameMenuPanel menuPanel = new GameMenuPanel(onPlayRequested);
+                menuPanel.updateHighscore();
+                view.setMenuPanel(menuPanel);
                 view.setMenuLocked(true);
                 view.showMenu();
+
+                // Keep a reference to menuPanel for later updates (used by lambda below)
+                // Using final array to capture variable in lambdas
+                final GameMenuPanel[] menuRef = new GameMenuPanel[] { menuPanel };
+
+                // Update pause exit handler to refresh menu when showing it
+                view.setPauseExitHandler(() -> SwingUtilities.invokeLater(() -> {
+                    try {
+                        controller.enginePause();
+                        view.setMenuLocked(true);
+                        // refresh highscore before showing
+                        try { menuRef[0].updateHighscore(); } catch (Throwable t) {}
+                        view.showMenu();
+                        view.requestFocusInWindow();
+                        gameworld.GameState.get().reset();
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }));
             });
         } catch (Exception ex) {
             throw new RuntimeException("Failed to initialize main menu", ex);
@@ -150,6 +197,20 @@ public class KillerGameMain {
                 if (localPlayerId != null && !localPlayerId.isEmpty()) {
                     engine.view.renderables.ports.PlayerRenderDTO p = controller.getPlayerRenderData(localPlayerId);
                     if (p != null) finalScore = p.score;
+                }
+
+                // Check highscore and persist + notify if new record
+                int previousHS = killergame.HighscoreStore.getHighscore();
+                if (finalScore > previousHS) {
+                    killergame.HighscoreStore.saveHighscore(finalScore);
+                    final int fs = finalScore;
+                    // show dialog on EDT
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JOptionPane.showMessageDialog(view,
+                                "\u00A1Nuevo r\u00E9cord! Has conseguido " + fs + " puntos",
+                                "Nuevo r\u00E9cord",
+                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    });
                 }
 
                 gameworld.GameState.get().setFinalScore(finalScore);
@@ -214,6 +275,18 @@ public class KillerGameMain {
                                 if (localPlayerId != null && !localPlayerId.isEmpty()) {
                                     engine.view.renderables.ports.PlayerRenderDTO p = newController.getPlayerRenderData(localPlayerId);
                                     if (p != null) finalScore = p.score;
+                                }
+
+                                int previousHS = killergame.HighscoreStore.getHighscore();
+                                if (finalScore > previousHS) {
+                                    killergame.HighscoreStore.saveHighscore(finalScore);
+                                    final int fs = finalScore;
+                                    javax.swing.SwingUtilities.invokeLater(() -> {
+                                        javax.swing.JOptionPane.showMessageDialog(viewRef,
+                                                "\u00A1Nuevo r\u00E9cord! Has conseguido " + fs + " puntos",
+                                                "Nuevo r\u00E9cord",
+                                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                                    });
                                 }
 
                                 gameworld.GameState.get().setFinalScore(finalScore);

@@ -1,6 +1,8 @@
 package engine.controller.mappers;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import engine.model.bodies.ports.BodyData;
 import engine.model.physics.ports.PhysicsValuesDTO;
@@ -8,6 +10,10 @@ import engine.utils.pooling.PoolMDTO;
 import engine.view.renderables.ports.DynamicRenderDTO;
 
 public class DynamicRenderableMapper extends DTOPooledMapper<DynamicRenderDTO> {
+
+    // Track entities already warned to avoid spamming the console repeatedly
+    private static final Set<String> WARNED_ENTITIES = ConcurrentHashMap.newKeySet();
+
 
     public static DynamicRenderDTO fromBodyDTO(BodyData bodyData) {
         PhysicsValuesDTO phyValues = bodyData.getPhysicsValues();
@@ -78,9 +84,13 @@ public class DynamicRenderableMapper extends DTOPooledMapper<DynamicRenderDTO> {
 
         // Defensive check: detect invalid physics values early
         if (phyValues.size <= 0) {
-            System.err.println("WARNING: DynamicRenderableMapper detected invalid size! " +
-                "entityId=" + bodyData.entityId + ", size=" + phyValues.size + 
-                ", pos=(" + phyValues.posX + "," + phyValues.posY + ")");
+            // Warn only once per entity to avoid spamming the log when bodies are
+            // created/updated frequently before a valid size is available.
+            if (WARNED_ENTITIES.add(bodyData.entityId)) {
+                System.err.println("WARNING: DynamicRenderableMapper detected invalid size! " +
+                    "entityId=" + bodyData.entityId + ", size=" + phyValues.size + 
+                    ", pos=(" + phyValues.posX + "," + phyValues.posY + ")");
+            }
             return false; // Skip this body to prevent rendering issues
         }
 

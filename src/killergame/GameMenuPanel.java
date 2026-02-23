@@ -21,6 +21,7 @@ import javax.swing.SwingConstants;
 public class GameMenuPanel extends JPanel {
 
     private final Runnable onPlay;
+    private JLabel highscoreLabel;
 
     public GameMenuPanel(Runnable onPlay) {
         this.onPlay = onPlay;
@@ -47,10 +48,17 @@ public class GameMenuPanel extends JPanel {
         subtitleLabel.setForeground(Color.WHITE);
         subtitleLabel.setAlignmentX(CENTER_ALIGNMENT);
 
+        highscoreLabel = new JLabel("Highscore: 0", SwingConstants.CENTER);
+        highscoreLabel.setFont(highscoreLabel.getFont().deriveFont(18f));
+        highscoreLabel.setForeground(Color.ORANGE);
+        highscoreLabel.setAlignmentX(CENTER_ALIGNMENT);
+
         titlePanel.add(Box.createVerticalGlue());
         titlePanel.add(titleLabel);
         titlePanel.add(Box.createVerticalStrut(10));
         titlePanel.add(subtitleLabel);
+        titlePanel.add(Box.createVerticalStrut(8));
+        titlePanel.add(highscoreLabel);
         titlePanel.add(Box.createVerticalGlue());
 
         JPanel buttonPanel = new JPanel();
@@ -94,6 +102,15 @@ public class GameMenuPanel extends JPanel {
 
         add(titlePanel, BorderLayout.NORTH);
         add(buttonPanel, BorderLayout.CENTER);
+    }
+
+    public void updateHighscore() {
+        try {
+            int hs = killergame.HighscoreStore.getHighscore();
+            this.highscoreLabel.setText("Highscore: " + hs);
+        } catch (Throwable t) {
+            // ignore
+        }
     }
 
     private JButton createMenuButton(String text, Color color) {

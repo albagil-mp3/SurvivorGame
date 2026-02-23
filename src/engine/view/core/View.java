@@ -155,6 +155,8 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     private final Set<Integer> pressedKeys = new HashSet<>();
     private boolean wasWindowFocused = true;
     // endregion Fields
+    private PauseOverlay pauseOverlay;
+    private JButton pauseButton;
 
     // region Constructors
     public View() {
@@ -259,6 +261,13 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     public void showMenu() {
         if (this.cardLayout != null && this.rootPanel != null) {
             this.cardLayout.show(this.rootPanel, "menu");
+            // When menu is visible, hide pause controls and overlay
+            try {
+                if (this.pauseButton != null) this.pauseButton.setVisible(false);
+                if (this.pauseOverlay != null) this.pauseOverlay.setVisible(false);
+            } catch (Throwable t) {
+                // ignore
+            }
         }
     }
 
@@ -277,6 +286,12 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         if (this.cardLayout != null && this.rootPanel != null) {
             this.cardLayout.show(this.rootPanel, "game");
             SwingUtilities.invokeLater(this::updateViewportToFrame);
+            // Ensure pause button visible when in game
+            try {
+                if (this.pauseButton != null) this.pauseButton.setVisible(true);
+            } catch (Throwable t) {
+                // ignore
+            }
         }
     }
 
@@ -553,6 +568,28 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.pack();
         this.setVisible(true);
 
+        // Create pause overlay and button on layered pane
+        try {
+            this.pauseOverlay = new PauseOverlay(this);
+            this.pauseOverlay.setVisible(false);
+            this.pauseOverlay.setBounds(0, 0, this.getWidth(), this.getHeight());
+            this.getLayeredPane().add(this.pauseOverlay, javax.swing.JLayeredPane.MODAL_LAYER);
+
+            this.pauseButton = new JButton("||");
+            this.pauseButton.setFocusable(false);
+            this.pauseButton.setToolTipText("Pause");
+            this.pauseButton.setBounds(this.getWidth() - 80, 24, 48, 32);
+            this.pauseButton.addActionListener(e -> {
+                try {
+                    if (this.controller != null) this.controller.enginePause();
+                } catch (Throwable t) {}
+                this.pauseOverlay.showOverlay();
+            });
+            this.getLayeredPane().add(this.pauseButton, javax.swing.JLayeredPane.PALETTE_LAYER);
+        } catch (Throwable t) {
+            // ignore overlay creation errors
+        }
+
         SwingUtilities.invokeLater(() -> {
             this.setExtendedState(JFrame.MAXIMIZED_BOTH);
             updateViewportToFrame();
@@ -574,6 +611,22 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.renderer.setViewDimension(viewport);
         this.renderer.revalidate();
         this.renderer.repaint();
+
+        // Update pause overlay and button bounds when frame resizes
+        try {
+            if (this.pauseOverlay != null) {
+                this.pauseOverlay.setBounds(0, 0, size.width, size.height);
+            }
+            if (this.pauseButton != null) {
+                int btnW = 48;
+                int btnH = 32;
+                int x = Math.max(16, size.width - btnW - 20);
+                int y = 20;
+                this.pauseButton.setBounds(x, y, btnW, btnH);
+            }
+        } catch (Throwable t) {
+            // ignore layout errors
+        }
     }
 
     /**
@@ -939,6 +992,29 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
 
             g2.dispose();
         }
+    }
+
+    // Pause overlay helpers
+    public void setPauseResetHandler(Runnable r) {
+        if (this.pauseOverlay != null) this.pauseOverlay.setOnReset(r);
+    }
+
+    public void setPauseExitHandler(Runnable r) {
+        if (this.pauseOverlay != null) this.pauseOverlay.setOnExit(r);
+    }
+
+    public void showPauseOverlay() {
+        try {
+            if (this.controller != null) this.controller.enginePause();
+            if (this.pauseOverlay != null) this.pauseOverlay.showOverlay();
+        } catch (Throwable t) {}
+    }
+
+    public void hidePauseOverlay() {
+        try {
+            if (this.pauseOverlay != null) this.pauseOverlay.hideOverlay();
+            if (this.controller != null) this.controller.engineResume();
+        } catch (Throwable t) {}
     }
 
 }
