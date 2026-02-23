@@ -94,50 +94,12 @@ public final class ProjectAssets {
         // endregion
 
         // region bombs (bomb-***)
-        this.catalog.register("bomb_01", "grenade-01.png", AssetType.MINE, AssetIntensity.MEDIUM);
-        this.catalog.register("bomb_02", "grenade-02.png", AssetType.MINE, AssetIntensity.MEDIUM);
-        // endregion
-
-        // region cosmic portals (cosmic-portal-***)
-        this.catalog.register("cosmic_portal_01", "cosmic-portal-01.png", AssetType.COSMIC_PORTAL, AssetIntensity.HIGH);
-        // endregion
-
-        // region lights (light-***)
-        this.catalog.register("light_01", "light-01.png", AssetType.LIGHT, AssetIntensity.HIGH);
-        this.catalog.register("light_02", "light-02.png", AssetType.LIGHT, AssetIntensity.HIGH);
-        // endregion
-
-        // region missiles (misil-***)
-        this.catalog.register("misil_01", "misil-01-mini.png", AssetType.MISSILE, AssetIntensity.HIGH);
-        this.catalog.register("misil_02", "misil-02-mini.png", AssetType.MISSILE, AssetIntensity.HIGH);
-        this.catalog.register("misil_03", "misil-03-mini.png", AssetType.MISSILE, AssetIntensity.HIGH);
-        this.catalog.register("misil_04", "misil-04.png", AssetType.MISSILE, AssetIntensity.HIGH);
-        this.catalog.register("misil_05", "misil-05-mini.png", AssetType.MISSILE, AssetIntensity.HIGH);
-        // endregion
-
-        // region meteors (meteor-***)
-        this.catalog.register("meteor_01", "meteor-01.png", AssetType.METEOR, AssetIntensity.HIGH);
-        this.catalog.register("meteor_02", "meteor-02.png", AssetType.METEOR, AssetIntensity.HIGH);
-        this.catalog.register("meteor_03", "meteor-03.png", AssetType.METEOR, AssetIntensity.HIGH);
-        this.catalog.register("meteor_04", "meteor-04.png", AssetType.METEOR, AssetIntensity.HIGH);
-        this.catalog.register("meteor_05", "meteor-05.png", AssetType.METEOR, AssetIntensity.HIGH);
-        // endregion
-
-     
-
-        // region rainbows (rainbow-***)
-        this.catalog.register("rainbow_01", "rainbow-01.png", AssetType.RAINBOW, AssetIntensity.HIGH);
-        // endregion
-
-        // region rockets (rocket-***)
-        this.catalog.register("rocket_01", "rocket-01.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        this.catalog.register("rocket_02", "rocket-02.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        this.catalog.register("rocket_03", "rocket-03.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        this.catalog.register("rocket_04", "rocket-04.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        this.catalog.register("rocket_05", "rocket-05.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        this.catalog.register("rocket_06", "rocket-06.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        this.catalog.register("rocket_07", "rocket-07.png", AssetType.ROCKET, AssetIntensity.HIGH);
-        // endregion
+        
+   
+       
+        this.catalog.register("pac-man-a-1", "pac-man-a-1.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("pac-man-a-2", "pac-man-a-2.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
+        this.catalog.register("pac-man-a-3", "pac-man-a-3.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
 
         // Player weapon visual overlay - AssetType.WEAPON solo para armas visuales
         this.catalog.register("player_weapon", "ak-47.png", AssetType.WEAPON, AssetIntensity.LOW);
