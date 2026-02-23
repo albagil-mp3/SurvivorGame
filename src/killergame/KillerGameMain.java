@@ -131,27 +131,76 @@ public class KillerGameMain {
                 t.printStackTrace();
             }
 
-            // Show Play Again button. When clicked, stop the current engine and relaunch main.
-            view.showPlayAgainButton(() -> {
-                try {
-                    controller.engineStop();
-                } catch (Throwable ex) {
-                    ex.printStackTrace();
-                }
+            // Show Play Again button. When clicked, reset the game in the same window.
+                final Controller controllerRef = controller;
+                final Model modelRef = model;
+                final View viewRef = view;
+                final WorldDefinitionProvider worldProvRef = worldProv;
+                final DoubleVector worldDimRef = worldDimension;
+                final DoubleVector viewDimRef = viewDimension;
+                final int maxBodiesRef = maxBodies;
+                final int maxEnemySpawnDelayRef = maxEnemySpawnDelay;
 
-                // Small pause to allow threads to terminate gracefully
-                try { Thread.sleep(500L); } catch (InterruptedException e) { /* ignore */ }
+                view.showPlayAgainButton(() -> {
+                    try {
+                        // Stop current engine and model
+                        controllerRef.engineStop();
+                        try { modelRef.shutdown(); } catch (Throwable t) { t.printStackTrace(); }
 
-                // Relaunch the game in the same JVM by calling main again with the
-                // previously selected theme. This approach works for quick reload
-                // during development; if you need a full process restart consider
-                // launching a new JVM process instead.
-                try {
-                    KillerGameMain.main(new String[] { selectedTheme.name() });
-                } catch (Throwable ex) {
-                    ex.printStackTrace();
-                }
-            });
+                        // Clear renderables so previous visuals vanish
+                        viewRef.hidePlayAgainButton();
+                        viewRef.getLayeredPane().repaint();
+                        viewRef.getLayeredPane().revalidate();
+                        viewRef.repaint();
+
+                        // Reset global game state
+                        gameworld.GameState.get().reset();
+
+                        // Construct fresh model + controller using same view (no new window)
+                        Model newModel = new Model(worldDimRef, maxBodiesRef);
+                        ActionsGenerator newGameRules = new KillerGameRules(newModel);
+                        Controller newController = new Controller(
+                                worldDimRef,
+                                viewDimRef,
+                                maxBodiesRef,
+                                viewRef,
+                                newModel,
+                                newGameRules);
+
+                        newController.activate();
+
+                        // Rebuild scene
+                        WorldDefinition newWorldDef = worldProvRef.provide();
+                        KillerLevelGenerator newLevelGenerator = new KillerLevelGenerator(newController, newWorldDef);
+                        MazeNavigator newMazeNavigator = newLevelGenerator.createMazeNavigator();
+
+                        MazeAIController newMazeAI = new MazeAIController(newModel, newMazeNavigator);
+                        newMazeAI.activate();
+
+                        new KillerEnemySpawner(newController, newWorldDef, maxEnemySpawnDelayRef, newMazeNavigator).activate();
+
+                        // Restart timer
+                        gameworld.GameTimer.get().start(10_000L, () -> {
+                            try {
+                                String localPlayerId = viewRef.getLocalPlayerId();
+                                int finalScore = 0;
+                                if (localPlayerId != null && !localPlayerId.isEmpty()) {
+                                    engine.view.renderables.ports.PlayerRenderDTO p = newController.getPlayerRenderData(localPlayerId);
+                                    if (p != null) finalScore = p.score;
+                                }
+
+                                gameworld.GameState.get().setFinalScore(finalScore);
+                                gameworld.GameState.get().setGameOver(true);
+                            } catch (Throwable t) { t.printStackTrace(); }
+
+                            // Show Play again button for next round
+                            viewRef.showPlayAgainButton(null);
+                        });
+
+                    } catch (Throwable ex) {
+                        ex.printStackTrace();
+                    }
+                });
         });
     }
 }

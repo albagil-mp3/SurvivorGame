@@ -16,11 +16,10 @@ public class ControlPanel extends JPanel {
 
     public ControlPanel(View view) {
         this.view = view;
-        this.setLayout(new FlowLayout(FlowLayout.LEFT));
+        this.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        this.playAgainButton = new JButton("Play again");
+        this.playAgainButton = new javax.swing.JButton("Play again");
         this.playAgainButton.setVisible(false);
-        this.add(this.playAgainButton);
     }
 
     public void setPlayAgainAction(ActionListener action) {
@@ -35,5 +34,9 @@ public class ControlPanel extends JPanel {
         this.playAgainButton.setVisible(visible);
         this.revalidate();
         this.repaint();
+    }
+
+    public JButton getPlayAgainButton() {
+        return this.playAgainButton;
     }
 }

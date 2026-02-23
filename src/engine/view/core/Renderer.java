@@ -361,6 +361,15 @@ public class Renderer extends Canvas implements Runnable {
         this.staticRenderables = newRenderables; // atomic swap
     }
 
+    /**
+     * Clear all renderables (dynamic + static). Used when restarting a game
+     * to ensure the canvas does not show remnants from the previous session.
+     */
+    public void clearAllRenderables() {
+        this.dynamicRenderables.clear();
+        this.staticRenderables = new java.util.concurrent.ConcurrentHashMap<>();
+    }
+
     // *** PRIVATES ***
 
     // region drawers (draw***)
