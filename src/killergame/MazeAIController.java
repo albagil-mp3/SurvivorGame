@@ -29,7 +29,6 @@ public class MazeAIController implements Runnable {
     public void activate() {
         this.running = true;
         this.thread.start();
-        System.out.println("MazeAIController activated!");
     }
     
     public void deactivate() {
@@ -38,7 +37,6 @@ public class MazeAIController implements Runnable {
     
     @Override
     public void run() {
-        System.out.println("[MAZE-AI] MazeAIController thread started!");
         
         int updateCount = 0;
         while (this.running) {
@@ -98,31 +96,54 @@ public class MazeAIController implements Runnable {
         // Get current direction based on velocity
         Direction currentDir = navigator.getCurrentDirection(speedX, speedY);
        
-        // Choose next direction based on available paths
-        Direction nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
+        // Only consider changing direction when very close to the center of the current cell
+        Direction nextDir = currentDir; // Default: keep current direction
         
-        // Calculate new velocity for the chosen direction
-        Velocity newVelocity = navigator.getVelocityForDirection(nextDir, enemySpeed);
-        
-        // Check if direction actually changed
-        boolean directionChanged = Math.abs(newVelocity.vx - speedX) > 5.0 || 
-                                   Math.abs(newVelocity.vy - speedY) > 5.0;
-        
-        // CENTER the enemy in the current cell when changing direction
-        // This prevents wall clipping when turning
-        if (directionChanged) {
-            MazeNavigator.GridPosition gridPos = navigator.worldToGrid(posX, posY);
-            MazeNavigator.WorldPosition cellCenter = navigator.gridToWorld(gridPos.row, gridPos.col);
-            posX = cellCenter.x;
-            posY = cellCenter.y;
+        // Check if we need to change direction (always attempt to choose next direction)
+        nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
+
+        // Prevent movement into walls even if we're off-center
+        boolean blocked = navigator.isDirectionBlocked(posX, posY, nextDir);
+        if (blocked) {
+            Direction alternative = navigator.chooseNextDirection(posX, posY, currentDir);
+            if (!navigator.isDirectionBlocked(posX, posY, alternative)) {
+                nextDir = alternative;
+                blocked = false;
+            }
         }
+
+        // Calculate new velocity for the chosen direction
+        Velocity newVelocity = blocked
+                ? new Velocity(0.0, 0.0)
+                : navigator.getVelocityForDirection(nextDir, enemySpeed);
+
+        double newPosX = posX;
+        double newPosY = posY;
+        if (blocked) {
+            var center = navigator.getCellCenterForWorld(posX, posY);
+            newPosX = center.x;
+            newPosY = center.y;
+        }
+
+        // Keep enemies centered on the corridor axis to avoid clipping walls
+        if (!blocked) {
+            var center = navigator.getCellCenterForWorld(posX, posY);
+            if (nextDir == Direction.EAST || nextDir == Direction.WEST) {
+                newPosY = center.y;
+            } else if (nextDir == Direction.NORTH || nextDir == Direction.SOUTH) {
+                newPosX = center.x;
+            }
+        }
+        
+        // NO POSITION MODIFICATION - Let the enemy move completely naturally
+        // Position is never modified, only velocity changes when direction changes
         
         // Always update velocity to counteract friction/collisions
         // Even if direction didn't change, we need to maintain speed
         PhysicsValuesDTO newPhyValues = new PhysicsValuesDTO(
             phyValues.timeStamp,
-            posX,
-            posY,
+            newPosX,
+            newPosY,
             phyValues.angle,
             phyValues.size,
             newVelocity.vx,  // New velocity X

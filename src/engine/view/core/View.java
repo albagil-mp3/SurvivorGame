@@ -1,8 +1,15 @@
 package engine.view.core;
 
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -16,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.JButton;
 
@@ -124,6 +132,12 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     private final Images images;
     private String localPlayerId;
     private final Renderer renderer;
+    private CardLayout cardLayout;
+    private JPanel rootPanel;
+    private JPanel gamePanel;
+    private JPanel menuPanel;
+    private JPanel leftPanel;
+    private JPanel rightPanel;
     private DoubleVector viewDimension;
     private DoubleVector viewportDimension;
     private DoubleVector worldDimension;
@@ -225,6 +239,30 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
 
     public void setViewportDimension(DoubleVector viewportDim) {
         this.viewportDimension = viewportDim;
+    }
+
+    public void setMenuPanel(JPanel menuPanel) {
+        if (menuPanel == null || this.cardLayout == null || this.rootPanel == null) {
+            return;
+        }
+        this.menuPanel.removeAll();
+        this.menuPanel.setLayout(new BorderLayout());
+        this.menuPanel.add(menuPanel, BorderLayout.CENTER);
+        this.menuPanel.revalidate();
+        this.menuPanel.repaint();
+    }
+
+    public void showMenu() {
+        if (this.cardLayout != null && this.rootPanel != null) {
+            this.cardLayout.show(this.rootPanel, "menu");
+        }
+    }
+
+    public void showGame() {
+        if (this.cardLayout != null && this.rootPanel != null) {
+            this.cardLayout.show(this.rootPanel, "game");
+            SwingUtilities.invokeLater(this::updateViewportToFrame);
+        }
     }
 
     public void setWorldDimension(DoubleVector worldDim) {
@@ -359,32 +397,42 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     // *** PRIVATE ***
 
     private void addRenderer(Container container) {
-        GridBagConstraints c = new GridBagConstraints();
+        this.leftPanel = new JPanel();
+        this.leftPanel.setBackground(Color.BLACK);
+        this.leftPanel.setPreferredSize(new Dimension(220, 1));
 
-        c.anchor = GridBagConstraints.NORTHWEST;
+        this.rightPanel = new JPanel();
+        this.rightPanel.setBackground(Color.BLACK);
+        this.rightPanel.setPreferredSize(new Dimension(220, 1));
+
+        this.renderer.setPreferredSize(new Dimension(1000, 1000));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.BOTH;
-        c.gridx = 1;
-        c.gridy = 0;
-        c.weightx = 1F;
-        c.weighty = 0;
-        c.gridheight = 10;
-        c.gridwidth = 8;
-        container.add(this.renderer, c);
-    }
-
-    private void addControlPanel(Container container) {
-        GridBagConstraints c = new GridBagConstraints();
-
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.fill = GridBagConstraints.VERTICAL;
         c.gridx = 0;
         c.gridy = 0;
-        c.weightx = 0F;
-        c.weighty = 0F;
-        c.gridheight = 10;
-        c.gridwidth = 1;
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+        container.add(this.leftPanel, c);
 
-        container.add(this.controlPanel, c);
+        GridBagConstraints center = new GridBagConstraints();
+        center.anchor = GridBagConstraints.CENTER;
+        center.fill = GridBagConstraints.NONE;
+        center.gridx = 1;
+        center.gridy = 0;
+        center.weightx = 0.0;
+        center.weighty = 1.0;
+        container.add(this.renderer, center);
+
+        GridBagConstraints right = new GridBagConstraints();
+        right.anchor = GridBagConstraints.CENTER;
+        right.fill = GridBagConstraints.BOTH;
+        right.gridx = 2;
+        right.gridy = 0;
+        right.weightx = 1.0;
+        right.weighty = 1.0;
+        container.add(this.rightPanel, right);
     }
 
     private void createFrame() {
@@ -393,10 +441,35 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLayout(new GridBagLayout());
 
+        this.setResizable(true);
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        this.setSize(screenSize);
+        this.setMinimumSize(new Dimension(800, 800));
+        this.setLocationRelativeTo(null);
+
+        this.cardLayout = new CardLayout();
+        this.rootPanel = new JPanel(this.cardLayout);
+        this.gamePanel = new JPanel(new GridBagLayout());
+        this.menuPanel = new JPanel(new BorderLayout());
+        this.menuPanel.setBackground(Color.BLACK);
+
+        this.addRenderer(this.gamePanel);
+
+        this.rootPanel.add(this.menuPanel, "menu");
+        this.rootPanel.add(this.gamePanel, "game");
+        this.cardLayout.show(this.rootPanel, "menu");
+
         panel = this.getContentPane();
-        // Do not add controlPanel to the layout to avoid left white bar; button will be
-        // shown as an overlay in the layered pane when needed.
-        this.addRenderer(panel);
+        panel.setLayout(new BorderLayout());
+        panel.add(this.rootPanel, BorderLayout.CENTER);
+
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                updateViewportToFrame();
+            }
+        });
 
         this.setFocusable(true);
         this.addKeyListener(this);
@@ -409,74 +482,34 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         this.pack();
         this.setVisible(true);
 
-        SwingUtilities.invokeLater(() -> this.requestFocusInWindow());
-    }
-
-    /**
-     * Show the "Play again" button and attach the action to run when clicked.
-     * The provided runnable will be executed in a new thread to avoid blocking
-     * the Swing EDT.
-     */
-    public void showPlayAgainButton(Runnable onPlayAgain) {
         SwingUtilities.invokeLater(() -> {
-            // Configure action on the control panel button
-            this.controlPanel.setPlayAgainAction(e -> {
-                // Hide overlay/button immediately
-                this.hidePlayAgainButton();
-                if (onPlayAgain != null) new Thread(onPlayAgain, "PlayAgainAction").start();
-            });
-
-            // Move the button to the layered pane so it appears OVER the renderer
-            try {
-                JButton btn = this.controlPanel.getPlayAgainButton();
-                java.awt.Container parent = btn.getParent();
-                if (parent != null) parent.remove(btn);
-
-                // Center button under the GAME OVER / Final score text using same fonts as Renderer
-                int btnW = 160;
-                int btnH = 34;
-                int cx = (int) (this.viewDimension == null ? this.getWidth() / 2 : this.viewDimension.x * 0.5d);
-                int cy = (int) (this.viewDimension == null ? this.getHeight() / 2 : this.viewDimension.y * 0.5d);
-
-                // Compute title and score font ascents using this component's FontMetrics
-                java.awt.Font titleFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 72);
-                java.awt.Font scoreFont = new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 36);
-                int titleAscent = this.getFontMetrics(titleFont).getAscent();
-                int scoreAscent = this.getFontMetrics(scoreFont).getAscent();
-
-                // Renderer draws title at (cy - titleAscent/2) and score at (cy + titleAscent)
-                // Place button a few pixels below the score baseline
-                int scoreY = cy + titleAscent;
-                int padding = 12;
-                int x = cx - btnW / 2;
-                int y = scoreY + scoreAscent + padding;
-
-                btn.setBounds(x, y, btnW, btnH);
-                btn.setVisible(true);
-
-                this.getLayeredPane().add(btn, javax.swing.JLayeredPane.PALETTE_LAYER);
-                this.getLayeredPane().revalidate();
-                this.getLayeredPane().repaint();
-            } catch (Throwable t) {
-                // Fallback to showing in control panel if layered pane fails
-                this.controlPanel.showPlayAgain(true);
-            }
+            this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            updateViewportToFrame();
+            this.requestFocusInWindow();
         });
     }
 
-    public void hidePlayAgainButton() {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                JButton btn = this.controlPanel.getPlayAgainButton();
-                java.awt.Container parent = btn.getParent();
-                if (parent != null) parent.remove(btn);
-                this.getLayeredPane().revalidate();
-                this.getLayeredPane().repaint();
-            } catch (Throwable t) {
-                // ignore
-            }
-            this.controlPanel.showPlayAgain(false);
-        });
+    private void updateViewportToFrame() {
+        Dimension size = this.gamePanel == null ? this.getContentPane().getSize() : this.gamePanel.getSize();
+        if (size.width <= 0 || size.height <= 0) {
+            return;
+        }
+
+        int gameSize = 800;
+        int sideWidth = Math.max(0, (size.width - gameSize) / 2);
+        if (this.leftPanel != null) {
+            this.leftPanel.setPreferredSize(new Dimension(sideWidth, size.height));
+        }
+        if (this.rightPanel != null) {
+            this.rightPanel.setPreferredSize(new Dimension(sideWidth, size.height));
+        }
+        this.renderer.setPreferredSize(new Dimension(gameSize, gameSize));
+
+        DoubleVector viewport = new DoubleVector(gameSize, gameSize);
+        this.viewportDimension = viewport;
+        this.renderer.setViewDimension(viewport);
+        this.renderer.revalidate();
+        this.renderer.repaint();
     }
 
     private void resetAllKeyStates() {
