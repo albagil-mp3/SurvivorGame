@@ -14,8 +14,9 @@ public class PlayerRenderDTO {
     public final double missilesStatus;
     public final int score;
     public final int level;
+    public final String timeRemaining;
 
-    public PlayerRenderDTO(
+        public PlayerRenderDTO(
             String entityId,
             String playerName,
             double damage,
@@ -28,7 +29,8 @@ public class PlayerRenderDTO {
             double minesStatus,
             double missilesStatus,
             int level,
-            int score) {
+            int score,
+            String timeRemaining) {
 
         this.entityId = entityId;
         this.playerName = playerName;
@@ -43,12 +45,14 @@ public class PlayerRenderDTO {
         this.missilesStatus = missilesStatus;
         this.score = score;
         this.level = level;
+        this.timeRemaining = timeRemaining;
     }
 
     public Object[] toObjectArray() {
         return new Object[] {
                 this.entityId,
                 this.playerName,
+            this.timeRemaining,
                 this.damage,
                 this.energy,
                 this.shield,

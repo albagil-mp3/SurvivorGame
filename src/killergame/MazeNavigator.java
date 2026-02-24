@@ -47,6 +47,14 @@ public class MazeNavigator {
         double worldY = offsetY + row * cellSize + cellSize / 2.0;
         return new WorldPosition(worldX, worldY);
     }
+
+    /**
+     * Gets the center of the grid cell containing the given world position.
+     */
+    public WorldPosition getCellCenterForWorld(double worldX, double worldY) {
+        GridPosition gridPos = worldToGrid(worldX, worldY);
+        return gridToWorld(gridPos.row, gridPos.col);
+    }
     
     /**
      * Checks if a grid position is a valid path (not wall, within bounds).
@@ -56,6 +64,29 @@ public class MazeNavigator {
             return false;
         }
         return mazeGrid[row][col] == PATH;
+    }
+
+    /**
+     * Checks if moving in a direction would hit a wall at the cell boundary.
+     */
+    public boolean isDirectionBlocked(double worldX, double worldY, Direction dir) {
+        GridPosition gridPos = worldToGrid(worldX, worldY);
+        GridPosition nextCell = getNextCell(gridPos, dir);
+
+        if (isValidPath(nextCell.row, nextCell.col)) {
+            return false;
+        }
+
+        WorldPosition center = gridToWorld(gridPos.row, gridPos.col);
+        double half = cellSize * 0.5;
+        double margin = cellSize * 0.1;
+
+        return switch (dir) {
+            case EAST -> worldX >= center.x + half - margin;
+            case WEST -> worldX <= center.x - half + margin;
+            case SOUTH -> worldY >= center.y + half - margin;
+            case NORTH -> worldY <= center.y - half + margin;
+        };
     }
     
     /**
@@ -167,6 +198,12 @@ public class MazeNavigator {
      * Gets current direction based on velocity.
      */
     public Direction getCurrentDirection(double velocityX, double velocityY) {
+        // Add a check for zero velocity (stationary)
+        if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) {
+            // If stationary, return a default direction (EAST)
+            return Direction.EAST;
+        }
+        
         double absX = Math.abs(velocityX);
         double absY = Math.abs(velocityY);
         
@@ -175,6 +212,29 @@ public class MazeNavigator {
         } else {
             return velocityY > 0 ? Direction.SOUTH : Direction.NORTH;
         }
+    }
+    
+    /**
+     * Checks if entity is very close to cell center (for precise direction changes).
+     */
+    public boolean isAtCellCenter(double worldX, double worldY) {
+        WorldPosition cellCenter = gridToWorld(
+            worldToGrid(worldX, worldY).row,
+            worldToGrid(worldX, worldY).col
+        );
+        
+        double distX = Math.abs(worldX - cellCenter.x);
+        double distY = Math.abs(worldY - cellCenter.y);
+        double threshold = cellSize * 0.1; // Very tight threshold for smooth direction changes
+        
+        return distX < threshold && distY < threshold;
+    }
+    
+    /**
+     * Gets the cell size for distance calculations.
+     */
+    public int getCellSize() {
+        return cellSize;
     }
     
     /**
@@ -188,7 +248,7 @@ public class MazeNavigator {
         
         double distX = Math.abs(worldX - cellCenter.x);
         double distY = Math.abs(worldY - cellCenter.y);
-        double threshold = cellSize * 0.4; // Within 40% of cell size (more lenient)
+        double threshold = cellSize * 0.3; // More lenient threshold for smoother direction changes
         
         return distX < threshold && distY < threshold;
     }

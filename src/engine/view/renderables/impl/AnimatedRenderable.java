@@ -151,8 +151,7 @@ public class AnimatedRenderable extends DynamicRenderable {
         this.isPlayerShip = true;
         this.weaponAssetId = weaponAssetId;
         this.weaponSize = weaponSize;
-        System.out.println("AnimatedRenderable: Configured as player ship with weapon: " + 
-                          weaponAssetId + ", size: " + weaponSize);
+            // Silent: AnimatedRenderable configured
     }
     
     /**

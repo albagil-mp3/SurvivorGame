@@ -17,7 +17,7 @@ import engine.world.ports.WorldDefinition;
 public class KillerEnemySpawner extends AbstractIAGenerator {
 
     // region Fields
-    private static final int MAX_ENEMIES = 20; // Maximum number of concurrent enemies
+    private static final int MAX_ENEMIES = 150; // Maximum number of concurrent enemies
     
     private final ArrayList<DefItem> enemyDefs;
     private final Random rnd = new Random();
@@ -52,7 +52,7 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
     @Override
     protected void onActivate() {
         // Initialize any resources needed for spawning
-        System.out.println("Killer Game - Enemy maze spawner activated!");
+        // Silent: enemy spawner activated
     }
 
     @Override
@@ -90,13 +90,7 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
         // Convert prototype to DTO to resolve range-based properties
         DefItemDTO enemyDef = this.defItemToDTO(defItem);
 
-        // Spawn enemies at the center of the map, aligned to grid
-        double centerX = worldWidth / 2.0;
-        double centerY = worldHeight / 2.0;
-        
-        // Convert to grid and back to ensure spawn at cell center
-        MazeNavigator.GridPosition spawnGrid = navigator.worldToGrid(centerX, centerY);
-        MazeNavigator.WorldPosition spawnPos = navigator.gridToWorld(spawnGrid.row, spawnGrid.col);
+        MazeNavigator.WorldPosition spawnPos = findRandomMazeSpawnPosition();
         double newPosX = spawnPos.x;
         double newPosY = spawnPos.y;
         
@@ -115,7 +109,7 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
         }
         
         // Get velocity for chosen direction
-        double speed = 40.0; // Constant speed
+        double speed = 150.0; // Matched with MazeAIController speed
         MazeNavigator.Velocity velocity = navigator.getVelocityForDirection(startDir, speed);
         double speedX = velocity.vx;
         double speedY = velocity.vy;
@@ -138,5 +132,31 @@ public class KillerEnemySpawner extends AbstractIAGenerator {
 
         // Inject enemy into the game
         this.addDynamicIntoTheGame(updatedEnemyDef);
+    }
+
+    private MazeNavigator.WorldPosition findRandomMazeSpawnPosition() {
+        final int maxAttempts = 200;
+
+        for (int i = 0; i < maxAttempts; i++) {
+            double randomX = this.rnd.nextDouble() * this.worldWidth;
+            double randomY = this.rnd.nextDouble() * this.worldHeight;
+
+            MazeNavigator.GridPosition grid = this.navigator.worldToGrid(randomX, randomY);
+            if (!this.navigator.isValidPath(grid.row, grid.col)) {
+                continue;
+            }
+
+            // Ensure we spawn in a usable corridor cell (at least one outgoing path)
+            MazeNavigator.WorldPosition worldPos = this.navigator.gridToWorld(grid.row, grid.col);
+            if (!this.navigator.getValidDirections(worldPos.x, worldPos.y).isEmpty()) {
+                return worldPos;
+            }
+        }
+
+        // Fallback: center cell if random probing fails
+        double centerX = this.worldWidth / 2.0;
+        double centerY = this.worldHeight / 2.0;
+        MazeNavigator.GridPosition centerGrid = this.navigator.worldToGrid(centerX, centerY);
+        return this.navigator.gridToWorld(centerGrid.row, centerGrid.col);
     }
 }

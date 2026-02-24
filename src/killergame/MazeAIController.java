@@ -1,9 +1,11 @@
 package killergame;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import engine.controller.impl.Controller;
 import engine.model.bodies.ports.BodyData;
+import engine.model.bodies.ports.BodyType;
 import engine.model.impl.Model;
 import engine.model.physics.ports.PhysicsValuesDTO;
 import killergame.MazeNavigator.Direction;
@@ -15,11 +17,17 @@ import killergame.MazeNavigator.Velocity;
  */
 public class MazeAIController implements Runnable {
 
+    private static final int FLEE_RADIUS_CELLS = 4;
+    private static final double UNSTUCK_CENTER_SPEED_FACTOR = 0.45;
+    private static final long TURN_COOLDOWN_MS = 300; // prevent immediate re-turning at corners
+
     private final Model model;
     private final MazeNavigator navigator;
-    private final double enemySpeed = 40.0; // Constant speed for enemies
+    private final double enemySpeed = 150.0; 
     private final Thread thread;
     private volatile boolean running = false;
+    // Track last direction-change time per enemy to avoid rapid oscillation
+    private final Map<Object, Long> lastTurnTime = new HashMap<>();
     
     public MazeAIController(Model model, MazeNavigator navigator) {
         this.model = model;
@@ -30,7 +38,6 @@ public class MazeAIController implements Runnable {
     public void activate() {
         this.running = true;
         this.thread.start();
-        System.out.println("MazeAIController activated!");
     }
     
     public void deactivate() {
@@ -39,23 +46,13 @@ public class MazeAIController implements Runnable {
     
     @Override
     public void run() {
-        System.out.println("[MAZE-AI] MazeAIController thread started!");
-        
-        int updateCount = 0;
         while (this.running) {
             try {
                 // Update enemy directions
                 updateEnemyDirections();
-                updateCount++;
                 
-                // Log every 50 updates (~5 seconds)
-                if (updateCount % 50 == 0) {
-                    int enemyCount = model.getDynamicEnemyCount();
-                    System.out.println("[MAZE-AI] Update #" + updateCount + " - Active enemies: " + enemyCount);
-                }
-                
-                // Sleep for 100ms (10 updates per second)
-                Thread.sleep(100);
+                // Silent: periodic AI update log removed
+                Thread.sleep(150);
                 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -66,38 +63,39 @@ public class MazeAIController implements Runnable {
             }
         }
         
-        System.out.println("[MAZE-AI] MazeAIController thread stopped.");
+        // Silent: MazeAIController thread stopped log removed
     }
     
     private void updateEnemyDirections() {
-        // Get all dynamic bodies (enemies)
-        ArrayList<BodyData> bodies = model.snapshotRenderData();
-        
-        if (bodies == null || bodies.isEmpty()) {
-            return;
+        // Get only DYNAMIC enemy bodies via thread-safe snapshot
+        // (avoids corrupting the shared scratchDynamicsBuffer used by the Renderer)
+        ArrayList<BodyData> bodiesCopy = model.snapshotDynamicEnemies();
+        MazeNavigator.GridPosition playerGrid = getNearestPlayerGridPosition();
+
+        if (bodiesCopy == null || bodiesCopy.isEmpty()) {
+            return; // No enemies to update
         }
-        
-        // IMPORTANT: Make a defensive copy and filter out nulls
-        // The snapshot buffer is shared and can be cleared by other threads
-        ArrayList<BodyData> bodiesCopy = new ArrayList<>();
-        synchronized (bodies) {
-            for (BodyData body : bodies) {
-                if (body != null && body.type == engine.model.bodies.ports.BodyType.DYNAMIC) {
-                    bodiesCopy.add(body);
-                }
+
+        // Silent: detailed enemy update log removed
+
+        // Update each enemy
+        int updatedCount = 0;
+        for (BodyData bodyData : bodiesCopy) {
+            if (updateSingleEnemy(bodyData, playerGrid)) {
+                updatedCount++;
             }
         }
         
-        // Update each enemy
-        for (BodyData bodyData : bodiesCopy) {
-            updateSingleEnemy(bodyData);
+        // Log periodically (less frequently for smoother output)
+        if (updatedCount > 0 && System.currentTimeMillis() % 3000 < 100) { // Log roughly every 3 seconds
+            // Silent: periodic smooth-update log removed
         }
     }
     
-    private boolean updateSingleEnemy(BodyData bodyData) {
+    private boolean updateSingleEnemy(BodyData bodyData, MazeNavigator.GridPosition playerGrid) {
         PhysicsValuesDTO phyValues = bodyData.getPhysicsValues();
         if (phyValues == null) {
-            System.out.println("[MAZE-AI] Enemy has null physics values");
+            System.err.println("[MAZE-AI] Enemy has null physics values");
             return false;
         }
         
@@ -108,28 +106,97 @@ public class MazeAIController implements Runnable {
         
         // Get current direction based on velocity
         Direction currentDir = navigator.getCurrentDirection(speedX, speedY);
+        MazeNavigator.GridPosition enemyGrid = navigator.worldToGrid(posX, posY);
+        boolean playerNear = isPlayerNear(enemyGrid, playerGrid);
        
-        // Choose next direction based on available paths
-        Direction nextDir = navigator.chooseNextDirection(posX, posY, currentDir);
+        // Only consider changing direction when very close to the center of the current cell
+        Direction nextDir = currentDir; // Default: keep current direction
         
+        if (navigator.isNearCellCenter(posX, posY)) {
+            // Only when very close to center, check if we need to change direction
+            Direction candidate = playerNear
+                    ? chooseFleeDirection(posX, posY, currentDir, playerGrid)
+                    : navigator.chooseNextDirection(posX, posY, currentDir);
+
+            // Enforce a small cooldown per enemy to avoid rapid oscillation at corners
+            Object eid = bodyData.entityId;
+            long now = System.currentTimeMillis();
+            Long last = lastTurnTime.get(eid);
+            if (candidate != null && candidate != currentDir) {
+                if (last == null || now - last >= TURN_COOLDOWN_MS) {
+                    nextDir = candidate;
+                    lastTurnTime.put(eid, now);
+                } else {
+                    // Too soon to turn again; keep current direction
+                    nextDir = currentDir;
+                }
+            } else if (candidate != null) {
+                nextDir = candidate;
+            }
+        }
+
+        // Prevent movement into walls even if we're off-center
+        boolean blocked = navigator.isDirectionBlocked(posX, posY, nextDir);
+        if (blocked) {
+            Direction alternative = findViableDirection(posX, posY, currentDir, playerNear, playerGrid);
+            if (alternative != null) {
+                nextDir = alternative;
+                blocked = false;
+            }
+        }
+
         // Calculate new velocity for the chosen direction
-        Velocity newVelocity = navigator.getVelocityForDirection(nextDir, enemySpeed);
-        
-        // Check if direction actually changed
-        boolean directionChanged = Math.abs(newVelocity.vx - speedX) > 5.0 || 
-                                   Math.abs(newVelocity.vy - speedY) > 5.0;
-        
-        // CENTER the enemy in the current cell when changing direction
-        // This prevents wall clipping when turning
-        if (directionChanged) {
-            MazeNavigator.GridPosition gridPos = navigator.worldToGrid(posX, posY);
-            MazeNavigator.WorldPosition cellCenter = navigator.gridToWorld(gridPos.row, gridPos.col);
-            posX = cellCenter.x;
-            posY = cellCenter.y;
+        Velocity newVelocity;
+        MazeNavigator.WorldPosition center = navigator.getCellCenterForWorld(posX, posY);
+
+        // If we decided to change direction exactly at the center, snap to center to avoid accumulating offsets
+        if (navigator.isAtCellCenter(posX, posY) && nextDir != currentDir) {
+            posX = center.x;
+            posY = center.y;
+        }
+
+        if (!blocked) {
+            // Base velocity for chosen direction
+            Velocity base = navigator.getVelocityForDirection(nextDir, enemySpeed);
+
+            // Apply a small perpendicular correction to steer toward the cell center
+            double correctionFactor = 0.25; // 25% of speed for gentle correction
+            double corrVx = 0.0;
+            double corrVy = 0.0;
+
+            switch (nextDir) {
+                case EAST, WEST -> {
+                    // moving horizontally -> correct Y toward center
+                    double dy = center.y - posY;
+                    double frac = dy / (navigator.getCellSize() * 0.5);
+                    frac = Math.max(-1.0, Math.min(1.0, frac));
+                    corrVy = frac * enemySpeed * correctionFactor;
+                }
+                case NORTH, SOUTH -> {
+                    // moving vertically -> correct X toward center
+                    double dx = center.x - posX;
+                    double frac = dx / (navigator.getCellSize() * 0.5);
+                    frac = Math.max(-1.0, Math.min(1.0, frac));
+                    corrVx = frac * enemySpeed * correctionFactor;
+                }
+            }
+
+            newVelocity = new Velocity(base.vx + corrVx, base.vy + corrVy);
+        } else {
+            // Last-resort anti-stuck: gently steer towards cell center instead of freezing.
+            double toCenterX = center.x - posX;
+            double toCenterY = center.y - posY;
+            double len = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY);
+
+            if (len > 0.001) {
+                double unstuckSpeed = enemySpeed * UNSTUCK_CENTER_SPEED_FACTOR;
+                newVelocity = new Velocity((toCenterX / len) * unstuckSpeed, (toCenterY / len) * unstuckSpeed);
+            } else {
+                newVelocity = new Velocity(0.0, 0.0);
+            }
         }
         
-        // Always update velocity to counteract friction/collisions
-        // Even if direction didn't change, we need to maintain speed
+        // Always update velocity to maintain movement (even if not changing position)
         PhysicsValuesDTO newPhyValues = new PhysicsValuesDTO(
             phyValues.timeStamp,
             posX,
@@ -150,7 +217,143 @@ public class MazeAIController implements Runnable {
         if (body != null) {
             body.doMovement(newPhyValues);
             return true;
+        } else {
+            System.err.println("[MAZE-AI] Could not find body for enemy " + bodyData.entityId);
         }
         return false;
+    }
+
+    private MazeNavigator.GridPosition getNearestPlayerGridPosition() {
+        ArrayList<BodyData> allDynamics = model.snapshotRenderData();
+        if (allDynamics == null || allDynamics.isEmpty()) {
+            return null;
+        }
+
+        for (BodyData bodyData : allDynamics) {
+            if (bodyData == null) {
+                continue;
+            }
+            if (bodyData.type != BodyType.PLAYER) {
+                continue;
+            }
+
+            PhysicsValuesDTO playerPhy = bodyData.getPhysicsValues();
+            if (playerPhy == null) {
+                continue;
+            }
+
+            return navigator.worldToGrid(playerPhy.posX, playerPhy.posY);
+        }
+
+        return null;
+    }
+
+    private boolean isPlayerNear(MazeNavigator.GridPosition enemyGrid, MazeNavigator.GridPosition playerGrid) {
+        if (enemyGrid == null || playerGrid == null) {
+            return false;
+        }
+
+        int manhattan = Math.abs(enemyGrid.row - playerGrid.row) + Math.abs(enemyGrid.col - playerGrid.col);
+        return manhattan <= FLEE_RADIUS_CELLS;
+    }
+
+    private Direction chooseFleeDirection(
+            double enemyWorldX,
+            double enemyWorldY,
+            Direction currentDir,
+            MazeNavigator.GridPosition playerGrid) {
+
+        if (playerGrid == null) {
+            return navigator.chooseNextDirection(enemyWorldX, enemyWorldY, currentDir);
+        }
+
+        java.util.List<Direction> validDirs = navigator.getValidDirections(enemyWorldX, enemyWorldY);
+        if (validDirs.isEmpty()) {
+            return currentDir;
+        }
+
+        MazeNavigator.GridPosition enemyGrid = navigator.worldToGrid(enemyWorldX, enemyWorldY);
+        Direction opposite = getOpposite(currentDir);
+
+        Direction bestDir = validDirs.get(0);
+        int bestDistance = Integer.MIN_VALUE;
+
+        for (Direction dir : validDirs) {
+            int nextRow = enemyGrid.row;
+            int nextCol = enemyGrid.col;
+
+            switch (dir) {
+                case NORTH:
+                    nextRow--;
+                    break;
+                case SOUTH:
+                    nextRow++;
+                    break;
+                case EAST:
+                    nextCol++;
+                    break;
+                case WEST:
+                    nextCol--;
+                    break;
+                default:
+                    break;
+            }
+
+            int distance = Math.abs(nextRow - playerGrid.row) + Math.abs(nextCol - playerGrid.col);
+
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                bestDir = dir;
+            } else if (distance == bestDistance && dir == opposite) {
+                // Tie-breaker: prefer reversing direction to quickly escape in corridors.
+                bestDir = dir;
+            }
+        }
+
+        return bestDir;
+    }
+
+    private Direction getOpposite(Direction dir) {
+        switch (dir) {
+            case NORTH:
+                return Direction.SOUTH;
+            case SOUTH:
+                return Direction.NORTH;
+            case EAST:
+                return Direction.WEST;
+            case WEST:
+                return Direction.EAST;
+            default:
+                return dir;
+        }
+    }
+
+    private Direction findViableDirection(
+            double worldX,
+            double worldY,
+            Direction currentDir,
+            boolean playerNear,
+            MazeNavigator.GridPosition playerGrid) {
+
+        Direction preferred = playerNear
+                ? chooseFleeDirection(worldX, worldY, currentDir, playerGrid)
+                : navigator.chooseNextDirection(worldX, worldY, currentDir);
+
+        if (preferred != null && !navigator.isDirectionBlocked(worldX, worldY, preferred)) {
+            return preferred;
+        }
+
+        Direction opposite = getOpposite(currentDir);
+        if (opposite != null && !navigator.isDirectionBlocked(worldX, worldY, opposite)) {
+            return opposite;
+        }
+
+        for (Direction dir : navigator.getValidDirections(worldX, worldY)) {
+            if (!navigator.isDirectionBlocked(worldX, worldY, dir)) {
+                return dir;
+            }
+        }
+
+        return null;
     }
 }

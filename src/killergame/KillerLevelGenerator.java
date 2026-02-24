@@ -51,7 +51,7 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
     @Override
     protected void createDecorators() {
-        // No decorators for the maze
+        // Decorators are placed after maze statics are created to avoid overlapping walls
     }
 
     @Override
@@ -78,8 +78,8 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
         MazeType[] allVariants = MazeType.values();
         MazeType selectedVariant = allVariants[random.nextInt(allVariants.length)];
         
-        System.out.println("Creating global procedural maze");
-        System.out.println("Selected variant: " + selectedVariant);
+        // Silent: creating global procedural maze
+        // Silent: selected variant info
         
         // Generate global maze
         generateGlobalMaze(selectedVariant);
@@ -93,7 +93,24 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
     
     @Override
     protected void createPlayers() {
-        // No player for now
+        java.util.ArrayList<engine.world.ports.DefItem> shipDefs = this.getWorldDefinition().spaceships;
+        java.util.ArrayList<engine.world.ports.DefEmitterDTO> weaponDefs = this.getWorldDefinition().weapons;
+        double[] spawnPos = findCenterSpawnPosition();
+        for (engine.world.ports.DefItem def : shipDefs) {
+            engine.world.ports.DefItemDTO body = this.defItemToDTO(def);
+            engine.world.ports.DefItemDTO spawnedBody = new engine.world.ports.DefItemDTO(
+                    body.assetId,
+                    body.size,
+                    body.angle,
+                    spawnPos[0],
+                    spawnPos[1],
+                    body.density,
+                    body.speedX,
+                    body.speedY,
+                    body.angularSpeed,
+                    body.thrust);
+            this.addLocalPlayerIntoTheGame(spawnedBody, weaponDefs);
+        }
     }
     
     // *** PUBLIC METHODS ***
@@ -107,6 +124,82 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
             throw new IllegalStateException("Maze not generated yet. Call createStatics() first.");
         }
         return new MazeNavigator(mazeGrid, mazeOffsetX, mazeOffsetY, mazeCellSize);
+    }
+
+    private double[] findValidCornerSpawnPosition() {
+        if (mazeGrid == null) {
+            return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+        }
+
+        int rows = mazeGrid.length;
+        int cols = mazeGrid[0].length;
+
+        int[][] corners = new int[][] {
+            { 1, 1 },
+            { 1, cols - 2 },
+            { rows - 2, 1 },
+            { rows - 2, cols - 2 }
+        };
+
+        int[] order = new int[] { 0, 1, 2, 3 };
+        for (int i = order.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int tmp = order[i];
+            order[i] = order[j];
+            order[j] = tmp;
+        }
+
+        for (int idx : order) {
+            int[] corner = corners[idx];
+            int[] cell = findNearestPathCell(corner[0], corner[1], 6);
+            if (cell != null) {
+                double x = mazeOffsetX + (cell[1] + 0.5) * mazeCellSize;
+                double y = mazeOffsetY + (cell[0] + 0.5) * mazeCellSize;
+                return new double[] { x, y };
+            }
+        }
+
+        return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+    }
+
+    private double[] findCenterSpawnPosition() {
+        if (mazeGrid == null) {
+            return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+        }
+
+        int centerRow = mazeGrid.length / 2;
+        int centerCol = mazeGrid[0].length / 2;
+
+        int[] centerCell = findNearestPathCell(centerRow, centerCol, 6);
+        if (centerCell == null) {
+            return new double[] { worldWidth / 2.0, worldHeight / 2.0 };
+        }
+
+        double x = mazeOffsetX + (centerCell[1] + 0.5) * mazeCellSize;
+        double y = mazeOffsetY + (centerCell[0] + 0.5) * mazeCellSize;
+        return new double[] { x, y };
+    }
+
+    private int[] findNearestPathCell(int startRow, int startCol, int maxRadius) {
+        int rows = mazeGrid.length;
+        int cols = mazeGrid[0].length;
+
+        for (int radius = 0; radius <= maxRadius; radius++) {
+            for (int dr = -radius; dr <= radius; dr++) {
+                for (int dc = -radius; dc <= radius; dc++) {
+                    int r = startRow + dr;
+                    int c = startCol + dc;
+                    if (r < 0 || r >= rows || c < 0 || c >= cols) {
+                        continue;
+                    }
+                    if (mazeGrid[r][c] == PATH) {
+                        return new int[] { r, c };
+                    }
+                }
+            }
+        }
+
+        return null;
     }
     
     // *** PRIVATE HELPERS - Global Maze Generation ***
@@ -171,6 +264,69 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
         // Renderizar centrado
         renderMazeGrid(maze, offsetX, offsetY, cellSize, "wall_01");
+
+        // Place decorators now that maze layout (walls) is known. Ensure decorators don't overlap walls.
+        placeDecoratorsAvoidingWalls(maze, offsetX, offsetY, cellSize);
+    }
+
+    /**
+     * Place world decorators avoiding wall cells. If a decorator falls on a wall cell,
+     * attempt to move it to the nearest PATH cell within a small radius.
+     */
+    private void placeDecoratorsAvoidingWalls(int[][] maze, double offsetX, double offsetY, int cellSize) {
+        java.util.ArrayList<engine.world.ports.DefItem> decorators = this.getWorldDefinition().spaceDecorators;
+        if (decorators == null || decorators.isEmpty()) return;
+
+        int rows = maze.length;
+        int cols = maze[0].length;
+
+        for (engine.world.ports.DefItem def : decorators) {
+            engine.world.ports.DefItemDTO defDto = this.defItemToDTO(def);
+            double px = defDto.posX;
+            double py = defDto.posY;
+
+            int col = (int) ((px - offsetX) / cellSize);
+            int row = (int) ((py - offsetY) / cellSize);
+
+            boolean placed = false;
+
+            if (row >= 0 && row < rows && col >= 0 && col < cols) {
+                if (maze[row][col] == PATH) {
+                    // original position is free
+                        engine.world.ports.DefItemDTO dto = new engine.world.ports.DefItemDTO(
+                            defDto.assetId, defDto.size, defDto.angle, px, py, defDto.density);
+                    this.addDecoratorIntoTheGame(dto);
+                    placed = true;
+                } else {
+                    // search nearest PATH cell within radius
+                    int maxRadius = 8; // cells
+                    for (int r = 1; r <= maxRadius && !placed; r++) {
+                        for (int dy = -r; dy <= r && !placed; dy++) {
+                            for (int dx = -r; dx <= r && !placed; dx++) {
+                                int nr = row + dy;
+                                int nc = col + dx;
+                                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                                if (maze[nr][nc] == PATH) {
+                                    double nx = offsetX + nc * cellSize + cellSize / 2.0;
+                                    double ny = offsetY + nr * cellSize + cellSize / 2.0;
+                                    engine.world.ports.DefItemDTO dto = new engine.world.ports.DefItemDTO(
+                                            defDto.assetId, defDto.size, defDto.angle, nx, ny, defDto.density);
+                                    this.addDecoratorIntoTheGame(dto);
+                                    placed = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!placed) {
+                // If outside maze bounds or not placed, place at original position as fallback
+                engine.world.ports.DefItemDTO dto = new engine.world.ports.DefItemDTO(
+                        defDto.assetId, defDto.size, defDto.angle, px, py, defDto.density);
+                this.addDecoratorIntoTheGame(dto);
+            }
+        }
     }
     
     /**
@@ -251,6 +407,14 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
             addWallSegment("wall_02", mazeCellSize, x, topY);
             addWallSegment("wall_02", mazeCellSize, x, bottomY);
+            
+            // UPDATE MAZE GRID - mark these cells as walls for MazeNavigator
+            if (topRow >= 0 && topRow < mazeGrid.length && c >= 0 && c < mazeGrid[0].length) {
+                mazeGrid[topRow][c] = WALL;
+            }
+            if (bottomRow >= 0 && bottomRow < mazeGrid.length && c >= 0 && c < mazeGrid[0].length) {
+                mazeGrid[bottomRow][c] = WALL;
+            }
         }
 
         // --- PARED IZQUIERDA Y DERECHA ---
@@ -266,6 +430,14 @@ public class KillerLevelGenerator extends AbstractLevelGenerator {
 
             addWallSegment("wall_02", mazeCellSize, leftX, y);
             addWallSegment("wall_02", mazeCellSize, rightX, y);
+            
+            // UPDATE MAZE GRID - mark these cells as walls for MazeNavigator
+            if (r >= 0 && r < mazeGrid.length && leftCol >= 0 && leftCol < mazeGrid[0].length) {
+                mazeGrid[r][leftCol] = WALL;
+            }
+            if (r >= 0 && r < mazeGrid.length && rightCol >= 0 && rightCol < mazeGrid[0].length) {
+                mazeGrid[r][rightCol] = WALL;
+            }
         }
     }
 

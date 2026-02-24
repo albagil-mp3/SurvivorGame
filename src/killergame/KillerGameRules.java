@@ -12,6 +12,8 @@ import engine.events.domain.ports.eventtype.EmitEvent;
 import engine.events.domain.ports.eventtype.LifeOver;
 import engine.events.domain.ports.eventtype.LimitEvent;
 import engine.model.bodies.ports.BodyType;
+import engine.model.impl.Model;
+import gameworld.GameTimer;
 
 /**
  * Game rules for Killer Game - Maze Chase Edition.
@@ -21,6 +23,15 @@ import engine.model.bodies.ports.BodyType;
  * - Goal: Hunt down all enemies with your weapon
  */
 public class KillerGameRules implements ActionsGenerator {
+
+    private static final int KILL_SCORE = 10;
+
+    private final Model model;
+    private int killCount = 0;
+
+    public KillerGameRules(Model model) {
+        this.model = model;
+    }
 
     // *** INTERFACE IMPLEMENTATIONS ***
 
@@ -66,45 +77,59 @@ public class KillerGameRules implements ActionsGenerator {
                         event));
             }
 
-            // Life over - entity dies when health reaches 0
-            case LifeOver e -> actions.add(new ActionDTO(
-                    e.primaryBodyRef.id(),
-                    e.primaryBodyRef.type(),
-                    ActionType.DIE,
-                    event));
-
-            // Collision events - handle collisions in the maze
-            case CollisionEvent e -> {
-                BodyType primaryType = e.primaryBodyRef.type();
-                BodyType secondaryType = e.secondaryBodyRef.type();
-
-                // Projectile hits enemy - enemy dies, projectile dies
-                if (primaryType == BodyType.PROJECTILE && secondaryType == BodyType.DYNAMIC) {
-                    actions.add(new ActionDTO(
-                            e.secondaryBodyRef.id(),
-                            e.secondaryBodyRef.type(),
-                            ActionType.DIE,
-                            event));
-                    
+            // Life over - entity dies when health reaches 0 (players are immortal)
+            case LifeOver e -> {
+                if (e.primaryBodyRef.type() != BodyType.PLAYER) {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
                             ActionType.DIE,
                             event));
                 }
-                // Enemy hits projectile - enemy dies, projectile dies
+            }
+
+            // Collision events - handle collisions in the maze
+            case CollisionEvent e -> {
+                BodyType primaryType = e.primaryBodyRef.type();
+                BodyType secondaryType = e.secondaryBodyRef.type();
+
+                // Projectile hits enemy - enemy dies, projectile dies, +10 score
+                if (primaryType == BodyType.PROJECTILE && secondaryType == BodyType.DYNAMIC) {
+                    actions.add(new ActionDTO(
+                            e.secondaryBodyRef.id(),
+                            e.secondaryBodyRef.type(),
+                            ActionType.DIE,
+                            event));
+                    actions.add(new ActionDTO(
+                            e.primaryBodyRef.id(),
+                            e.primaryBodyRef.type(),
+                            ActionType.DIE,
+                            event));
+                    this.model.playerAddScoreToAll(KILL_SCORE);
+                    // increment kill count and give +15s every 3 kills
+                    this.killCount++;
+                    if (this.killCount % 3 == 0) {
+                        GameTimer.get().addTime(15_000L);
+                    }
+                }
+                // Enemy hits projectile - enemy dies, projectile dies, +10 score
                 else if (primaryType == BodyType.DYNAMIC && secondaryType == BodyType.PROJECTILE) {
                     actions.add(new ActionDTO(
                             e.primaryBodyRef.id(),
                             e.primaryBodyRef.type(),
                             ActionType.DIE,
                             event));
-                    
                     actions.add(new ActionDTO(
                             e.secondaryBodyRef.id(),
                             e.secondaryBodyRef.type(),
                             ActionType.DIE,
                             event));
+                    this.model.playerAddScoreToAll(KILL_SCORE);
+                    // increment kill count and give +15s every 3 kills
+                    this.killCount++;
+                    if (this.killCount % 3 == 0) {
+                        GameTimer.get().addTime(15_000L);
+                    }
                 }
                 // Projectile hits wall (GRAVITY) - projectile dies
                 else if (primaryType == BodyType.PROJECTILE && secondaryType == BodyType.GRAVITY) {
@@ -122,24 +147,42 @@ public class KillerGameRules implements ActionsGenerator {
                             ActionType.DIE,
                             event));
                 }
+                // Player hits wall - use rebound system that works correctly
+                else if (primaryType == BodyType.PLAYER && secondaryType == BodyType.GRAVITY) {
+                    actions.add(new ActionDTO(
+                            e.primaryBodyRef.id(),
+                            e.primaryBodyRef.type(),
+                            ActionType.NO_MOVE,
+                            event));
+                }
+                // Wall hits player - use rebound system
+                else if (primaryType == BodyType.GRAVITY && secondaryType == BodyType.PLAYER) {
+                    actions.add(new ActionDTO(
+                            e.secondaryBodyRef.id(),
+                            e.secondaryBodyRef.type(),
+                            ActionType.NO_MOVE,
+                            event));
+                }
                 // Player hits enemy - both bounce (no death)
                 else if ((primaryType == BodyType.PLAYER && secondaryType == BodyType.DYNAMIC) ||
                          (primaryType == BodyType.DYNAMIC && secondaryType == BodyType.PLAYER)) {
-                    // Just let physics handle the bounce, no special action needed
-                }
-                // Player hits wall - player bounces
-                else if ((primaryType == BodyType.PLAYER && secondaryType == BodyType.GRAVITY) ||
-                         (primaryType == BodyType.GRAVITY && secondaryType == BodyType.PLAYER)) {
-                    // Physics will handle the bounce
+                    // Let physics handle the bounce
                 }
                 // Enemy hits enemy - both bounce
                 else if (primaryType == BodyType.DYNAMIC && secondaryType == BodyType.DYNAMIC) {
-                    // Physics will handle the bounce
+                    // Let physics handle the bounce
                 }
                 // Enemy hits wall - enemy bounces
                 else if ((primaryType == BodyType.DYNAMIC && secondaryType == BodyType.GRAVITY) ||
                          (primaryType == BodyType.GRAVITY && secondaryType == BodyType.DYNAMIC)) {
-                    // Physics will handle the bounce
+                    String enemyId = (primaryType == BodyType.DYNAMIC)
+                        ? e.primaryBodyRef.id()
+                        : e.secondaryBodyRef.id();
+                    actions.add(new ActionDTO(
+                        enemyId,
+                        BodyType.DYNAMIC,
+                        ActionType.NO_MOVE,
+                        event));
                 }
             }
 

@@ -17,8 +17,7 @@ public class SystemHUD extends DataHUD {
     }
 
     private void addItems() {
-        this.addTitle("SYSTEM STATUS");
-        this.addTextItem("FPS");
+        this.addSkipValue();             // FPS (hidden)
         this.addSkipValue();              // Draw Scene
         this.addSkipValue();             // Draw HUD
         this.addSkipValue();             // Draw Total

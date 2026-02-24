@@ -234,12 +234,22 @@ public class Controller implements WorldManager, DomainEventProcessor {
         this.view.activate();
         this.model.activate();
         this.engineState = EngineState.ALIVE;
-        System.out.println("Controller: Activated ");
+        // Silent: Controller activated
     }
 
     // region Engine (engine**)
     public void enginePause() {
         this.engineState = EngineState.PAUSED;
+        if (this.model != null) {
+            this.model.pause();
+        }
+    }
+
+    public void engineResume() {
+        this.engineState = EngineState.ALIVE;
+        if (this.model != null) {
+            this.model.resume();
+        }
     }
 
     public void engineStop() {

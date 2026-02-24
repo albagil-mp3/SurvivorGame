@@ -3,6 +3,7 @@ package engine.controller.mappers;
 import engine.model.bodies.ports.PlayerDTO;
 import engine.view.renderables.ports.PlayerRenderDTO;
 import gameworld.GameState;
+import gameworld.GameTimer;
 
 public class PlayerRenderableMapper {
 
@@ -26,8 +27,9 @@ public class PlayerRenderableMapper {
                 playerDto.secondaryAmmoStatus,
                 playerDto.minesStatus,
                 playerDto.missilesStatus,
-                playerDto.score,
-                GameState.get().getWorldLevel()); // nivel de mundo, no de jugador
+            GameState.get().getWorldLevel(),
+            playerDto.score,
+            GameTimer.get().getRemainingFormatted()); // append remaining time formatted MM:SS
 
         return renderableData;
     }

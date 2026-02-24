@@ -54,8 +54,10 @@ public class BasicPhysicsEngine extends AbstractPhysicsEngine {
         // ✅ Protección contra valores anómalos
         if (dt <= 0.0) {
             System.err.println("WARNING: Negative dt detected:  " + dt + "s.  Using 0.001s");
+            dt = 0.001d;
         } else if (dt > 0.5) {
             System.err.println("WARNING: Large dt detected: " + dt + "s. Clamping to 0.5s");
+            dt = 0.5d;
         }
         this.profiler.stopInterval("PHYSICS_DT", dtStart);
 
