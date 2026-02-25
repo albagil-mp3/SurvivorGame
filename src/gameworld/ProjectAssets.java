@@ -1,5 +1,9 @@
 package gameworld;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import engine.assets.core.AssetCatalog;
@@ -15,7 +19,7 @@ public final class ProjectAssets {
     // Constructor por defecto: tema SPACE
     public ProjectAssets(Theme theme) {
         this.theme = theme;
-        this.catalog = new AssetCatalog("src/resources/images/");
+        this.catalog = new AssetCatalog(resolveAssetsPath());
         this.registerCommonAssets();
         this.registerThemeAssets(theme);
     }
@@ -155,5 +159,27 @@ public final class ProjectAssets {
         this.catalog.register("signs_01", "ui-signs-1.png", AssetType.UI_SIGN, AssetIntensity.HIGH);
         // endregion
 
+    }
+
+    public static String resolveAssetsPath() {
+        Path cwd = Paths.get("").toAbsolutePath();
+
+        Path p = cwd;
+        for (int i = 0; i < 6 && p != null; i++) {
+            Path direct = p.resolve(Paths.get("src", "resources", "images"));
+            if (Files.isDirectory(direct)) {
+                return direct.toString() + File.separator;
+            }
+
+            Path nested = p.resolve(Paths.get("SurvivorGame", "src", "resources", "images"));
+            if (Files.isDirectory(nested)) {
+                return nested.toString() + File.separator;
+            }
+
+            p = p.getParent();
+        }
+
+        // Fallback to relative path (legacy behavior)
+        return "src/resources/images/";
     }
 }
