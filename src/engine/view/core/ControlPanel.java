@@ -18,7 +18,14 @@ public class ControlPanel extends JPanel {
         this.view = view;
         this.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        this.playAgainButton = new javax.swing.JButton("Play again");
+        this.playAgainButton = new javax.swing.JButton("PLAY AGAIN");
+        this.playAgainButton.setFont(this.playAgainButton.getFont().deriveFont(18f));
+        this.playAgainButton.setForeground(java.awt.Color.GREEN);
+        this.playAgainButton.setBackground(java.awt.Color.DARK_GRAY);
+        this.playAgainButton.setBorderPainted(true);
+        this.playAgainButton.setMaximumSize(new java.awt.Dimension(200, 50));
+        this.playAgainButton.setPreferredSize(new java.awt.Dimension(200, 50));
+        this.playAgainButton.setFocusPainted(false);
         this.playAgainButton.setVisible(false);
     }
 

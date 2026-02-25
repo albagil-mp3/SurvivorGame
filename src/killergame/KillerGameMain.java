@@ -41,6 +41,7 @@ public class KillerGameMain {
         // region Game configuration
         int maxBodies = 3000; // Max number of entities (player + enemies + walls)
         int maxEnemySpawnDelay = 1000; // Spawn delay in milliseconds (2000ms = 2 seconds)
+        long roundDurationMs = 5_000L; // Round duration in milliseconds
         // endregion
 
         // *** ASSETS ***
@@ -90,16 +91,6 @@ public class KillerGameMain {
 
         controller.activate();
 
-        // Wire pause overlay handlers to perform reset and exit similar to PlayAgain
-        final Controller controllerRefPause = controller;
-        final Model modelRefPause = model;
-        final View viewRefPause = view;
-        final WorldDefinitionProvider worldProvRefPause = worldProv;
-        final DoubleVector worldDimRefPause = worldDimension;
-        final DoubleVector viewDimRefPause = viewDimension;
-        final int maxBodiesRefPause = maxBodies;
-        final int maxEnemySpawnDelayRefPause = maxEnemySpawnDelay;
-
         // Reset action removed: PauseOverlay has no REINICIAR button now.
         view.setPauseExitHandler(() -> SwingUtilities.invokeLater(() -> {
             try {
@@ -117,8 +108,22 @@ public class KillerGameMain {
 
         AtomicBoolean playRequested = new AtomicBoolean(false);
         AtomicReference<Runnable> startGameActionRef = new AtomicReference<>(null);
+        final Runnable[] playAgainActionRef = new Runnable[1];
+        AtomicBoolean gameplayStarted = new AtomicBoolean(false);
 
         Runnable onPlayRequested = () -> SwingUtilities.invokeLater(() -> {
+            if (gameplayStarted.get()) {
+                Runnable again = playAgainActionRef[0];
+                if (again != null) {
+                    again.run();
+                    Runnable action = startGameActionRef.get();
+                    if (action != null) {
+                        action.run();
+                    }
+                }
+                return;
+            }
+
             playRequested.set(true);
             Runnable action = startGameActionRef.get();
             if (action != null) {
@@ -185,9 +190,17 @@ public class KillerGameMain {
         // Start app with world initialized but paused until user presses PLAY.
         controller.enginePause();
 
-        AtomicBoolean gameplayStarted = new AtomicBoolean(false);
+        // Refs for Play Again restart flow
+        final Controller controllerRef = controller;
+        final Model modelRef = model;
+        final View viewRef = view;
+        final WorldDefinitionProvider worldProvRef = worldProv;
+        final DoubleVector worldDimRef = worldDimension;
+        final DoubleVector viewDimRef = viewDimension;
+        final int maxBodiesRef = maxBodies;
+        final int maxEnemySpawnDelayRef = maxEnemySpawnDelay;
 
-        Runnable startRoundTimer = () -> gameworld.GameTimer.get().start(60_000L, () -> {
+        Runnable startRoundTimer = () -> gameworld.GameTimer.get().start(roundDurationMs, () -> {
             System.err.println("[TIMER] Time up! Game over.");
 
             // Determine final score from local player (if available) and set GameState
@@ -221,97 +234,101 @@ public class KillerGameMain {
                 t.printStackTrace();
             }
 
-            // Show Play Again button. When clicked, reset the game in the same window.
-            final Controller controllerRef = controller;
-            final Model modelRef = model;
-            final View viewRef = view;
-            final WorldDefinitionProvider worldProvRef = worldProv;
-            final DoubleVector worldDimRef = worldDimension;
-            final DoubleVector viewDimRef = viewDimension;
-            final int maxBodiesRef = maxBodies;
-            final int maxEnemySpawnDelayRef = maxEnemySpawnDelay;
+            view.showPlayAgainButton(playAgainActionRef[0]);
+        });
 
-            view.showPlayAgainButton(() -> {
+        playAgainActionRef[0] = () -> {
+            try {
+                // Stop current engine and model
+                controllerRef.enginePause();
                 try {
-                    // Stop current engine and model
-                    controllerRef.engineStop();
+                    modelRef.shutdown();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+
+                // Clear renderables so previous visuals vanish
+                viewRef.hidePlayAgainButton();
+                viewRef.getLayeredPane().repaint();
+                viewRef.getLayeredPane().revalidate();
+                viewRef.repaint();
+
+                // Reset global game state
+                gameworld.GameState.get().reset();
+
+                // Construct fresh model + controller using same view (no new window)
+                Model newModel = new Model(worldDimRef, maxBodiesRef);
+                ActionsGenerator newGameRules = new KillerGameRules(newModel);
+                Controller newController = new Controller(
+                        worldDimRef,
+                        viewDimRef,
+                        maxBodiesRef,
+                        viewRef,
+                        newModel,
+                        newGameRules);
+
+                newController.activate();
+
+                // Rebuild scene
+                WorldDefinition newWorldDef = worldProvRef.provide();
+                KillerLevelGenerator newLevelGenerator = new KillerLevelGenerator(newController, newWorldDef);
+                MazeNavigator newMazeNavigator = newLevelGenerator.createMazeNavigator();
+
+                MazeAIController newMazeAI = new MazeAIController(newModel, newMazeNavigator);
+                newMazeAI.activate();
+
+                new KillerEnemySpawner(newController, newWorldDef, maxEnemySpawnDelayRef, newMazeNavigator).activate();
+
+                // Restart timer
+                gameworld.GameTimer.get().start(roundDurationMs, () -> {
                     try {
-                        modelRef.shutdown();
+                        String localPlayerId = viewRef.getLocalPlayerId();
+                        int finalScore = 0;
+                        if (localPlayerId != null && !localPlayerId.isEmpty()) {
+                            engine.view.renderables.ports.PlayerRenderDTO p = newController.getPlayerRenderData(localPlayerId);
+                            if (p != null) {
+                                finalScore = p.score;
+                            }
+                        }
+
+                        int previousHS = killergame.HighscoreStore.getHighscore();
+                        if (finalScore > previousHS) {
+                            killergame.HighscoreStore.saveHighscore(finalScore);
+                            final int fs = finalScore;
+                            javax.swing.SwingUtilities.invokeLater(() -> {
+                                javax.swing.JOptionPane.showMessageDialog(viewRef,
+                                        "\u00A1Nuevo r\u00E9cord! Has conseguido " + fs + " puntos",
+                                        "Nuevo r\u00E9cord",
+                                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                            });
+                        }
+
+                        gameworld.GameState.get().setFinalScore(finalScore);
+                        gameworld.GameState.get().setGameOver(true);
                     } catch (Throwable t) {
                         t.printStackTrace();
                     }
 
-                    // Clear renderables so previous visuals vanish
-                    viewRef.hidePlayAgainButton();
-                    viewRef.getLayeredPane().repaint();
-                    viewRef.getLayeredPane().revalidate();
-                    viewRef.repaint();
+                    // Show Play again button for next round
+                    viewRef.showPlayAgainButton(playAgainActionRef[0]);
+                });
 
-                    // Reset global game state
-                    gameworld.GameState.get().reset();
+                // Keep menu PLAY wired to the current controller after restarts
+                startGameActionRef.set(() -> SwingUtilities.invokeLater(() -> {
+                    try {
+                        newController.engineResume();
+                        viewRef.setMenuLocked(false);
+                        viewRef.showGame();
+                        viewRef.requestFocusInWindow();
+                    } catch (Throwable ex) {
+                        ex.printStackTrace();
+                    }
+                }));
 
-                    // Construct fresh model + controller using same view (no new window)
-                    Model newModel = new Model(worldDimRef, maxBodiesRef);
-                    ActionsGenerator newGameRules = new KillerGameRules(newModel);
-                    Controller newController = new Controller(
-                            worldDimRef,
-                            viewDimRef,
-                            maxBodiesRef,
-                            viewRef,
-                            newModel,
-                            newGameRules);
-
-                    newController.activate();
-
-                    // Rebuild scene
-                    WorldDefinition newWorldDef = worldProvRef.provide();
-                    KillerLevelGenerator newLevelGenerator = new KillerLevelGenerator(newController, newWorldDef);
-                    MazeNavigator newMazeNavigator = newLevelGenerator.createMazeNavigator();
-
-                    MazeAIController newMazeAI = new MazeAIController(newModel, newMazeNavigator);
-                    newMazeAI.activate();
-
-                    new KillerEnemySpawner(newController, newWorldDef, maxEnemySpawnDelayRef, newMazeNavigator).activate();
-
-                    // Restart timer
-                    gameworld.GameTimer.get().start(60_000L, () -> {
-                        try {
-                            String localPlayerId = viewRef.getLocalPlayerId();
-                            int finalScore = 0;
-                            if (localPlayerId != null && !localPlayerId.isEmpty()) {
-                                engine.view.renderables.ports.PlayerRenderDTO p = newController.getPlayerRenderData(localPlayerId);
-                                if (p != null) {
-                                    finalScore = p.score;
-                                }
-                            }
-
-                            int previousHS = killergame.HighscoreStore.getHighscore();
-                            if (finalScore > previousHS) {
-                                killergame.HighscoreStore.saveHighscore(finalScore);
-                                final int fs = finalScore;
-                                javax.swing.SwingUtilities.invokeLater(() -> {
-                                    javax.swing.JOptionPane.showMessageDialog(viewRef,
-                                            "\u00A1Nuevo r\u00E9cord! Has conseguido " + fs + " puntos",
-                                            "Nuevo r\u00E9cord",
-                                            javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                                });
-                            }
-
-                            gameworld.GameState.get().setFinalScore(finalScore);
-                            gameworld.GameState.get().setGameOver(true);
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                        }
-
-                        // Show Play again button for next round
-                        viewRef.showPlayAgainButton(null);
-                    });
-
-                } catch (Throwable ex) {
-                    ex.printStackTrace();
-                }
-            });
-        });
+            } catch (Throwable ex) {
+                ex.printStackTrace();
+            }
+        };
 
         Runnable startGameAction = () -> SwingUtilities.invokeLater(() -> {
             try {

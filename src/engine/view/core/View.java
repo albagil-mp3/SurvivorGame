@@ -30,6 +30,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Image;
+import java.awt.IllegalComponentStateException;
 
 import engine.assets.core.AssetCatalog;
 import engine.assets.ports.AssetType;
@@ -142,6 +143,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     private JPanel menuPanel;
     private ImagePanel backgroundPanel;
     private volatile boolean menuLocked = false;
+    private boolean activated = false;
     private DoubleVector viewDimension;
     private DoubleVector viewportDimension;
     private DoubleVector worldDimension;
@@ -177,6 +179,13 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
     // *** PUBLIC ***
 
     public void activate() {
+        if (this.activated) {
+            // Already activated; avoid re-packing/resizing the window
+            this.renderer.setViewDimension(this.viewportDimension == null
+                    ? this.viewDimension
+                    : this.viewportDimension);
+            return;
+        }
         if (this.viewDimension == null) {
             throw new IllegalArgumentException("View dimensions not setted");
         }
@@ -202,6 +211,7 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
         // this.renderer.setViewDimension(this.viewDimension);
         this.renderer.activate();
         this.pack();
+        this.activated = true;
         // Silent: View activated
     }
 
@@ -265,6 +275,8 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
             try {
                 if (this.pauseButton != null) this.pauseButton.setVisible(false);
                 if (this.pauseOverlay != null) this.pauseOverlay.setVisible(false);
+                // Hide Play Again if it was shown during Game Over
+                this.hidePlayAgainButton();
             } catch (Throwable t) {
                 // ignore
             }
@@ -650,10 +662,32 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
                 if (parent != null) parent.remove(btn);
 
                 // Center button under the GAME OVER / Final score text using same fonts as Renderer
-                int btnW = 160;
-                int btnH = 34;
-                int cx = (int) (this.viewDimension == null ? this.getWidth() / 2 : this.viewDimension.x * 0.5d);
-                int cy = (int) (this.viewDimension == null ? this.getHeight() / 2 : this.viewDimension.y * 0.5d);
+                java.awt.Container layer = this.getLayeredPane();
+                int renderW = this.renderer.getWidth();
+                int renderH = this.renderer.getHeight();
+
+                int offsetX;
+                int offsetY;
+                try {
+                    java.awt.Point rOnScreen = this.renderer.getLocationOnScreen();
+                    java.awt.Point lOnScreen = layer.getLocationOnScreen();
+                    offsetX = rOnScreen.x - lOnScreen.x;
+                    offsetY = rOnScreen.y - lOnScreen.y;
+                } catch (IllegalComponentStateException ex) {
+                    java.awt.Point p = javax.swing.SwingUtilities.convertPoint(this.renderer, 0, 0, layer);
+                    offsetX = p.x;
+                    offsetY = p.y;
+                }
+
+                if (renderW <= 0 || renderH <= 0) {
+                    renderW = (int) (this.viewDimension == null ? this.getWidth() : this.viewDimension.x);
+                    renderH = (int) (this.viewDimension == null ? this.getHeight() : this.viewDimension.y);
+                    offsetX = (this.getWidth() - renderW) / 2;
+                    offsetY = (this.getHeight() - renderH) / 2;
+                }
+
+                int cx = offsetX + renderW / 2;
+                int cy = offsetY + renderH / 2;
 
                 // Compute title and score font ascents using this component's FontMetrics
                 java.awt.Font titleFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 72);
@@ -664,16 +698,19 @@ public class View extends JFrame implements KeyListener, WindowFocusListener, Mo
                 // Renderer draws title at (cy - titleAscent/2) and score at (cy + titleAscent)
                 // Place button a few pixels below the score baseline
                 int scoreY = cy + titleAscent;
-                int padding = 12;
+                int padding = 14;
+                java.awt.Dimension pref = btn.getPreferredSize();
+                int btnW = pref == null ? 200 : pref.width;
+                int btnH = pref == null ? 50 : pref.height;
                 int x = cx - btnW / 2;
                 int y = scoreY + scoreAscent + padding;
 
                 btn.setBounds(x, y, btnW, btnH);
                 btn.setVisible(true);
 
-                this.getLayeredPane().add(btn, javax.swing.JLayeredPane.PALETTE_LAYER);
-                this.getLayeredPane().revalidate();
-                this.getLayeredPane().repaint();
+                layer.add(btn, javax.swing.JLayeredPane.PALETTE_LAYER);
+                layer.revalidate();
+                layer.repaint();
             } catch (Throwable t) {
                 // Fallback to showing in control panel if layered pane fails
                 this.controlPanel.showPlayAgain(true);
