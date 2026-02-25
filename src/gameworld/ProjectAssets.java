@@ -13,10 +13,6 @@ public final class ProjectAssets {
     private final Theme theme;
 
     // Constructor por defecto: tema SPACE
-    public ProjectAssets() {
-        this(Theme.SPACE);
-    }
-
     public ProjectAssets(Theme theme) {
         this.theme = theme;
         this.catalog = new AssetCatalog("src/resources/images/");
@@ -29,11 +25,9 @@ public final class ProjectAssets {
     }
 
     // *** PRIVATE ***
-
     /**
-     * Registra los assets temáticos bajo IDs predecibles:
-     *   "theme_back"   → fondo principal del mundo
-     *   "theme_enemy"  → enemigo/asteroide principal del tema
+     * Registra los assets temáticos bajo IDs predecibles: "theme_back" → fondo
+     * principal del mundo "theme_enemy" → enemigo/asteroide principal del tema
      *
      * WorldDefinitionProvider usa estos IDs sin saber qué tema está activo.
      */
@@ -41,26 +35,23 @@ public final class ProjectAssets {
         switch (theme) {
             case JUNGLE -> {
                 // Fondo de jungla
-                this.catalog.register("theme_back",  "jungle-floor.jpg",   AssetType.BACKGROUND, AssetIntensity.LOW);
+                this.catalog.register("theme_back", "jungle-floor.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
                 this.catalog.register("wall_01", "wall-01.png", AssetType.STATIC, AssetIntensity.HIGH);
                 this.catalog.register("wall_02", "wall-02.png", AssetType.STATIC, AssetIntensity.HIGH);
                 this.catalog.register("stars_01", "dec1-jungle.png", AssetType.STARS, AssetIntensity.HIGH);
                 this.catalog.register("stars_02", "dec2-jungle.png", AssetType.STARS, AssetIntensity.HIGH);
                 this.catalog.register("stars_03", "dec3-jungle.png", AssetType.STARS, AssetIntensity.HIGH);
 
-
-
-
                 // Enemigos/obstáculos de jungla  ← añade aquí tus PNGs de jungla
                 // this.catalog.register("theme_enemy_01", "jungle-rock-01.png",  AssetType.ASTEROID, AssetIntensity.HIGH);
             }
             case SPACE -> {
                 // Fondo de espacio (por defecto)
-                this.catalog.register("theme_back",  "bg-13-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
+                this.catalog.register("theme_back", "bg-13-space-seamless.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
                 this.catalog.register("wall_01", "wall-space1.png", AssetType.STATIC, AssetIntensity.HIGH);
                 this.catalog.register("wall_02", "wall-space2.png", AssetType.STATIC, AssetIntensity.HIGH);
                 this.catalog.register("stars_01", "stars-01.png", AssetType.STARS, AssetIntensity.HIGH);
-               
+
                 this.catalog.register("stars_06", "stars-06.png", AssetType.STARS, AssetIntensity.HIGH);
                 this.catalog.register("stars_07", "stars-07.png", AssetType.STARS, AssetIntensity.HIGH);
             }
@@ -70,7 +61,7 @@ public final class ProjectAssets {
     private void registerCommonAssets() {
 
         // region asteroids (asteroid-***)
-        this.catalog.register("borde-panel",  "menu-back.jpg",   AssetType.BACKGROUND, AssetIntensity.LOW);
+        this.catalog.register("borde-panel", "menu-back.jpg", AssetType.BACKGROUND, AssetIntensity.LOW);
 
         this.catalog.register("asteroid_07", "fantasma.png", AssetType.ASTEROID, AssetIntensity.HIGH);
         // endregion
@@ -79,13 +70,12 @@ public final class ProjectAssets {
         // NOTA: el fondo del tema activo se registra como "theme_back" en registerThemeAssets()
         // Menu background used by the View for side/menu panels
         this.catalog.register("menu-back", "menu-back.png", AssetType.BACKGROUND, AssetIntensity.LOW);
-        
+
         // region bullets (bullet-***)
         this.catalog.register("bullet_01", "bullet-01.png", AssetType.BULLET, AssetIntensity.LOW);
         // endregion
 
         // region walls (wall-***)
-      
         this.catalog.register("wall_03", "wall-03.png", AssetType.STATIC, AssetIntensity.HIGH);
         this.catalog.register("wall_04", "wall-04.png", AssetType.STATIC, AssetIntensity.HIGH);
         // endregion
@@ -120,8 +110,6 @@ public final class ProjectAssets {
         this.catalog.register("meteor_05", "meteor-05.png", AssetType.METEOR, AssetIntensity.HIGH);
         // endregion
 
-     
-
         // region rainbows (rainbow-***)
         this.catalog.register("rainbow_01", "rainbow-01.png", AssetType.RAINBOW, AssetIntensity.HIGH);
         // endregion
@@ -144,19 +132,15 @@ public final class ProjectAssets {
         this.catalog.register("pac-man-a-2", "pac-man-a-2.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
         this.catalog.register("pac-man-a-3", "pac-man-a-3.png", AssetType.SPACESHIP, AssetIntensity.HIGH);
 
-
-
-        
         // Register player spaceship animation (using spaceship frames 2-15)
         this.catalog.registerAnimation(new AnimatedAssetInfoDTO(
-            "player_ship_animated",
-            Arrays.asList(
-                "pac-man-a-1", "pac-man-a-2", "pac-man-a-3","pac-man-a-2"
-                
-            ),
-            AssetType.SPACESHIP,
-            AssetIntensity.HIGH,
-            200  // 100ms per frame = 10 FPS animation  
+                "player_ship_animated",
+                Arrays.asList(
+                        "pac-man-a-1", "pac-man-a-2", "pac-man-a-3", "pac-man-a-2"
+                ),
+                AssetType.SPACESHIP,
+                AssetIntensity.HIGH,
+                200 // 100ms per frame = 10 FPS animation  
         ));
         // endregion
 
